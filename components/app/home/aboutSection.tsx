@@ -24,8 +24,8 @@ export default function AboutSection() {
               with our creations feels intuitive, meaningful, and impactful.
             </p>
             <p className="text-center italic mt-8">
-              "And do not be conformed to this world, but be transformed by the renewing of your mind, 
-              so that you may prove what the will of God is, that is which is good and acceptable and perfect." 
+              &quot;And do not be conformed to this world, but be transformed by the renewing of your mind, 
+              so that you may prove what the will of God is, that is which is good and acceptable and perfect.&quot; 
               <span className="font-semibold not-italic">- Romans 12:2</span>
             </p>
           </CardContent>
