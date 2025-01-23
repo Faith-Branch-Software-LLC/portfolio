@@ -54,6 +54,34 @@ const config: Config = {
         fraunces: ["Fraunces", "serif"],
         gelasio: ["Gelasio", "serif"],
       },
+      keyframes: {
+        'flip-right': {
+          '0%': { 
+            transform: 'rotateY(0deg)',
+          },
+          '100%': { 
+            transform: 'rotateY(-180deg)',
+          }
+        },
+        'flip-left': {
+          '0%': { 
+            transform: 'rotateY(0deg)',
+          },
+          '100%': { 
+            transform: 'rotateY(180deg)',
+          }
+        }
+      },
+      animation: {
+        'flip-right': 'flip-right 1s ease-in-out',
+        'flip-left': 'flip-left 1s ease-in-out'
+      },
+      perspective: {
+        '1000': '1000px'
+      },
+      rotate: {
+        'y-180': 'rotateY(180deg)',
+      },
     },
   },
   plugins: [],

@@ -2,3 +2,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Add these styles */
+.page {
+  background-color: white;
+}
+
+.--page-flip-shadow {
+  background: rgba(0, 0, 0, 0.2);
+}
