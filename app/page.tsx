@@ -28,7 +28,7 @@ export default function Home() {
       <IdealProjectsSection />
       <OurTeamSection />
       {/* <PartnerBuisnessSection /> */}
-      <Footer />
+      <Footer layer={5} />
     </div>
   );
 }

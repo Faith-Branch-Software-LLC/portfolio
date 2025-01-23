@@ -10,11 +10,11 @@ import UnderlineLink from "@/components/ui/underline-link"
  * Footer component that displays company logo, social links, contact information,
  * and copyright notice
  */
-export default function Footer() {
+export default function Footer({layer}: {layer: number}) {
   return (
-    <Section className="bg-darkPurple" layer={5}>
+    <Section className="bg-darkPurple" layer={layer}>
       <div className="flex flex-col items-center gap-6 w-full">
-        <div className="flex flex-row items-center justify-around gap-2 w-full">
+        <div className="flex flex-col md:flex-row items-center justify-around gap-12 w-full">
           <div className="flex flex-col items-center gap-2">
 
             <Image

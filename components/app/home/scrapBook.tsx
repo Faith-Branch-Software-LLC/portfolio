@@ -99,7 +99,7 @@ export default function ScrapBook() {
   const currentSpreadInfo = scrapBookPages.find(page => page.title && page.spreadIndex === currentSpread);
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto flex flex-row items-start gap-8">
+    <div className="relative w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start gap-8">
       <div id="book" ref={bookRef} className="flex-1">
         {/* Cover */}
         <div className="page" data-density="hard">

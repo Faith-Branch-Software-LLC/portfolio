@@ -41,7 +41,7 @@ export function generateSpikePath(
   }
   
   const path = [];
-  const baseline = height * 0.9;
+  const baseline = width > 768 ? height * 0.9 : height * 0.93;
   
   // Start path
   path.push(`M 0 0`);

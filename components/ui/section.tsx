@@ -26,11 +26,11 @@ export default function Section({
   const { width, height } = useElementDimensions(containerRef);
   const [path, setPath] = useState('M 0 0 L 0 100 L 100 100 L 100 0 Z');
   const { setTotalTranslation, setMaxLayer, maxLayer } = useLayout();
-  const translation = layer * 160;
+  const translation = width > 768 ? layer * 160 : layer * 192;
 
   useEffect(() => {
     if (width && height) {
-      const adjustedHeight = layer === 4 ? height * 1.1 : height
+      const adjustedHeight = width > 768 &&layer === 4 ? height * 1.1 : height
       setPath(generateSpikePath(undefined, width, adjustedHeight));
     }
   }, [width, height, layer]);
@@ -57,7 +57,7 @@ export default function Section({
         className={cn(
           "flex flex-col items-center justify-center mx-0 relative bg-white w-full h-full overflow-visible gap-5 md:gap-8 p-5",
           "pb-48 md:pb-40",
-          layer === 0 ? "pt-5" : "pt-48 md:pt-[160px]",
+          layer === 0 ? "pt-5" : "pt-48 md:pt-40",
           className
         )}
         style={{
