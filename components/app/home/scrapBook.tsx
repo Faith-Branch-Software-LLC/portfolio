@@ -19,17 +19,17 @@ export default function ScrapBook() {
 
   const scrapBookPages: PageInfo[] = [
     {
-      image: '/scrapBookImages/image1.png',
+      image: '/scrapBookImages/front-cover.png',
       spreadIndex: 0,
       title: 'My Portfolio',
       description: 'Welcome to my collection of projects',
     },
     {
-      image: '/scrapBookImages/image2.png',
+      image: '/scrapBookImages/front-cover-back.png',
       spreadIndex: 1,
       title: 'Project One',
       description: 'A web application built with React and TypeScript',
-      url: 'https://project1.com'
+      url: '#'
     },
     {
       image: '/scrapBookImages/image3.jpeg',
@@ -40,7 +40,7 @@ export default function ScrapBook() {
       spreadIndex: 2,
       title: 'Project Two',
       description: 'Mobile-first responsive design',
-      url: 'https://project2.com'
+      url: '#'
     },
     {
       image: '/scrapBookImages/image2.png',
@@ -50,7 +50,7 @@ export default function ScrapBook() {
       image: '/scrapBookImages/image3.jpeg',
       spreadIndex: 3,
       title: 'Thank You',
-      description: 'Thanks for viewing my portfolio',
+      description: 'Thanks for viewing our scrap book!',
     }
   ];
 
