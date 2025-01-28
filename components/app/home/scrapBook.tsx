@@ -19,36 +19,47 @@ export default function ScrapBook() {
 
   const scrapBookPages: PageInfo[] = [
     {
-      image: '/scrapBookImages/front-cover.png',
+      image: '/scrapBookImages/cover.jpg',
       spreadIndex: 0,
-      title: 'My Portfolio',
-      description: 'Welcome to my collection of projects',
+      title: 'Scrap Book',
+      description: 'Enjoy looking through some of our projects!',
     },
     {
-      image: '/scrapBookImages/front-cover-back.png',
+      image: '/scrapBookImages/hwm-1.jpg',
       spreadIndex: 1,
-      title: 'Project One',
-      description: 'A web application built with React and TypeScript',
-      url: '#'
+      title: 'Homework Muffin',
+      description: 'In 2023, I started working on Homework Muffin as a Senior Design Project. It is a web/mobile application that helps students organize their homework and study for exams.',
+      url: 'https://homeworkmuffin.com'
     },
     {
-      image: '/scrapBookImages/image3.jpeg',
+      image: '/scrapBookImages/hwm-2.jpg',
       spreadIndex: 1,
     },
     {
-      image: '/scrapBookImages/image4.jpeg',
+      image: '/scrapBookImages/afc-1.jpg',
       spreadIndex: 2,
-      title: 'Project Two',
-      description: 'Mobile-first responsive design',
-      url: '#'
+      title: 'Austintown Fence',
+      description: 'The first project since the start of the company. We were tasked with creating a website for a local fence company. We were able to create a really nice website with admin tools to help manage the website after the project was completed.',
+      url: 'https://austintownfence.org'
     },
     {
-      image: '/scrapBookImages/image2.png',
+      image: '/scrapBookImages/afc-2.jpg',
       spreadIndex: 2,
     },
     {
-      image: '/scrapBookImages/image3.jpeg',
+      image: '/scrapBookImages/eof-1.jpg',
       spreadIndex: 3,
+      title: 'EyeOnFi',
+      description: 'EyeOnFi is a financial forecasting tool that helps everyday people make better financial decisions. By imputing your financial data, EyeOnFi will help you forecast your financial future, helping to make informed decisions about your finances.',
+      url: 'https://app.eyeonfi.com'
+    },
+    {
+      image: '/scrapBookImages/eof-2.jpg',
+      spreadIndex: 3,
+    },
+    {
+      image: '/scrapBookImages/cover-back.jpg',
+      spreadIndex: 4,
       title: 'Thank You',
       description: 'Thanks for viewing our scrap book!',
     }
