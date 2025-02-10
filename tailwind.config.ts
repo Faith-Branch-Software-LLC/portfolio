@@ -53,6 +53,8 @@ const config: Config = {
       fontFamily: {
         fraunces: ["Fraunces", "serif"],
         gelasio: ["Gelasio", "serif"],
+        sendFlowers: ["Send Flowers", "cursive"],
+        sourGummy: ["Sour Gummy", "cursive"],
       },
       keyframes: {
         'flip-right': {
