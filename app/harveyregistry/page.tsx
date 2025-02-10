@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { FaAmazon, FaBullseye } from "react-icons/fa";
 
@@ -16,7 +16,6 @@ export default function HarveyRegistry() {
       <Image src="/flower-sep.svg" alt="Flower Separator" width={300} height={300} className="w-3/4 md:w-1/2 my-2" />
       <RegistryLink href="https://www.amazon.com/wedding/registry/SVL6RG278P85?tag=wedch-995-20"><FaAmazon className="w-4 h-4 md:w-6 md:h-6" /> Amazon Registry</RegistryLink>
       <RegistryLink href="https://www.target.com/gift-registry/gift-giver?registryId=12ba1620-2145-11ef-8226-81af0ec493a8&type=WEDDING"><FaBullseye className="w-4 h-4 md:w-6 md:h-6" /> Target Registry</RegistryLink>
-
     </div>
   );
 }
@@ -28,5 +27,4 @@ function RegistryLink({ href, children }: { href: string, children: React.ReactN
       <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
     </a>
   );
-
 }
