@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Section from "@/components/ui/section";
 import Link from "next/link";
@@ -10,21 +12,21 @@ import UnderlineLink from "@/components/ui/underline-link"
  * Footer component that displays company logo, social links, contact information,
  * and copyright notice
  */
-export default function Footer({layer}: {layer: number}) {
+export default function Footer({ layer }: { layer: number }) {
   return (
     <Section className="bg-darkPurple" layer={layer}>
       <div className="flex flex-col items-center gap-6 w-full">
         <div className="flex flex-col md:flex-row items-center justify-around gap-12 w-full">
           <div className="flex flex-col items-center gap-2">
-
-            <Image
-              src="/logo.svg"
-              alt="Faith Branch Software LLC"
-              width={100}
-              height={100}
-              className="w-72"
-            />
-
+            <Link href="/">
+              <Image
+                src="/logo.svg"
+                alt="Faith Branch Software LLC"
+                width={100}
+                height={100}
+                className="w-48 md:w-72"
+              />
+            </Link>
             <div className="flex gap-4">
               <Link
                 href="https://github.com/Faith-Branch-Software-LLC"
@@ -52,11 +54,25 @@ export default function Footer({layer}: {layer: number}) {
 
           <div className="flex flex-col gap-8 font-gelasio text-xl text-white">
             <Link
-              href="#about"
+              href="/blog"
+              className="flex items-center gap-2 hover:text-white/80 group w-full cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                Blog
+                <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
+            <Link
+              href="/#about"
               scroll={false}
               onClick={(e) => {
-                e.preventDefault()
-                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+                e.preventDefault();
+                const aboutSection = document.getElementById('about');
+                if (aboutSection) {
+                  aboutSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  window.location.href = '/#about';
+                }
               }}
               className="flex items-center gap-2 hover:text-white/80 group w-full cursor-pointer"
             >

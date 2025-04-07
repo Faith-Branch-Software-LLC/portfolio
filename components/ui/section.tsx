@@ -10,6 +10,8 @@ import { useLayout } from "@/lib/context/layoutContext";
  * Creates a decorative section with spiky bottom border and shadow
  * @param children - Content to render inside the section
  * @param className - Additional CSS classes to apply
+ * @param id - Optional ID for the section
+ * @param layer - Optional layer number for stacking (default: 0)
  */
 export default function Section({
   children,
@@ -23,28 +25,57 @@ export default function Section({
   id?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { width, height } = useElementDimensions(containerRef);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [path, setPath] = useState('M 0 0 L 0 100 L 100 100 L 100 0 Z');
   const { setTotalTranslation, setMaxLayer, maxLayer } = useLayout();
-  const translation = width > 768 ? layer * 160 : layer * 192;
+  const translation = dimensions.width > 768 ? layer * 150 : layer * 100;
 
   useEffect(() => {
-    if (width && height) {
-      const adjustedHeight = width > 768 &&layer === 4 ? height * 1.1 : height
-      setPath(generateSpikePath(undefined, width, adjustedHeight));
+    if (!containerRef.current) return;
+
+    function updateDimensions() {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({ width: rect.width, height: rect.height });
+      }
     }
-  }, [width, height, layer]);
+
+    // Initial measurement
+    updateDimensions();
+
+    // Create ResizeObserver for content changes
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    // Listen for window resize events
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (dimensions.width) {
+      const clipHeight = dimensions.width > 768 ? 150 : 100;
+      setPath(generateSpikePath(undefined, dimensions.width, clipHeight));
+    }
+  }, [dimensions]);
 
   useEffect(() => {
     if (layer > maxLayer) {
       setMaxLayer(layer);
       setTotalTranslation(translation);
     }
-  }, [layer, maxLayer, setMaxLayer, setTotalTranslation]);
+  }, [layer, maxLayer, setMaxLayer, setTotalTranslation, translation]);
 
   return (
     <div
-      className="relative w-full overflow-visible"
+      className="relative w-full overflow-visible bg-transparent pb-[97px] md:pb-[147px]"
       style={{
         transform: `translateY(-${translation}px)`,
         zIndex: `calc(50 - ${layer})`
@@ -55,9 +86,18 @@ export default function Section({
         id={id}
         ref={containerRef}
         className={cn(
-          "flex flex-col items-center justify-center mx-0 relative bg-white w-full h-full overflow-visible gap-5 md:gap-8 p-5",
-          "pb-48 md:pb-40",
-          layer === 0 ? "pt-5" : "pt-48 md:pt-40",
+          "flex flex-col items-center justify-center relative bg-transparent w-screen h-full overflow-visible gap-5 md:gap-8 p-5 pb-4",
+          layer === 0 ? "pt-5" : "pt-[100px] md:pt-[150px]",
+          className
+        )}
+      >
+        {children}
+      </div>
+
+      {/* Clipping container */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 right-0 h-[100px] md:h-[150px]",
           className
         )}
         style={{
@@ -65,14 +105,15 @@ export default function Section({
           zIndex: `calc(50 - ${layer})`
         }}
       >
-        {children}
+        <div className="absolute inset-0" />
       </div>
 
       {/* Shadow element */}
       <div
-        className="absolute inset-0 translate-y-[20px] blur-xl bg-gradient-to-b from-black/80 via-black/50 to-transparent overflow-visible"
+        className="absolute bottom-0 left-0 right-0 h-[100px] md:h-[150px] translate-y-[20px] blur-xl bg-gradient-to-b from-black/80 via-black/50 to-transparent"
         style={{
-          clipPath: `path('${path}')`
+          clipPath: `path('${path}')`,
+          zIndex: `calc(50 - ${layer + 1})`
         }}
       />
     </div>

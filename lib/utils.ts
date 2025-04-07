@@ -41,14 +41,15 @@ export function generateSpikePath(
   }
   
   const path = [];
-  const baseline = width > 768 ? height * 0.9 : height * 0.93;
+  const baseline = height; // Use full height as baseline
+  const spikeHeight = height * 0.8; // Use 80% of the height for spikes
   
   // Start path
   path.push(`M 0 0`);
   path.push(`L 0 ${baseline}`);
   
   // Generate first point
-  let lastY = baseline + (Math.random() * distance * 2 - distance);
+  let lastY = baseline - (Math.random() * spikeHeight);
   path.push(`L ${width / points} ${lastY}`);
   
   // Generate remaining points ensuring minimum variance
@@ -58,7 +59,7 @@ export function generateSpikePath(
     
     // Keep generating Y values until we meet the variance requirement
     do {
-      newY = baseline + (Math.random() * distance * 2 - distance);
+      newY = baseline - (Math.random() * spikeHeight);
     } while (Math.abs(newY - lastY) < variance);
     
     path.push(`L ${x} ${newY}`);
