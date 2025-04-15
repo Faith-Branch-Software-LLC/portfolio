@@ -86,7 +86,7 @@ export default function Section({
         id={id}
         ref={containerRef}
         className={cn(
-          "flex flex-col items-center justify-center relative bg-transparent w-screen h-full overflow-visible gap-5 md:gap-8 p-5 pb-4",
+          "flex flex-col items-center justify-center relative bg-transparent w-full h-full overflow-visible gap-5 md:gap-8 p-5 pb-4",
           layer === 0 ? "pt-5" : "pt-[100px] md:pt-[150px]",
           className
         )}

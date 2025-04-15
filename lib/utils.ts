@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * @param width - Container width in pixels
  * @returns 'mobile' | 'tablet' | 'desktop'
  */
-function getContainerSize(width: number): 'mobile' | 'tablet' | 'desktop' {
+export function getContainerSize(width: number): 'mobile' | 'tablet' | 'desktop' {
   if (width < 768) return 'mobile';
   if (width < 1024) return 'tablet';
   return 'desktop';

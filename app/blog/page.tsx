@@ -1,26 +1,11 @@
 import React from 'react';
-import { syncMarkdownPostsWithDb, getPaginatedBlogPosts } from '@/lib/blog';
 import BlogPageContent from '@/components/app/blog/BlogPageContent';
+import { syncMarkdownPostsWithDb, getAllBlogPosts } from '@/lib/blog';
 
 interface BlogPageProps {
   searchParams: {
     page?: string;
   };
-}
-
-/**
- * Fetches paginated blog posts from the database
- * @param page The page number to fetch
- * @returns The paginated blog posts and metadata
- */
-async function getBlogPostsData(page: number = 1) {
-  const pageSize = 9; // Show 9 posts per page
-  
-  // Sync markdown posts with database first
-  await syncMarkdownPostsWithDb();
-  
-  // Get paginated blog posts
-  return await getPaginatedBlogPosts(page, pageSize);
 }
 
 /**
@@ -32,12 +17,21 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   // Await the searchParams object before accessing its properties
   const params = await Promise.resolve(searchParams);
   const currentPage = params.page ? parseInt(params.page) : 1;
+
+  await syncMarkdownPostsWithDb();
+  const posts = await getAllBlogPosts();
   
-  // Get paginated blog posts
-  const { posts, pagination } = await getBlogPostsData(currentPage);
-
-  return <BlogPageContent posts={posts} pagination={pagination} />;
+  return (
+    <BlogPageContent 
+      posts={posts} 
+      pagination={{
+        currentPage,
+        totalPages: Math.ceil(posts.length / 9), // Default to 9 posts per page
+        hasNextPage: currentPage < Math.ceil(posts.length / 9),
+        hasPreviousPage: currentPage > 1,
+        totalCount: posts.length,
+        pageSize: 9
+      }} 
+    />
+  );
 }
-
-
-

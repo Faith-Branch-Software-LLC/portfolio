@@ -1,128 +1,134 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+import { motion } from 'motion/react';
 
 export interface PaginationMetadata {
-  totalCount: number;
-  totalPages: number;
   currentPage: number;
-  pageSize: number;
+  totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+  totalCount: number;
+  pageSize: number;
 }
 
 interface BlogPaginationProps {
   pagination: PaginationMetadata;
+  onPageChange: (page: number) => void;
 }
 
 /**
- * Component for blog pagination
+ * Pagination component for blog posts with enhanced styling and animations
  * @param pagination The pagination metadata
- * @returns A pagination component for the blog
+ * @param onPageChange Callback function when page changes
+ * @returns A pagination component with enhanced styling and animations
  */
-function BlogPagination({ pagination }: BlogPaginationProps) {
-  const { totalPages, currentPage, hasNextPage, hasPreviousPage } = pagination;
-  
-  // Calculate which page numbers to show
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    const maxPagesToShow = 5;
-    
-    if (totalPages <= maxPagesToShow) {
-      // Show all pages if there are few
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      // Add first page
-      pageNumbers.push(1);
-      
-      // Calculate start and end for middle pages
-      let startPage = Math.max(2, currentPage - 1);
-      let endPage = Math.min(totalPages - 1, currentPage + 1);
-      
-      // Adjust if at the beginning or end
-      if (currentPage <= 2) {
-        endPage = Math.min(totalPages - 1, 4);
-      } else if (currentPage >= totalPages - 1) {
-        startPage = Math.max(2, totalPages - 3);
-      }
-      
-      // Add ellipsis if needed
-      if (startPage > 2) {
-        pageNumbers.push('ellipsis-start');
-      }
-      
-      // Add middle pages
-      for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(i);
-      }
-      
-      // Add ellipsis if needed
-      if (endPage < totalPages - 1) {
-        pageNumbers.push('ellipsis-end');
-      }
-      
-      // Add last page if not the first
-      if (totalPages > 1) {
-        pageNumbers.push(totalPages);
-      }
-    }
-    
-    return pageNumbers;
-  };
-  
-  const pageNumbers = getPageNumbers();
-  
-  return (
-    <Pagination>
-      <PaginationContent>
-        {hasPreviousPage && (
-          <PaginationItem>
-            <Link href={`/blog?page=${currentPage - 1}`} passHref legacyBehavior>
-              <PaginationPrevious />
-            </Link>
-          </PaginationItem>
-        )}
-        
-        {pageNumbers.map((pageNumber, index) => {
-          if (pageNumber === 'ellipsis-start' || pageNumber === 'ellipsis-end') {
-            return (
-              <PaginationItem key={`${pageNumber}-${index}`}>
-                <PaginationEllipsis />
-              </PaginationItem>
-            );
-          }
-          
-          return (
-            <PaginationItem key={pageNumber}>
-              <Link href={`/blog?page=${pageNumber}`} passHref legacyBehavior>
-                <PaginationLink isActive={pageNumber === currentPage}>
-                  {pageNumber}
-                </PaginationLink>
-              </Link>
-            </PaginationItem>
-          );
-        })}
-        
-        {hasNextPage && (
-          <PaginationItem>
-            <Link href={`/blog?page=${currentPage + 1}`} passHref legacyBehavior>
-              <PaginationNext />
-            </Link>
-          </PaginationItem>
-        )}
-      </PaginationContent>
-    </Pagination>
-  );
-}
+export default function BlogPagination({ pagination, onPageChange }: BlogPaginationProps) {
+  const { currentPage, totalPages, hasNextPage, hasPreviousPage } = pagination;
 
-export default BlogPagination; 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      onPageChange(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="flex flex-col items-center gap-4"
+    >
+      <div className="flex items-center gap-2">
+        <motion.button
+          whileHover={hasPreviousPage ? { scale: 1.05, backgroundColor: "#2E294E" } : {}}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={!hasPreviousPage}
+          transition={{ duration: 0.05 }}
+          className={`px-4 py-2 rounded-lg font-gelasio transition-all duration-300 ${
+            hasPreviousPage
+              ? 'hover:shadow-button text-white'
+              : 'cursor-not-allowed text-offWhite'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {hasPreviousPage ? (
+              <motion.span
+                animate={{ x: [-2, 2, -2] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                ←
+              </motion.span>
+            ) : (
+              <span>←</span>
+            )}
+          </div>
+        </motion.button>
+        
+        <div className="flex gap-1 p-2 rounded-lg">
+          {getPageNumbers().map((page) => (
+            <motion.button
+              key={page}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handlePageChange(page)}
+              className={`px-4 py-2 rounded-lg font-gelasio transition-all duration-300 ${
+                page === currentPage
+                  ? 'bg-darkPurple text-white shadow-button'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              {page}
+            </motion.button>
+          ))}
+        </div>
+
+        <motion.button
+          whileHover={hasNextPage ? { scale: 1.05, backgroundColor: "#2E294E" } : {}}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={!hasNextPage}
+          transition={{ duration: 0.05 }}
+          className={`px-4 py-2 rounded-lg font-gelasio transition-all duration-300 ${
+            hasNextPage
+              ? 'hover:shadow-button text-white'
+              : 'cursor-not-allowed text-offWhite'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {hasNextPage ? (
+              <motion.span
+                animate={{ x: [-2, 2, -2] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                →
+              </motion.span>
+            ) : (
+              <span>→</span>
+            )}
+          </div>
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+} 

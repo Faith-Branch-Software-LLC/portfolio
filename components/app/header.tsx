@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 import Section from "@/components/ui/section";
 
 /**
@@ -22,7 +21,7 @@ export default function Header() {
               priority
             />
             <span className="hidden md:inline text-white text-xl font-bold">
-              Faith Branch
+              Faith Branch Software LLC
             </span>
           </Link>
           <div className="flex gap-6">
