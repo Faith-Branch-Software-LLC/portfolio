@@ -91,14 +91,17 @@ export default function BlogPostContent({ post, htmlContent }: BlogPostContentPr
             </div>
 
             {post.imageUrl && (
-              <div className="relative w-full h-48 md:h-64 mb-8 rounded-lg overflow-hidden">
-                <Image
-                  src={post.imageUrl}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+              <div className="relative w-full mb-8 overflow-hidden">
+                <div className="max-h-[400px] sm:max-h-[500px] w-full flex justify-center items-center bg-teal py-6 faded-sides">
+                  <Image
+                    src={post.imageUrl}
+                    alt={post.title}
+                    width={1200}
+                    height={1200}
+                    className="max-h-[370px] sm:max-h-[470px] w-auto h-auto object-contain rounded-lg shadow-card"
+                    priority
+                  />
+                </div>
               </div>
             )}
           </motion.div>
@@ -108,7 +111,7 @@ export default function BlogPostContent({ post, htmlContent }: BlogPostContentPr
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="prose prose-lg max-w-none prose-headings:text-center prose-headings:font-black prose-headings:text-black prose-a:bg-darkPurple prose-a:text-white prose-a:px-2 prose-a:py-1 prose-a:rounded-md prose-a:shadow-button prose-p:text-black prose-img:rounded-lg prose-pre:bg-[#002B36] prose-pre:text-[#eee8d5] prose-pre:rounded-lg prose-pre:shadow-card prose-pre:p-4 prose-li:text-black font-gelasio"
+            className="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-black prose-a:bg-darkPurple prose-a:text-white prose-a:px-2 prose-a:py-1 prose-a:rounded-md prose-a:shadow-button prose-p:text-black prose-img:rounded-lg prose-pre:bg-[#002B36] prose-pre:text-[#eee8d5] prose-pre:rounded-lg prose-pre:shadow-card prose-pre:p-4 prose-li:text-black font-gelasio"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </div>

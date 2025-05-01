@@ -64,8 +64,8 @@ export default function ContactForm() {
         <UnderlineLink href="mailto:sneiswanger@faithbranch.com" icon={MailIcon} iconSize={24} color="black">
           sneiswanger@faithbranch.com
         </UnderlineLink>
-        <UnderlineLink href="tel:+13309930338" icon={PhoneIcon} iconSize={24} color="black">
-          (330) 993-0338
+        <UnderlineLink href="tel:+13309930174" icon={PhoneIcon} iconSize={24} color="black">
+          (330) 993-0174
         </UnderlineLink>
         <UnderlineLink href="https://www.linkedin.com/in/sebastian-neiswanger/" icon={FaLinkedin} iconSize={24} color="black">
           in/sebastian-neiswanger

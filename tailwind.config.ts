@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: [
@@ -44,6 +45,7 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "noise": "url('/noise.svg')",
       },
       boxShadow: {
         deep: "0 35px 4rem 1rem rgba(0, 0, 0, 0.6)",
@@ -86,6 +88,26 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    plugin(function({ addUtilities }) {
+      const fadeUtilities = {
+        '.faded-sides': {
+          'position': 'relative',
+          'mask-image': 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+          '-webkit-mask-image': 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+        },
+        '.faded-sides-narrow': {
+          'mask-image': 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+          '-webkit-mask-image': 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+        },
+        '.faded-sides-wide': {
+          'mask-image': 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)',
+          '-webkit-mask-image': 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)',
+        },
+      }
+      addUtilities(fadeUtilities);
+    })
+  ],
 };
 export default config;

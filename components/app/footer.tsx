@@ -81,8 +81,8 @@ export default function Footer({ layer }: { layer: number }) {
                 <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
-            <UnderlineLink href="tel:+13309930338" icon={Phone}>
-              (330) 993-0338
+            <UnderlineLink href="tel:+13309930174" icon={Phone}>
+              (330) 993-0174
             </UnderlineLink>
             <UnderlineLink href="mailto:sneiswanger@faithbranch.com" icon={Mail}>
               sneiswanger@faithbranch.com

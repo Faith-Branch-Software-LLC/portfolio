@@ -34,6 +34,16 @@ export function parseMarkdownFile(fileName: string): MarkdownPost {
   
   const { data, content } = matter(fileContents);
   
+  // Process published status (convert string "true"/"false" to boolean)
+  let published = true;
+  if (data.published !== undefined) {
+    if (typeof data.published === 'string') {
+      published = data.published.toLowerCase() === 'true';
+    } else {
+      published = !!data.published;
+    }
+  }
+  
   return {
     slug,
     frontmatter: {
@@ -41,8 +51,8 @@ export function parseMarkdownFile(fileName: string): MarkdownPost {
       description: data.description || '',
       date: data.date || new Date().toISOString(),
       imageUrl: data.imageUrl,
-      tags: data.tags,
-      published: data.published ?? true,
+      tags: data.tags, // gray-matter should already handle the YAML array format correctly
+      published: published,
     },
     content,
   };
@@ -208,6 +218,28 @@ export async function syncMarkdownPostsWithDb(): Promise<BlogPost[]> {
       where: { slug: post.slug },
     });
     
+    // Handle Obsidian-style tags which can come in different formats
+    let tagString = '';
+    if (post.frontmatter.tags) {
+      // If tags is already an array, join with commas
+      if (Array.isArray(post.frontmatter.tags)) {
+        tagString = post.frontmatter.tags.join(',');
+      } 
+      // If tags is a string, use it directly
+      else if (typeof post.frontmatter.tags === 'string') {
+        tagString = post.frontmatter.tags;
+      }
+      // Handle any other format
+      else {
+        try {
+          // Attempt to convert to string if it's another type
+          tagString = String(post.frontmatter.tags);
+        } catch (e) {
+          console.error(`Could not process tags for post ${post.slug}:`, e);
+        }
+      }
+    }
+    
     if (existingPost) {
       await prisma.blogPost.update({
         where: { slug: post.slug },
@@ -217,7 +249,7 @@ export async function syncMarkdownPostsWithDb(): Promise<BlogPost[]> {
           // Don't save content to the database
           published: post.frontmatter.published ?? true,
           imageUrl: post.frontmatter.imageUrl,
-          tags: post.frontmatter.tags?.join(','),
+          tags: tagString,
           updatedAt: new Date(),
         },
       });
@@ -230,7 +262,7 @@ export async function syncMarkdownPostsWithDb(): Promise<BlogPost[]> {
           // Don't save content to the database
           published: post.frontmatter.published ?? true,
           imageUrl: post.frontmatter.imageUrl,
-          tags: post.frontmatter.tags?.join(','),
+          tags: tagString,
         },
       });
     }

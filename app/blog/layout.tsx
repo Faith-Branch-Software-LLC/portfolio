@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import Header from "@/components/app/header";
-import Footer from "@/components/app/footer";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "Faith Branch Blog",
   description: "Blog of information I feel is fun or important to share",
 };
 
