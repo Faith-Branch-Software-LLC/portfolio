@@ -4,22 +4,17 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import BlogPostContent from '@/components/app/blog/BlogPostContent';
 
-interface BlogPostPageProps {
-  params: {
-    id: string;
-  };
-}
-
 /**
  * Generates metadata for the blog post page
- * @param props The parameters from the URL
+ * @param params The parameters from the URL
  * @returns The metadata for the blog post
  */
-export async function generateMetadata(
-  props: BlogPostPageProps
-): Promise<Metadata> {
-  const params = await Promise.resolve(props.params);
-  const id = params.id;
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}): Promise<Metadata> {
+  const { id } = await params;
   
   if (!id) {
     return {
@@ -43,12 +38,15 @@ export async function generateMetadata(
 
 /**
  * Individual blog post page component
- * @param props The parameters from the URL
+ * @param params The parameters from the URL
  * @returns The blog post page
  */
-export default async function BlogPostPage(props: BlogPostPageProps) {
-  const params = await Promise.resolve(props.params);
-  const id = params.id;
+export default async function BlogPostPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params;
   
   if (!id) {
     notFound();

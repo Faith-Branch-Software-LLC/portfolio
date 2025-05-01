@@ -2,21 +2,19 @@ import React from 'react';
 import BlogPageContent from '@/components/app/blog/BlogPageContent';
 import { syncMarkdownPostsWithDb, getAllBlogPosts } from '@/lib/blog';
 
-interface BlogPageProps {
-  searchParams: {
-    page?: string;
-  };
-}
-
 /**
  * Blog index page component
  * @param searchParams The search parameters from the URL
  * @returns The blog index page
  */
-export default async function BlogPage({ searchParams }: BlogPageProps) {
+export default async function BlogPage({ 
+  params 
+}: { 
+  params: Promise<{ page?: string }> 
+}) {
   // Await the searchParams object before accessing its properties
-  const params = await Promise.resolve(searchParams);
-  const currentPage = params.page ? parseInt(params.page) : 1;
+  const {page} = await params;
+  const currentPage = page ? parseInt(page) : 1;
 
   await syncMarkdownPostsWithDb();
   const posts = await getAllBlogPosts();
