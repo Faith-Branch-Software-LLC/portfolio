@@ -1,9 +1,8 @@
 service: faithbranch-website
-image: sebastianneiswanger/faithbranch-website
+image: sneiswanger/faithbranch-website
 registry:
-  username: sebastianneiswanger
-  password:
-    - KAMAL_REGISTRY_PASSWORD
+  username: sneiswanger
+  password: KAMAL_REGISTRY_PASSWORD
 builder:
   arch: amd64
   secrets:

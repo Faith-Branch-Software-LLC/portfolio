@@ -20,8 +20,8 @@ WORKDIR /app
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm dlx prisma generate
-RUN --mount=type=secret,id=NEXT_PUBLIC_WIX_CLIENT_ID \
-  NEXT_PUBLIC_WIX_CLIENT_ID=$(cat /run/secrets/NEXT_PUBLIC_WIX_CLIENT_ID) \
+RUN --mount=type=secret,id=ReSendKey \
+  NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
   pnpm run build
 
 FROM base AS runner
