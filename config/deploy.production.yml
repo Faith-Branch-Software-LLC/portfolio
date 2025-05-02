@@ -11,5 +11,4 @@ proxy:
   host: faithbranch.com
   ssl: true
   healthcheck:
-    port: 3000
     path: /up
