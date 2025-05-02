@@ -1,0 +1,14 @@
+servers:
+  web:
+    - 104.131.185.135
+
+env:
+  secret:
+    - ReSendKey
+
+proxy:
+  app_port: 3000
+  host: faithbranch.com
+  ssl: true
+  healthcheck:
+    path: /up
