@@ -12,3 +12,7 @@ proxy:
   ssl: true
   healthcheck:
     path: /up
+  traefik_extra_configs:
+    - "http.routers.accounting_app.rule=Host(`accounting.faithbranch.com`)"
+    - "http.routers.accounting_app.service=accounting_app"
+    - "http.services.accounting_app.loadbalancer.server.port=8080"
