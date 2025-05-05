@@ -12,8 +12,8 @@ proxy:
   ssl: true
   healthcheck:
     path: /up
-  traefik_extra_configs:
-    - "http.routers.accounting.rule=Host(`accounting.faithbranch.com`)"
-    - "http.routers.accounting.service=accounting_service"
-    - "http.services.accounting_service.loadbalancer.servers[0].url=http://172.17.0.1:8080"
-    - "http.services.accounting_service.loadbalancer.passHostHeader=true"
+  hosts:
+    - hostname: accounting.faithbranch.com
+      target: http://172.17.0.1:8080
+      options:
+        preserve_host_header: true
