@@ -12,8 +12,3 @@ proxy:
   ssl: true
   healthcheck:
     path: /up
-  hosts:
-    - hostname: accounting.faithbranch.com
-      target: http://172.17.0.1:8080
-      options:
-        preserve_host_header: true
