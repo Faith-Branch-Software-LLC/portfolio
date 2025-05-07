@@ -10,7 +10,5 @@ proxy:
   app_port: 3000
   host: faithbranch.com
   ssl: true
-  volumes:
-    - ./caddy/Caddyfile:/etc/caddy/Caddyfile
   healthcheck:
     path: /up

@@ -1,7 +1,0 @@
-faithbranch.com {
-  reverse_proxy web:3000
-}
-
-accounting.faithbranch.com {
-  reverse_proxy host.docker.internal:8080
-}
