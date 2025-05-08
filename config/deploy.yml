@@ -8,3 +8,4 @@ builder:
   arch: amd64
   secrets:
     - ReSendKey
+    - DATABASE_URL
