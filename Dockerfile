@@ -24,6 +24,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ARG CACHE_BUST=$(date +%s)
 RUN echo "Cache bust: ${CACHE_BUST}"
 
+RUN pnpm dlx prisma migrate deploy
 RUN pnpm dlx prisma generate
 RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=DATABASE_URL \
