@@ -29,7 +29,7 @@ RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=DATABASE_URL \
     NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
     DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
-    pnpm dlx prisma migrate deploy
+    pnpm dlx prisma migrate deploy \
     pnpm run build
 
 FROM base AS runner
