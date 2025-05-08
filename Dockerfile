@@ -21,8 +21,10 @@ COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm dlx prisma generate
 RUN --mount=type=secret,id=ReSendKey \
-  NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
-  pnpm run build
+    --mount=type=secret,id=DATABASE_URL \
+    NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
+    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
+    pnpm run build
 
 FROM base AS runner
 WORKDIR /app
