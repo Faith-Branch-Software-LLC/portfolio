@@ -4,8 +4,8 @@ servers:
 
 env:
   secret:
-    - ReSendKey
     - DATABASE_URL
+    - ReSendKey
 
 proxy:
   app_port: 3000
