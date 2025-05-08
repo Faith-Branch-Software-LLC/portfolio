@@ -5,6 +5,7 @@ servers:
 env:
   secret:
     - ReSendKey
+    - DATABASE_URL
 
 proxy:
   app_port: 3000
