@@ -246,6 +246,7 @@ export async function syncMarkdownPostsWithDb(): Promise<BlogPost[]> {
         data: {
           title: post.frontmatter.title,
           description: post.frontmatter.description,
+          createdAt: post.frontmatter.date,
           // Don't save content to the database
           published: post.frontmatter.published ?? true,
           imageUrl: post.frontmatter.imageUrl,
@@ -259,6 +260,7 @@ export async function syncMarkdownPostsWithDb(): Promise<BlogPost[]> {
           slug: post.slug,
           title: post.frontmatter.title,
           description: post.frontmatter.description,
+          createdAt: post.frontmatter.date,
           // Don't save content to the database
           published: post.frontmatter.published ?? true,
           imageUrl: post.frontmatter.imageUrl,
