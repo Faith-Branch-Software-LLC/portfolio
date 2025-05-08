@@ -20,10 +20,11 @@ WORKDIR /app
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
+# Set up environment variables first
 RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=DATABASE_URL \
-    NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
-    DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
+    export NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) && \
+    export DATABASE_URL=$(cat /run/secrets/DATABASE_URL) && \
     pnpm dlx prisma generate && \
     pnpm dlx prisma migrate deploy && \
     pnpm run build && \
