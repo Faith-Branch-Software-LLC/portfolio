@@ -29,8 +29,9 @@ RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=DATABASE_URL \
     NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) \
     DATABASE_URL=$(cat /run/secrets/DATABASE_URL) \
-    pnpm dlx prisma migrate deploy \
-    pnpm run build
+    pnpm dlx prisma migrate deploy && \
+    pnpm run build && \
+    ls -la /app/.next/static || (echo "Build failed - static directory not created" && exit 1)
 
 FROM base AS runner
 WORKDIR /app
