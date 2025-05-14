@@ -7,7 +7,7 @@ tags:
   - life
   - work
   - history
-published: "false"
+published: "true"
 ---
 # Blurring the Lines: Work, Life, and Finding Balance
 
