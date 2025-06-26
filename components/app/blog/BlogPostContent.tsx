@@ -111,7 +111,7 @@ export default function BlogPostContent({ post, htmlContent }: BlogPostContentPr
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-black prose-a:bg-darkPurple prose-a:text-white prose-a:px-2 prose-a:py-1 prose-a:rounded-md prose-a:shadow-button prose-p:text-black prose-img:rounded-lg prose-pre:bg-[#002B36] prose-pre:text-[#eee8d5] prose-pre:rounded-lg prose-pre:shadow-card prose-pre:p-4 prose-li:text-black font-gelasio"
+            className="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-black prose-a:bg-darkPurple prose-a:text-white prose-a:px-2 prose-a:py-1 prose-a:rounded-md prose-a:shadow-button prose-p:text-black prose-img:rounded-lg prose-img:h-[350px] prose-img:w-auto prose-pre:bg-[#002B36] prose-pre:text-[#eee8d5] prose-pre:rounded-lg prose-pre:shadow-card prose-pre:p-4 prose-li:text-black font-gelasio"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </div>
