@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Allow access to all pages and resources
+Allow: /blog
+Allow: /blog/*
+Allow: /_next/static/
+Allow: /favicon.ico
+Allow: /icon.svg
+
+# Block sensitive or unnecessary paths for crawlers
+Disallow: /api/
+Disallow: /_next/
+Disallow: /up/
+
+# Sitemap location
+Sitemap: https://faithbranch.com/sitemap.xml
+
+# Crawl delay (optional - helps prevent overwhelming the server)
+Crawl-delay: 1

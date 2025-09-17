@@ -33,6 +33,52 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.description,
+    keywords: post.tags ? post.tags.split(',').join(', ') : 'software development, programming, tech blog',
+    authors: [{ name: "Faith Branch Software LLC" }],
+    creator: "Faith Branch Software LLC",
+    publisher: "Faith Branch Software LLC",
+    metadataBase: new URL('https://faithbranchsoftware.com'),
+    alternates: {
+      canonical: `/blog/${post.slug}`,
+    },
+    openGraph: {
+      type: 'article',
+      locale: 'en_US',
+      url: `https://faithbranchsoftware.com/blog/${post.slug}`,
+      title: post.title,
+      description: post.description,
+      siteName: 'Faith Branch Software LLC',
+      publishedTime: post.createdAt.toISOString(),
+      modifiedTime: post.updatedAt?.toISOString() || post.createdAt.toISOString(),
+      authors: ['Faith Branch Software LLC'],
+      section: 'Technology',
+      tags: post.tags ? post.tags.split(',') : [],
+      images: [
+        {
+          url: post.imageUrl || '/icon.svg',
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.description,
+      images: [post.imageUrl || '/icon.svg'],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
   };
 }
 
@@ -59,8 +105,48 @@ export default async function BlogPostPage({
   }
   
   const htmlContent = post.content ? markdownToHtml(post.content) : '';
-  
-  return <BlogPostContent post={post} htmlContent={htmlContent} />;
+
+  // JSON-LD structured data for the blog post
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description,
+    image: post.imageUrl || 'https://faithbranchsoftware.com/icon.svg',
+    datePublished: post.createdAt.toISOString(),
+    dateModified: post.updatedAt?.toISOString() || post.createdAt.toISOString(),
+    author: {
+      '@type': 'Organization',
+      name: 'Faith Branch Software LLC',
+      url: 'https://faithbranchsoftware.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Faith Branch Software LLC',
+      url: 'https://faithbranchsoftware.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://faithbranchsoftware.com/icon.svg',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://faithbranchsoftware.com/blog/${post.slug}`,
+    },
+    ...(post.tags && {
+      keywords: post.tags.split(',').map(tag => tag.trim()),
+    }),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BlogPostContent post={post} htmlContent={htmlContent} />
+    </>
+  );
 }
 
 
