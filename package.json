@@ -10,7 +10,8 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "studio": "prisma studio",
-    "kamal": "dotenv -f '.env.production' kamal"
+    "deploy:production": "dotenv -f '.env.production' kamal deploy -d production",
+    "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
