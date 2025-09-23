@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Faith Branch Software LLC" }],
   creator: "Faith Branch Software LLC",
   publisher: "Faith Branch Software LLC",
-  metadataBase: new URL('https://faithbranchsoftware.com'),
+  metadataBase: new URL('https://faithbranch.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://faithbranchsoftware.com',
+    url: 'https://faithbranch.com',
     title: 'Faith Branch Software LLC',
     description: 'Portfolio for Faith Branch Software LLC. Please view our current and past projects. Contact us for information on how to get started with your project!',
     siteName: 'Faith Branch Software LLC',
@@ -60,8 +60,8 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Faith Branch Software LLC',
-    url: 'https://faithbranchsoftware.com',
-    logo: 'https://faithbranchsoftware.com/icon.svg',
+    url: 'https://faithbranch.com',
+    logo: 'https://faithbranch.com/icon.svg',
     description: 'Portfolio for Faith Branch Software LLC. Please view our current and past projects. Contact us for information on how to get started with your project!',
     sameAs: [
       // Add social media profiles here when available

@@ -10,14 +10,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Faith Branch Software LLC" }],
   creator: "Faith Branch Software LLC",
   publisher: "Faith Branch Software LLC",
-  metadataBase: new URL('https://faithbranchsoftware.com'),
+  metadataBase: new URL('https://faithbranch.com'),
   alternates: {
     canonical: '/blog',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://faithbranchsoftware.com/blog',
+    url: 'https://faithbranch.com/blog',
     title: 'Faith Branch Blog',
     description: 'Blog of information I feel is fun or important to share',
     siteName: 'Faith Branch Software LLC',

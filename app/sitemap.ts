@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { getAllBlogPosts } from '@/lib/blog'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://faithbranchsoftware.com'
+  const baseUrl = 'https://faithbranch.com'
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

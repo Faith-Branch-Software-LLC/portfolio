@@ -37,14 +37,14 @@ export async function generateMetadata({
     authors: [{ name: "Faith Branch Software LLC" }],
     creator: "Faith Branch Software LLC",
     publisher: "Faith Branch Software LLC",
-    metadataBase: new URL('https://faithbranchsoftware.com'),
+    metadataBase: new URL('https://faithbranch.com'),
     alternates: {
       canonical: `/blog/${post.slug}`,
     },
     openGraph: {
       type: 'article',
       locale: 'en_US',
-      url: `https://faithbranchsoftware.com/blog/${post.slug}`,
+      url: `https://faithbranch.com/blog/${post.slug}`,
       title: post.title,
       description: post.description,
       siteName: 'Faith Branch Software LLC',
@@ -112,26 +112,26 @@ export default async function BlogPostPage({
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
-    image: post.imageUrl || 'https://faithbranchsoftware.com/icon.svg',
+    image: post.imageUrl || 'https://faithbranch.com/icon.svg',
     datePublished: post.createdAt.toISOString(),
     dateModified: post.updatedAt?.toISOString() || post.createdAt.toISOString(),
     author: {
       '@type': 'Organization',
       name: 'Faith Branch Software LLC',
-      url: 'https://faithbranchsoftware.com',
+      url: 'https://faithbranch.com',
     },
     publisher: {
       '@type': 'Organization',
       name: 'Faith Branch Software LLC',
-      url: 'https://faithbranchsoftware.com',
+      url: 'https://faithbranch.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://faithbranchsoftware.com/icon.svg',
+        url: 'https://faithbranch.com/icon.svg',
       },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://faithbranchsoftware.com/blog/${post.slug}`,
+      '@id': `https://faithbranch.com/blog/${post.slug}`,
     },
     ...(post.tags && {
       keywords: post.tags.split(',').map(tag => tag.trim()),
