@@ -12,3 +12,269 @@
 .--page-flip-shadow {
   background: rgba(0, 0, 0, 0.2);
 }
+
+/* Code Block Styling */
+.code-block-wrapper {
+  position: relative;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.code-block-header {
+  background: #001B20;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-block-language {
+  color: #93A1A1;
+  font-size: 0.875rem;
+  font-family: 'Courier New', Courier, monospace;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.code-copy-button {
+  background: #2E294E;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: 'Gelasio', serif;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.code-copy-button:hover {
+  background: #1B998B;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.code-copy-button:active {
+  transform: translateY(0);
+}
+
+.code-block-content {
+  display: flex;
+  background: #002B36;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.code-line-numbers {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.75rem 1rem 1rem;
+  background: #001B20;
+  color: #586e75;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid #073642;
+}
+
+.code-line-numbers span {
+  height: 1.5rem;
+  display: block;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 1rem;
+  flex: 1;
+  overflow-x: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.code-block-wrapper pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  display: block;
+}
+
+/* Monospace font for code */
+.prose code,
+.prose pre {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Inline code styling */
+.prose :not(pre) > code {
+  background: #2E294E;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Remove Tailwind Typography's default backticks on inline code */
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+/* Box shadow only on inline code, not code blocks */
+.prose :not(pre) > code {
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.15);
+}
+
+/* Remove box shadow from code blocks */
+.code-block-wrapper code {
+  box-shadow: none !important;
+}
+
+/* Callout Styling */
+.callout {
+  border-left: 4px solid;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.25);
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+  font-family: 'Gelasio', serif;
+}
+
+.callout-content {
+  padding: 0.75rem 1rem;
+  background: white;
+}
+
+.callout-content > *:first-child {
+  margin-top: 0;
+}
+
+.callout-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.callout-icon {
+  font-size: 1.25rem;
+}
+
+/* Callout type variants */
+.callout-note {
+  border-color: #1B998B;
+  background: rgba(27, 153, 139, 0.05);
+}
+.callout-note .callout-header {
+  background: #1B998B;
+  color: white;
+}
+.callout-note .callout-content {
+  background: white;
+  color: #000;
+}
+
+.callout-caution,
+.callout-warning {
+  border-color: #F46036;
+  background: rgba(244, 96, 54, 0.05);
+}
+.callout-caution .callout-header,
+.callout-warning .callout-header {
+  background: #F46036;
+  color: white;
+}
+.callout-caution .callout-content,
+.callout-warning .callout-content {
+  background: #FFF5F2;
+  color: #000;
+}
+
+.callout-danger {
+  border-color: #D7263D;
+  background: rgba(215, 38, 61, 0.05);
+}
+.callout-danger .callout-header {
+  background: #D7263D;
+  color: white;
+}
+.callout-danger .callout-content {
+  background: #FFF0F2;
+  color: #000;
+}
+
+.callout-tip,
+.callout-success {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.05);
+}
+.callout-tip .callout-header,
+.callout-success .callout-header {
+  background: #4CAF50;
+  color: white;
+}
+.callout-tip .callout-content,
+.callout-success .callout-content {
+  background: #F1F8F4;
+  color: #000;
+}
+
+.callout-info {
+  border-color: #2196F3;
+  background: rgba(33, 150, 243, 0.05);
+}
+.callout-info .callout-header {
+  background: #2196F3;
+  color: white;
+}
+.callout-info .callout-content {
+  background: #E3F2FD;
+  color: #000;
+}
+
+/* List Image Formatting */
+.prose ol,
+.prose ul {
+  list-style-position: outside;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin: 0.5rem 0;
+  padding-left: 0.5rem;
+}
+
+.prose li > p {
+  margin: 0;
+  display: inline;
+}
+
+.prose li img {
+  display: block;
+  margin: 1rem auto;
+  max-width: 100%;
+}
+
+/* Keep images that are direct children of list items */
+.prose li > img {
+  margin: 1rem 0;
+}
+
+/* Images wrapped in paragraphs within list items */
+.prose li p > img {
+  display: block;
+  margin: 1rem 0;
+}

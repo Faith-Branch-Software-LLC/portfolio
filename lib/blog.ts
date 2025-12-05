@@ -5,6 +5,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { MarkdownPost, BlogPost } from '../types/blog';
 import { prisma } from './db';
+import { configureMarked } from './utils/markedExtensions';
 
 /**
  * Gets all markdown files from the blogPages directory
@@ -89,6 +90,9 @@ export function getMarkdownPostBySlug(slug: string): MarkdownPost | null {
  * @returns The sanitized HTML content
  */
 export function markdownToHtml(markdown: string): string {
+  // Configure marked with custom extensions
+  configureMarked();
+
   // Configure marked for better security and rendering
   marked.setOptions({
     gfm: true, // GitHub flavored markdown
@@ -102,10 +106,11 @@ export function markdownToHtml(markdown: string): string {
     smartLists: true, // Use smart lists
     smartypants: true, // Use smart typography
   });
-  
+
   // First convert markdown to HTML
   const rawHtml = marked.parse(markdown);
-  
+  const processedHtml = String(rawHtml);
+
   // In a server environment, we need to create a DOM window for DOMPurify
   let sanitizedHtml = '';
   if (typeof window === 'undefined') {
@@ -114,19 +119,20 @@ export function markdownToHtml(markdown: string): string {
       const { JSDOM } = require('jsdom');
       const jsdom = new JSDOM('');
       const domPurify = DOMPurify(jsdom.window);
-      
-      // Sanitize the HTML with DOMPurify - ensure rawHtml is a string
-      sanitizedHtml = domPurify.sanitize(String(rawHtml), {
+
+      // Sanitize the HTML with DOMPurify - ensure processedHtml is a string
+      sanitizedHtml = domPurify.sanitize(processedHtml, {
         USE_PROFILES: { html: true },
         ALLOWED_TAGS: [
-          'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li', 
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li',
           'blockquote', 'code', 'pre', 'hr', 'br', 'em', 'strong', 'img',
-          'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div'
+          'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'button'
         ],
         ALLOWED_ATTR: [
-          'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel'
+          'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel',
+          'data-code', 'data-language', 'aria-label', 'aria-hidden'
         ],
-        FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input', 'button'],
+        FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input'],
         FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
       });
     } catch (error) {
@@ -136,17 +142,18 @@ export function markdownToHtml(markdown: string): string {
     }
   } else {
     // In a browser environment, use the browser's window
-    sanitizedHtml = DOMPurify.sanitize(String(rawHtml), {
+    sanitizedHtml = DOMPurify.sanitize(processedHtml, {
       USE_PROFILES: { html: true },
       ALLOWED_TAGS: [
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li', 
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li',
         'blockquote', 'code', 'pre', 'hr', 'br', 'em', 'strong', 'img',
-        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div'
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'button'
       ],
       ALLOWED_ATTR: [
-        'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel'
+        'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel',
+        'data-code', 'data-language', 'aria-label', 'aria-hidden'
       ],
-      FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input', 'button'],
+      FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input'],
       FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
     });
   }

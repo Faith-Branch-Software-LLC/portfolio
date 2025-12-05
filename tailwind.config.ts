@@ -57,6 +57,7 @@ const config: Config = {
         gelasio: ["Gelasio", "serif"],
         sendFlowers: ["Send Flowers", "cursive"],
         sourGummy: ["Sour Gummy", "cursive"],
+        mono: ["Courier New", "Courier", "monospace"],
       },
       keyframes: {
         'flip-right': {
