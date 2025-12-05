@@ -11,9 +11,9 @@ export default function CodeBlock() {
   useEffect(() => {
     const handleCopy = async (event: Event) => {
       const button = event.currentTarget as HTMLButtonElement;
-      const code = button.getAttribute('data-code');
+      const encodedCode = button.getAttribute('data-code');
 
-      if (!code) {
+      if (!encodedCode) {
         toast({
           title: 'Error',
           description: 'No code to copy',
@@ -22,14 +22,22 @@ export default function CodeBlock() {
         return;
       }
 
+      // Decode base64 to get the original code
+      let code: string;
       try {
-        // Decode HTML entities
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = code;
-        const decodedCode = tempDiv.textContent || tempDiv.innerText || '';
+        code = atob(encodedCode);
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to decode code',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-        // Copy to clipboard
-        await navigator.clipboard.writeText(decodedCode);
+      try {
+        // Copy to clipboard (code is already decoded from base64)
+        await navigator.clipboard.writeText(code);
 
         // Show success toast
         toast({

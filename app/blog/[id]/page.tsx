@@ -104,7 +104,7 @@ export default async function BlogPostPage({
     notFound();
   }
   
-  const htmlContent = post.content ? markdownToHtml(post.content) : '';
+  const htmlContent = post.content ? await markdownToHtml(post.content) : '';
 
   // JSON-LD structured data for the blog post
   const jsonLd = {

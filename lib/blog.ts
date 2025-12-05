@@ -89,9 +89,9 @@ export function getMarkdownPostBySlug(slug: string): MarkdownPost | null {
  * @param markdown The markdown content to convert
  * @returns The sanitized HTML content
  */
-export function markdownToHtml(markdown: string): string {
+export async function markdownToHtml(markdown: string): Promise<string> {
   // Configure marked with custom extensions
-  configureMarked();
+  await configureMarked();
 
   // Configure marked for better security and rendering
   marked.setOptions({
@@ -108,7 +108,7 @@ export function markdownToHtml(markdown: string): string {
   });
 
   // First convert markdown to HTML
-  const rawHtml = marked.parse(markdown);
+  const rawHtml = await marked.parse(markdown);
   const processedHtml = String(rawHtml);
 
   // In a server environment, we need to create a DOM window for DOMPurify
@@ -130,7 +130,7 @@ export function markdownToHtml(markdown: string): string {
         ],
         ALLOWED_ATTR: [
           'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel',
-          'data-code', 'data-language', 'aria-label', 'aria-hidden'
+          'data-code', 'data-language', 'aria-label', 'aria-hidden', 'style'
         ],
         FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input'],
         FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
@@ -151,7 +151,7 @@ export function markdownToHtml(markdown: string): string {
       ],
       ALLOWED_ATTR: [
         'href', 'title', 'src', 'alt', 'class', 'id', 'target', 'rel',
-        'data-code', 'data-language', 'aria-label', 'aria-hidden'
+        'data-code', 'data-language', 'aria-label', 'aria-hidden', 'style'
       ],
       FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input'],
       FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
