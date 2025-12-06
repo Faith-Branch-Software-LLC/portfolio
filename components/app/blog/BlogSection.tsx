@@ -16,7 +16,7 @@ export default function BlogSection({ children, sectionIndex }: BlogSectionProps
   const bgColor = sectionIndex % 2 === 0 ? 'bg-backgroundRed' : 'bg-teal';
 
   // Layer starts at 1 (0 is reserved for header if needed)
-  const layer = sectionIndex + 1;
+  const layer = sectionIndex + 2;
 
   return (
     <Section className={bgColor} layer={layer}>

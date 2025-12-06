@@ -253,7 +253,7 @@
 }
 
 .prose li {
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   padding-left: 0.5rem;
 }
 
@@ -277,4 +277,17 @@
 .prose li p > img {
   display: block;
   margin: 1rem 0;
+}
+
+/* List Markers - Make them more visible */
+.prose ol > li::marker {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.1em;
+}
+
+.prose ul > li::marker {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.2em;
 }

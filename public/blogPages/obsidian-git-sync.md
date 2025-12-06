@@ -29,6 +29,8 @@ I finally had a way to sync between my computer and iPhone for free. This post w
 
 On the service of your choice (GitHub, GitLab, etc.), create a new repository. If you already have an obsidian vault on desktop, you can link the vault to the repo. Or just use a repo that is already being used for a vault.
 
+---
+
 ## Step 2: Create a Vault on mobile
 
 No matter if the repo is empty or started, you are going to need to create a new vault on mobile. However, if you have a vault already started on mobile that you wish to use, you can skip to [Step 3: Link Vault to Repo](#step-3-link-vault-to-repo).
@@ -36,14 +38,13 @@ No matter if the repo is empty or started, you are going to need to create a new
 1. Open up the Obsidian mobile app on your device
 2. If this is your first time doing so you will be greeted by the new vault screen. If not you will need to go into the menu and choose to create a new vault.
 3. Press the `Create a vault` button
-
-![create a vault](../images/IMG_0031-2.jpg)
+   ![create a vault](../images/IMG_0031-2.jpg)
 4. Don't set up Sync—skip it, since that's a different service than what we're using here
-
-![skip sync](../images/IMG_0032-2.jpg)
+   ![skip sync](../images/IMG_0032-2.jpg)
 5. Name your new vault and create it
+   ![name your vault](../images/IMG_0033-2.jpg)
 
-![name your vault](../images/IMG_0033-2.jpg)
+---
 
 ## Step 3: Link Vault to Repo
 
@@ -52,38 +53,33 @@ The heavy lifting of this project is going to be done by Working Copy. I hadn't 
 1. Open the Working copy app
 2. Click on the fingerprint icon on the homepage
 3. Select the Link external repository. Before you login to a Git provider the button will have a lock emoji. Don't worry about it.
-
-![link external repository](../images/IMG_0034-2.jpg)
+   ![link external repository](../images/IMG_0034-2.jpg)
 4. Select your provider and login
 5. Search for the repository name of the one you created from [Step 1: Create a Git Repo](#step-1-create-a-git-repo)
 6. Select the correct repository
-
-![select repository](../images/IMG_0035-2.jpg)
+   ![select repository](../images/IMG_0035-2.jpg)
 7. You now have a copy of the repo on the app. It should open right after cloning.
 8. Select the Repository button from the inside of the repository
-
-![tap repo name](../images/IMG_0039-2.jpg)
+   ![tap repo name](../images/IMG_0039-2.jpg)
 9. Tap the repo name at the top of the screen—it should have an arrow next to it
 10. Select the `Link Repository to` button
-
-![link repository to](../images/IMG_0040-2.jpg)
+   ![link repository to](../images/IMG_0040-2.jpg)
 11. Now select the `Directory` option
-
-![directory](../images/IMG_0041-2.jpg)
+   ![directory](../images/IMG_0041-2.jpg)
 12. Now navigate to the vault you created in [Step 2: Create a Vault on mobile](#step-2-create-a-vault-on-mobile). This is just navigating through the files app. Mine was found at `Browse > On My iPhone > Obsidian > Project Tracker`.
 13. Make sure you are in the vault folder and press the `Open` button
-
-![open](../images/IMG_0043-2.jpg)
+   ![open](../images/IMG_0043-2.jpg)
 14. Reopen Obsidian and the vault should have updated with the repository. For me, I already started the vault on desktop, so I had to trust the author (myself) and enable plugins.
-
-![community plugins](../images/IMG_0044-2.jpg)
+   ![community plugins](../images/IMG_0044-2.jpg)
 15. Go into the menu and into the `Community plugins` tab
 16. Press the `Turn on and reload` button. This just allows community plugins, so I guess don't turn it on if you don't want them.
+   ![restricted mode](../images/IMG_0045-2.jpg)
 
-![restricted mode](../images/IMG_0045-2.jpg)
 If you already had a started vault this is what the notes could look like in obsidian
 
 ![notes](../images/IMG_0046-2.jpg)
+
+---
 
 ## Step 4: Saving Edits
 
@@ -92,27 +88,26 @@ Saving to Git is one side of the coin. If you want to work on desktop with updat
 1. Go into Working Copy
 2. Open the repository and select the `Repository` button
 3. Press the `Commit` button
+   ![commit](../images/IMG_0049-2.jpg)
 
-![commit](../images/IMG_0049-2.jpg)
 These can be done in basically any order. But I recommend:
 
 1. Press the `Add` button, to stage all the changes
 2. Name your commit something that makes sense for the work you did
 3. Select the `Push` switch to make it green. This just saves a step later. 
 4. Once everything is good, select the `Commit` button. This will commit and push the changes to your provider. If you had remote changes and forgot to pull them, then it will let you know. Just pull the changes (see [Step 5: Receiving Edits](#step-5-receiving-edits)) and then repeat this step.
+   ![push](../images/IMG_0051-2.jpg)
 
-![push](../images/IMG_0051-2.jpg)
+---
 
 ## Step 5: Receiving Edits
 
 This is the other side of the coin. More often than not, you should do this step before making any changes. If you have pushed changes on another device it is recommended you pull all the changes before doing any work.
 
 1. Pull down on the screen in the repository. This will fetch any changes from the provider.
-
-![pull](../images/IMG_0047-2.jpg)
+   ![pull](../images/IMG_0047-2.jpg)
 2. If you have any changes just click the green banner and it will merge them onto your device.
-
-![merge](../images/IMG_0048-2.jpg)
+   ![merge](../images/IMG_0048-2.jpg)
 
 ---
 

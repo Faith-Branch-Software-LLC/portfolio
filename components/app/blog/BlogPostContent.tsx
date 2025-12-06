@@ -43,7 +43,7 @@ export default function BlogPostContent({ post, htmlContent }: BlogPostContentPr
       }}
     >
       {/* Header Section with Post Metadata */}
-      <Section className="bg-olive" layer={0}>
+      <Section className="bg-olive" layer={1}>
         <div className="container mx-auto px-4 py-8 pb-0">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
