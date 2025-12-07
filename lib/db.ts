@@ -1,11 +1,19 @@
+import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
+dotenv.config();
 
 /**
- * Create a Prisma client instance
- * @returns The Prisma client
+ * Create a Prisma client instance with MariaDB adapter for v7
+ * @returns The Prisma client configured with Direct TCP adapter
  */
 function createPrismaClient() {
-  return new PrismaClient();
+  const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+
+  return new PrismaClient({
+    adapter,
+  });
 }
 
 // Add prisma to the global type
@@ -19,4 +27,4 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 // Save prisma client to global in development
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
-} 
+}
