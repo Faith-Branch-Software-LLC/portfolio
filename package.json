@@ -9,7 +9,7 @@
     "wasm:dev": "pnpm run wasm:build && pnpm run wasm:copy",
     "wasm:prod": "pnpm run wasm:build:release && pnpm run wasm:copy",
     "dev": "pnpm run wasm:dev && next dev --turbopack",
-    "build": "pnpm run wasm:prod && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "generate": "prisma generate",
