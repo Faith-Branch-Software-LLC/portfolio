@@ -8,7 +8,7 @@ tags:
   - webassembly
   - gsap
   - animation
-  - svg
+  - svgThis 
 published: "true"
 ---
 # Building an Animated Logo with Clipper2 and WebAssembly
@@ -21,13 +21,13 @@ This post covers the journey of building that animation, from the initial concep
 
 ## Animation Evolution
 
-<div style="display:grid; grid-template-columns: 30vw 30vw 30vw; row-gap:0; column-gap:1rem;">
-    <p style="margin:0"><b>1.</b> Scale from 0 to 1 on both the X and Y axes</p>
-    <p style="margin:0"><b>2.</b> Morph between pre-made growth stages and then drawing the branches</p>
-    <p style="margin:0"><b>3.</b> Inflate the tree organically using a custom made Clipper2 plugin</p>
-    <img src="../images/logo-scale.gif" style="margin:0"/>
-    <img src="../images/logo-morph.gif" style="margin:0"/>
-    <img src="../images/logo-grow.gif" style="margin:0"/>
+<div class="comparison-grid">
+    <p><b>1.</b> Scale from 0 to 1 on both the X and Y axes. This is very basic and does not look at all like what we desire.</p>
+    <p><b>2.</b> Morph between pre-made growth stages and then drawing the branches.</p>
+    <p><b>3.</b> Inflate the tree organically using a custom made Clipper2 plugin.</p>
+    <img src="../images/logo-scale.gif" alt="Logo animation using simple scale transform from 0 to 1"/>
+    <img src="../images/logo-morph.gif" alt="Logo animation using SVG morph between pre-made growth stages"/>
+    <img src="../images/logo-grow.gif" alt="Logo animation using Clipper2 polygon offset to organically grow the tree"/>
 </div>
 
 ---

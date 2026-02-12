@@ -291,3 +291,30 @@
   font-weight: 900;
   font-size: 1.2em;
 }
+
+/* Comparison grid: 3 columns on wide screens, stacked on small */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 1rem;
+}
+.comparison-grid > p {
+  margin: 0;
+}
+.comparison-grid > img {
+  margin: 0;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .comparison-grid > p { order: unset; }
+  .comparison-grid > img { order: unset; }
+  .comparison-grid > p:nth-child(1) { order: 1; }
+  .comparison-grid > img:nth-child(4) { order: 2; }
+  .comparison-grid > p:nth-child(2) { order: 3; }
+  .comparison-grid > img:nth-child(5) { order: 4; }
+  .comparison-grid > p:nth-child(3) { order: 5; }
+  .comparison-grid > img:nth-child(6) { order: 6; }
+}
