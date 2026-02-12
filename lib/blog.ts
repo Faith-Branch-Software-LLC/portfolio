@@ -166,10 +166,32 @@ export async function markdownToHtml(markdown: string): Promise<string> {
  * @returns The list of blog posts
  */
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
-  return await prisma.blogPost.findMany({
-    where: { published: true },
-    orderBy: { createdAt: 'desc' }, // Sort newest to oldest
-  });
+  try {
+    return await Promise.race([
+      prisma.blogPost.findMany({
+        where: { published: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 5000))
+    ]);
+  } catch (error) {
+    console.error('DB query failed for blog posts, falling back to markdown:', error);
+    // Fall back to constructing posts from markdown files
+    return getAllMarkdownPosts()
+      .filter(post => post.frontmatter.published !== false)
+      .map(post => ({
+        id: 0,
+        slug: post.slug,
+        title: post.frontmatter.title,
+        description: post.frontmatter.description,
+        published: post.frontmatter.published ?? true,
+        createdAt: new Date(post.frontmatter.date),
+        updatedAt: new Date(post.frontmatter.date),
+        imageUrl: post.frontmatter.imageUrl ?? null,
+        tags: post.frontmatter.tags?.join(',') ?? null,
+      }))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
 }
 
 /**
@@ -189,28 +211,39 @@ export async function getBlogPostById(id: number): Promise<BlogPost | null> {
  * @returns The blog post with content from markdown file, or null if not found
  */
 export async function getBlogPostBySlug(slug: string): Promise<(BlogPost & { content?: string }) | null> {
-  // First, check if the post exists in the database
-  const dbPost = await prisma.blogPost.findUnique({
-    where: { slug },
-  });
-  
-  if (!dbPost) {
-    return null;
+  // Try to fetch from database with timeout
+  let dbPost: BlogPost | null = null;
+  try {
+    dbPost = await Promise.race([
+      prisma.blogPost.findUnique({ where: { slug } }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 5000))
+    ]);
+  } catch (error) {
+    console.error('DB query failed for blog post, falling back to markdown:', error);
   }
-  
-  // Get the markdown content directly from the file
+
   const markdownPost = getMarkdownPostBySlug(slug);
-  
-  // If the markdown post exists, return a merged object with content
+
+  // Prefer DB + markdown, fall back to markdown-only if DB is unavailable
+  if (dbPost && markdownPost) {
+    return { ...dbPost, content: markdownPost.content };
+  }
+  if (dbPost) return dbPost;
   if (markdownPost) {
     return {
-      ...dbPost,
-      content: markdownPost.content, // Add content from markdown file
+      id: 0,
+      slug,
+      title: markdownPost.frontmatter.title,
+      description: markdownPost.frontmatter.description,
+      published: markdownPost.frontmatter.published ?? true,
+      createdAt: new Date(markdownPost.frontmatter.date),
+      updatedAt: new Date(markdownPost.frontmatter.date),
+      imageUrl: markdownPost.frontmatter.imageUrl ?? null,
+      tags: markdownPost.frontmatter.tags?.join(',') ?? null,
+      content: markdownPost.content,
     };
   }
-  
-  // If no markdown file exists, return the database post without content
-  return dbPost;
+  return null;
 }
 
 /**

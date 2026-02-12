@@ -16,7 +16,8 @@
     "migrate": "prisma migrate dev",
     "studio": "prisma studio",
     "deploy:production": "dotenv -f '.env.production' kamal deploy -d production",
-    "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging"
+    "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging",
+    "logs": "dotenv -f '.env.production' kamal app logs -f -d production"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
