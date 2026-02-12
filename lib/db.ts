@@ -9,7 +9,11 @@ dotenv.config();
  * @returns The Prisma client configured with Direct TCP adapter
  */
 function createPrismaClient() {
-  const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+  const adapter = new PrismaMariaDb(process.env.DATABASE_URL!, {
+    onConnectionError: (err) => {
+      console.error('Prisma MariaDB connection error:', err);
+    },
+  });
 
   return new PrismaClient({
     adapter,

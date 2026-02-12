@@ -16,8 +16,22 @@ export default async function BlogPage({
   const {page} = await params;
   const currentPage = page ? parseInt(page) : 1;
 
-  await syncMarkdownPostsWithDb();
-  const posts = await getAllBlogPosts();
+  // Attempt sync with timeout — don't let a DB issue block the page indefinitely
+  try {
+    await Promise.race([
+      syncMarkdownPostsWithDb(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB sync timeout')), 5000))
+    ]);
+  } catch (error) {
+    console.error('Blog sync failed or timed out:', error);
+  }
+
+  let posts: Awaited<ReturnType<typeof getAllBlogPosts>> = [];
+  try {
+    posts = await getAllBlogPosts();
+  } catch (error) {
+    console.error('Failed to fetch blog posts:', error);
+  }
   
   return (
     <BlogPageContent 

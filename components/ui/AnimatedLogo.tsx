@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
+import { OffsetPathPlugin, initWasm } from "@/lib/gsap/OffsetPathPlugin";
 
 // Register GSAP plugins
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(DrawSVGPlugin, MorphSVGPlugin);
+  gsap.registerPlugin(DrawSVGPlugin, MorphSVGPlugin, OffsetPathPlugin);
 }
 
 // ============================================
@@ -38,6 +39,7 @@ export default function AnimatedLogo({
   onAnimationComplete,
 }: AnimatedLogoProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [wasmReady, setWasmReady] = useState(false);
 
   // Main element refs
   const mainCircleLeftRef = useRef<SVGGElement>(null); // #_11
@@ -77,8 +79,26 @@ export default function AnimatedLogo({
   // Shadow refs
   const shadowRef = useRef<SVGGElement>(null);
 
+  // Initialize WASM module
   useEffect(() => {
-    if (!svgRef.current) return;
+    initWasm()
+      .then(() => {
+        console.log("[AnimatedLogo] WASM initialized");
+        setWasmReady(true);
+      })
+      .catch((err) => {
+        console.error("[AnimatedLogo] WASM init failed:", err);
+        setWasmReady(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!svgRef.current || !wasmReady) {
+      console.log("[AnimatedLogo] Not ready:", { svgRef: !!svgRef.current, wasmReady });
+      return;
+    }
+
+    console.log("[AnimatedLogo] WASM ready, setting up animation");
 
     const ctx = gsap.context(() => {
       // Initialize all elements to hidden state
@@ -113,11 +133,7 @@ export default function AnimatedLogo({
       gsap.set(treeGrow5Ref.current, { opacity: 0 });
       gsap.set(treeGrow6Ref.current, { opacity: 0 });
       gsap.set(treeBaseRef.current, { opacity: 0 });
-      gsap.set(treeFullRef.current, {
-        opacity: 1,
-        fillOpacity: 0,
-        drawSVG: "0%",
-      });
+      gsap.set(treeFullRef.current, { offsetPath: { offset: -45, originX: 0.1, originY: 1 }});
 
       // Leaves and olives - hidden with proper transform origins
       // Left side of tree - origin on right
@@ -196,31 +212,13 @@ export default function AnimatedLogo({
           duration: D.branchCircle,
           ease: "back.out(1.7)",
         }, ">-0.1")  // Slightly overlaps branch2Path
-        .to(treeSeedRef.current, {opacity: 1, durration: 0.01}, ">")
         .to(mainCircleRightRef.current, {
           scale: 1,
           duration: D.circleRight,
           ease: "back.out(1.7)",
         }, "-=0.3")
-        .to(treeSeedRef.current, { morphSVG: treeGrow1Ref.current!, duration: D.treeMorph, map: "position" })
-        .to(treeSeedRef.current, { morphSVG: treeGrow2Ref.current!, duration: D.treeMorph, map: "position" }, ">")
-        .to(treeSeedRef.current, { morphSVG: treeGrow3Ref.current!, duration: D.treeMorph, map: "position" }, ">")
-        .to(treeSeedRef.current, { morphSVG: treeGrow4Ref.current!, duration: D.treeMorph, map: "position" }, ">")
-        .to(treeSeedRef.current, { morphSVG: treeGrow5Ref.current!, duration: D.treeMorph, map: "position" }, ">")
-        .to(treeSeedRef.current, { morphSVG: treeGrow6Ref.current!, duration: D.treeMorph, map: "position" }, ">")
-        .to(treeSeedRef.current, { morphSVG: treeBaseRef.current!, duration: D.treeMorph, map: "position" }, ">")
-        // Draw stroke
-        .to(treeFullRef.current, {
-          drawSVG: "100%",
-          duration: D.treeStroke,
-          ease: "sine.inOut",
-        }, ">")
-        // Fade in fill
-        .to(treeFullRef.current, {
-          fillOpacity: 1,
-          duration: D.treeFill,
-          ease: "power1.in",
-        }, ">-0.5")  // Starts before stroke finishes
+        // NEW: Dynamic offset-based tree growth (replaces morphing)
+        .to(treeFullRef.current, { offsetPath: { offset: 0, originX: 0.1, originY: 1 }, duration: 2 }, ">")
         .to(leaf1Ref.current, { scale: 1, duration: D.leaf, ease: "back.out(1.4)" }, "leaves")
         .to(leaf2Ref.current, { scale: 1, duration: D.leaf, ease: "back.out(1.4)" }, "leaves+=0.3")
         .to(olive1Ref.current, { scale: 1, duration: D.leaf, ease: "back.out(1.4)" }, "leaves+=0.6")
@@ -236,7 +234,7 @@ export default function AnimatedLogo({
     }, svgRef);
 
     return () => ctx.revert();
-  }, [autoPlay, onAnimationComplete]);
+  }, [wasmReady, autoPlay, onAnimationComplete]);
 
   return (
     <svg
