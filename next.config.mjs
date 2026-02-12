@@ -28,6 +28,9 @@ const nextConfig = {
     return config;
   },
 
+  // Allow Turbopack (Next.js 16 default) alongside the webpack config
+  turbopack: {},
+
   // Ensure WASM files are served with correct Content-Type
   async headers() {
     return [
