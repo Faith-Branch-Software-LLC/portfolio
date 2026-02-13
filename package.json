@@ -48,6 +48,7 @@
     "marked": "^15.0.7",
     "motion": "^12.6.5",
     "next": "16.0.7",
+    "next-transition-router": "^0.2.11",
     "page-flip": "^2.0.7",
     "prisma": "7",
     "react": "19.2.1",

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from 'next-transition-router';
 import { BlogPost } from '@/types/blog';
 import { motion } from 'motion/react';
 

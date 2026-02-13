@@ -73,3 +73,45 @@ export function generateSpikePath(
   
   return path.join(' ');
 }
+
+/**
+ * Generates a CSS polygon clip-path with jagged left and right edges
+ * for use as a page transition overlay. Uses percentage-based coordinates.
+ * @param numPoints - Number of spike points per edge (default 15)
+ * @param spikeDepth - Max spike deviation as percentage of width (default 5)
+ * @param variance - Min difference between adjacent spike depths in % (default 1.5)
+ */
+export function generateVerticalSpikePath(
+  numPoints: number = 15,
+  spikeDepth: number = 5,
+  variance: number = 1.5
+): string {
+  const leftPoints: string[] = [];
+  const rightPoints: string[] = [];
+
+  // Left edge: walk top to bottom, varying X between 0% and spikeDepth%
+  let lastX = 0;
+  for (let i = 0; i <= numPoints; i++) {
+    const y = (i / numPoints) * 100;
+    let x: number;
+    do {
+      x = Math.random() * spikeDepth;
+    } while (i > 0 && Math.abs(x - lastX) < variance);
+    leftPoints.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+    lastX = x;
+  }
+
+  // Right edge: walk bottom to top, varying X between (100-spikeDepth)% and 100%
+  lastX = 0;
+  for (let i = numPoints; i >= 0; i--) {
+    const y = (i / numPoints) * 100;
+    let x: number;
+    do {
+      x = 100 - Math.random() * spikeDepth;
+    } while (i < numPoints && Math.abs((100 - x) - lastX) < variance);
+    rightPoints.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+    lastX = 100 - x;
+  }
+
+  return `polygon(${[...leftPoints, ...rightPoints].join(', ')})`;
+}

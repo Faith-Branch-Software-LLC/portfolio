@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Section from "@/components/ui/section";
 import Link from "next/link";
+import { Link as TransitionLink } from "next-transition-router";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import { FaDiscord, FaLinkedin, FaGithub } from "react-icons/fa";
 import { Separator } from "../ui/separator";
@@ -18,7 +19,7 @@ export default function Footer({ layer }: { layer: number }) {
       <div className="flex flex-col items-center gap-6 w-full">
         <div className="flex flex-col md:flex-row items-center justify-around gap-12 w-full">
           <div className="flex flex-col items-center gap-2">
-            <Link href="/">
+            <TransitionLink href="/">
               <Image
                 src="/logo.svg"
                 alt="Faith Branch Software LLC"
@@ -26,7 +27,7 @@ export default function Footer({ layer }: { layer: number }) {
                 height={100}
                 className="w-48 md:w-72"
               />
-            </Link>
+            </TransitionLink>
             <div className="flex gap-4">
               <Link
                 href="https://github.com/Faith-Branch-Software-LLC"
@@ -53,7 +54,7 @@ export default function Footer({ layer }: { layer: number }) {
           </div>
 
           <div className="flex flex-col gap-8 font-gelasio text-xl text-white">
-            <Link
+            <TransitionLink
               href="/blog"
               className="flex items-center gap-2 hover:text-white/80 group w-full cursor-pointer"
             >
@@ -61,7 +62,7 @@ export default function Footer({ layer }: { layer: number }) {
                 Blog
                 <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
               </div>
-            </Link>
+            </TransitionLink>
             <Link
               href="/#about"
               scroll={false}

@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster"
 import { LayoutProvider } from "@/lib/context/layoutContext";
+import PageTransitionProvider from "@/components/ui/PageTransition";
 
 export const metadata: Metadata = {
   title: "Faith Branch Software LLC",
@@ -79,14 +80,16 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <LayoutProvider>
-        <body className={cn("bg-teal min-h-screen")}>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-          />
-          <main className="relative">{children}</main>
-          <Toaster />
-        </body>
+          <body className={cn("bg-teal min-h-screen")}>
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+            />
+            <PageTransitionProvider>
+              <main className="relative">{children}</main>
+            </PageTransitionProvider>
+            <Toaster />
+          </body>
       </LayoutProvider>
     </html>
   );

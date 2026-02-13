@@ -8,7 +8,7 @@ tags:
   - webassembly
   - gsap
   - animation
-  - svgThis 
+  - svg
 published: "true"
 ---
 # Building an Animated Logo with Clipper2 and WebAssembly

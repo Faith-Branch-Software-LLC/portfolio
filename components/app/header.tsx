@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-transition-router";
 import Image from "next/image";
 import Section from "@/components/ui/section";
 

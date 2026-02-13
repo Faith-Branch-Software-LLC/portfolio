@@ -98,16 +98,6 @@ fn parse_svg_path_with_lyon(path_data: &str, tolerance: f64, scale: f64) -> Resu
         }
     }
 
-    // DEBUG: Log path statistics
-    web_sys::console::log_1(&format!(
-        "[WASM] Parsed path: {} points, first: ({}, {}), last: ({}, {})",
-        clipper_path.len(),
-        if !clipper_path.is_empty() { clipper_path[0].x } else { 0 },
-        if !clipper_path.is_empty() { clipper_path[0].y } else { 0 },
-        if !clipper_path.is_empty() { clipper_path[clipper_path.len()-1].x } else { 0 },
-        if !clipper_path.is_empty() { clipper_path[clipper_path.len()-1].y } else { 0 },
-    ).into());
-
     if clipper_path.is_empty() {
         return Err(PathError::EmptyPath);
     }
@@ -120,12 +110,6 @@ fn parse_svg_path_with_lyon(path_data: &str, tolerance: f64, scale: f64) -> Resu
         signed_area += (clipper_path[j].x - clipper_path[i].x) as f64
                      * (clipper_path[j].y + clipper_path[i].y) as f64;
     }
-
-    web_sys::console::log_1(&format!(
-        "[WASM] Path signed area: {:.0} ({})",
-        signed_area,
-        if signed_area > 0.0 { "clockwise - reversing for Clipper2" } else { "counter-clockwise - OK" }
-    ).into());
 
     // Clipper2 expects CCW winding for outer paths
     // In screen coordinates (Y-down), positive area = CW = needs reversal
@@ -396,13 +380,6 @@ pub fn offset_svg_path(
 
     // Parse SVG path and flatten curves to line segments
     let path = parse_svg_path_with_lyon(path_data, flatten_tolerance, scale)?;
-
-    // DEBUG: Log Clipper2 input
-    web_sys::console::log_1(&format!(
-        "[WASM] Calling Clipper2 with {} points, offset: {}",
-        path.len(),
-        offset_amount
-    ).into());
 
     // Validate path before offsetting
     if path.len() < 3 {
