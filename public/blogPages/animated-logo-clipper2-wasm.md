@@ -13,7 +13,7 @@ published: "true"
 ---
 # Building an Animated Logo with Clipper2 and WebAssembly
 
-Most logo animations rely on simple transforms — scale, rotate, fade. I wanted something different for my portfolio: a tree that *grows* by having its SVG path geometry inflate in real-time. Not just a scale animation because that takes the whole finished shape into account. A morph didn't work either because the line offsets end up looking super janky. I needed something that felt organic.
+Most logo animations rely on simple transforms: scale, rotate, and fade. I wanted something different for my portfolio: a tree that *grows* by having its SVG path geometry inflate in real-time. Not just a scale animation because that takes the whole finished shape into account. A morph didn't work either because the line offsets end up looking super janky. I needed something that felt organic.
 
 This post covers the journey of building that animation, from the initial concept through the technical challenges of compiling Rust to WebAssembly and integrating it with GSAP's animation timeline.
 
@@ -41,7 +41,7 @@ My portfolio logo features a olive tree growing out of a git main branch. The an
 3. Leaves and olives pop in with scale animations on the tree.
 4. A white shadow fades in at the end to outline the entire logo.
 
-The tricky part is step 2. SVG doesn't have a native "inflate/deflate" operation. CSS `scale` would just make the tree bigger — it wouldn't change the path geometry. What I needed was **polygon offsetting**: taking every edge of the path and moving it inward (deflate) or outward (inflate) by a fixed distance.
+The tricky part is step 2. SVG doesn't have a native "inflate/deflate" operation. CSS `scale` would just make the tree bigger; it wouldn't change the path geometry. What I needed was **polygon offsetting**: taking every edge of the path and moving it inward (deflate) or outward (inflate) by a fixed distance.
 
 ---
 
@@ -74,7 +74,7 @@ OffsetPathPlugin.ts (GSAP plugin)
 AnimatedLogo.tsx (React component)
 ```
 
-**React** manages the SVG elements and refs. **GSAP** handles the animation timeline and easing. The **custom GSAP plugin** bridges JavaScript and WebAssembly. **Rust/WASM** does the heavy computation — parsing SVG paths, flattening Bezier curves, running Clipper2, and converting results back to SVG.
+**React** manages the SVG elements and refs. **GSAP** handles the animation timeline and easing. The **custom GSAP plugin** bridges JavaScript and WebAssembly. **Rust/WASM** does the heavy computation: parsing SVG paths, flattening Bezier curves, running Clipper2, and converting results back to SVG.
 
 ---
 
@@ -90,7 +90,7 @@ SVG paths use commands like `M` (move), `L` (line), `C` (cubic Bezier), and `Z` 
 M303.208,677.356 C269.132,594.216 272.255,473.455 333.363,407.127 ...
 ```
 
-Clipper2 works with integer point arrays, not SVG strings. So the first step is parsing the SVG path into a list of points. I wrote a manual SVG parser that feeds commands into [lyon_path](https://crates.io/crates/lyon_path), which handles curve flattening — converting smooth Bezier curves into sequences of line segments.
+Clipper2 works with integer point arrays, not SVG strings. So the first step is parsing the SVG path into a list of points. I wrote a manual SVG parser that feeds commands into [lyon_path](https://crates.io/crates/lyon_path), which handles curve flattening, converting smooth Bezier curves into sequences of line segments.
 
 ### Coordinate Scaling
 
@@ -124,7 +124,7 @@ Without this fix, Clipper2 silently returned empty results because it interprete
 
 ### Anchor-Pinned Offsetting
 
-By default, Clipper2's offset shrinks a path toward its center. But I wanted the tree to grow *upward from its base* — the point where it connects to the horizontal bar.
+By default, Clipper2's offset shrinks a path toward its center. But I wanted the tree to grow *upward from its base*, the point where it connects to the horizontal bar.
 
 The solution: after Clipper2 computes the offset, calculate bounding boxes of both the original and offset paths, then translate the offset path so a chosen anchor point stays fixed.
 
@@ -192,7 +192,7 @@ This way, when `gsap.set(el, { offsetPath: -45 })` runs, it stores -45 on the el
 
 ### Graceful Degradation
 
-When the offset is very negative, Clipper2 deflates the path to nothing — there's no geometry left. Rather than throwing an error, the plugin hides the element with `visibility: hidden` and reveals it once the offset produces visible geometry:
+When the offset is very negative, Clipper2 deflates the path to nothing; there's no geometry left. Rather than throwing an error, the plugin hides the element with `visibility: hidden` and reveals it once the offset produces visible geometry:
 
 ```typescript
 if (!result || result.trim() === "") {
@@ -217,7 +217,7 @@ The WASM module compiles with `wasm-pack` and integrates into the Next.js build:
 }
 ```
 
-The compiled `.wasm` file is ~165KB and loads asynchronously. The plugin initializes WASM before the animation starts, and if it fails to load, the animation simply skips the offset effect — no crash, no broken UI.
+The compiled `.wasm` file is ~165KB and loads asynchronously. The plugin initializes WASM before the animation starts, and if it fails to load, the animation simply skips the offset effect. No crash, no broken UI.
 
 ---
 
@@ -235,7 +235,7 @@ The compiled `.wasm` file is ~165KB and loads asynchronously. The plugin initial
 
 ## What's Next
 
-The `OffsetPathPlugin` is a general-purpose GSAP plugin — it works with any SVG path element, not just this logo. Potential future uses include:
+The `OffsetPathPlugin` is a general-purpose GSAP plugin; it works with any SVG path element, not just this logo. Potential future uses include:
 
 - Hover effects that inflate/deflate buttons or icons
 - Loading animations with pulsing shapes
