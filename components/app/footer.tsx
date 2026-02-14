@@ -94,7 +94,7 @@ export default function Footer({ layer }: { layer: number }) {
         <Separator orientation="horizontal" className="bg-white" />
 
         <p className="text-md text-white">
-          © 2024 Faith Branch Software LLC. All rights reserved.
+          © 2025 Faith Branch Software LLC. All rights reserved.
         </p>
       </div>
     </Section>

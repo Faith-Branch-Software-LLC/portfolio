@@ -14,20 +14,21 @@ export default function Profile({
   description: string
 }) {
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center max-w-lg">
       <Image 
         src={imageUrl} 
         alt={name} 
         width={1000} 
         height={1000} 
-        className="w-1/4 aspect-square rounded-full shadow-card" 
+        className="w-40 md:w-52 aspect-square rounded-full shadow-card" 
       />
       <Card className="mt-5">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold font-fraunces">{name}</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl md:text-3xl font-bold font-fraunces">{name}</CardTitle>
+          <p className="text-sm font-gelasio text-black/60">Founder &amp; Lead Developer</p>
         </CardHeader>
         <CardContent>
-          <p className="text-md font-gelasio max-w-prose">
+          <p className="font-gelasio max-w-prose leading-relaxed text-center">
             {description}
           </p>
         </CardContent>

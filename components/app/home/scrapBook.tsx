@@ -28,7 +28,7 @@ export default function ScrapBook() {
       image: '/scrapBookImages/hwm-1.jpg',
       spreadIndex: 1,
       title: 'Homework Muffin',
-      description: 'In 2023, I started working on Homework Muffin as a Senior Design Project. It is a web/mobile application that helps students organize their homework and study for exams.',
+      description: 'A web and mobile application that helps students organize homework and study for exams. Built as a Senior Design Project in 2023.',
       url: 'https://homeworkmuffin.com'
     },
     {
@@ -39,7 +39,7 @@ export default function ScrapBook() {
       image: '/scrapBookImages/afc-1.jpg',
       spreadIndex: 2,
       title: 'Austintown Fence',
-      description: 'The first project since the start of the company. We were tasked with creating a website for a local fence company. We were able to create a really nice website with admin tools to help manage the website after the project was completed.',
+      description: 'Our first client project\u2014a complete website for a local fence company, including admin tools for ongoing content management.',
       url: 'https://austintownfence.org'
     },
     {
@@ -50,7 +50,7 @@ export default function ScrapBook() {
       image: '/scrapBookImages/eof-1.jpg',
       spreadIndex: 3,
       title: 'EyeOnFi',
-      description: 'EyeOnFi is a financial forecasting tool that helps everyday people make better financial decisions. By imputing your financial data, EyeOnFi will help you forecast your financial future, helping to make informed decisions about your finances.',
+      description: 'A financial forecasting tool that helps everyday people make smarter decisions by visualizing and projecting their financial future.',
       url: 'https://app.eyeonfi.com'
     },
     {
@@ -142,22 +142,23 @@ export default function ScrapBook() {
         </div>
       </div>
       
-      <Card className="w-80">
+      <Card className="w-80 self-center">
         <CardHeader>
-          <CardTitle>
-            {currentSpreadInfo?.title || 'My Portfolio'}
+          <CardTitle className="text-2xl md:text-3xl">
+            {currentSpreadInfo?.title || 'Our Portfolio'}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p>{currentSpreadInfo?.description}</p>
+        <CardContent className="flex flex-col gap-4">
+          <p className="leading-relaxed">{currentSpreadInfo?.description}</p>
           {currentSpreadInfo?.url && (
             <a 
               href={currentSpreadInfo.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-teal hover:underline"
+              className="inline-flex items-center gap-1 text-teal font-semibold font-fraunces hover:underline"
             >
-              Visit Project →
+              Visit Project
+              <span aria-hidden="true">{'\u2192'}</span>
             </a>
           )}
         </CardContent>

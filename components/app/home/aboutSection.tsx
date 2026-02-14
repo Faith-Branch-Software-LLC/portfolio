@@ -12,22 +12,44 @@ export default function AboutSection() {
           <CardHeader>
             <CardTitle>Our Mission</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <p>
-              We at Faith Branch Software LLC are dedicated to crafting exceptional websites and software
-              solutions that not only meet but exceed the expectations of our clients. Guided by our unwavering
-              commitment to Biblical ethics, we approach every project with integrity, transparency, and a heart
-              for service. Our goal is to deliver unique, complete, and thoughtful experiences, ensuring
-              every solution is tailored to the needs of those we serve. Proudly made in the USA, we take
-              inspiration from our roots, creating with care and precision that reflects our values. By
-              focusing on guest-based design, we prioritize the user experience, ensuring that every interaction
-              with our creations feels intuitive, meaningful, and impactful.
+          <CardContent className="flex flex-col gap-6">
+            <p className="leading-relaxed">
+              We craft exceptional websites and software solutions that exceed the expectations of our clients.
+              Guided by Biblical ethics, we approach every project with integrity, transparency,
+              and a heart for service.
             </p>
-            <p className="text-center italic mt-8">
-              &quot;And do not be conformed to this world, but be transformed by the renewing of your mind, 
-              so that you may prove what the will of God is, that is which is good and acceptable and perfect.&quot; 
-              <span className="font-semibold not-italic">- Romans 12:2</span>
-            </p>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <span className="text-backgroundRed font-fraunces font-bold text-xl leading-none mt-0.5">{'/'}</span>
+                <p className="leading-relaxed">
+                  <span className="font-semibold font-fraunces">Tailored Solutions</span>{' \u2014 '}
+                  Every project is uniquely designed to serve the specific needs of those we work with.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-backgroundRed font-fraunces font-bold text-xl leading-none mt-0.5">{'/'}</span>
+                <p className="leading-relaxed">
+                  <span className="font-semibold font-fraunces">Guest-Based Design</span>{' \u2014 '}
+                  We prioritize the user experience, ensuring every interaction feels intuitive and meaningful.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-backgroundRed font-fraunces font-bold text-xl leading-none mt-0.5">{'/'}</span>
+                <p className="leading-relaxed">
+                  <span className="font-semibold font-fraunces">Made in the USA</span>{' \u2014 '}
+                  Created with care and precision that reflects our values and roots.
+                </p>
+              </div>
+            </div>
+            <div className="border-l-4 border-teal pl-4 mt-2">
+              <p className="italic leading-relaxed">
+                &quot;And do not be conformed to this world, but be transformed by the renewing of your mind, 
+                so that you may prove what the will of God is, that which is good and acceptable and perfect.&quot;
+              </p>
+              <p className="font-semibold font-fraunces mt-2">
+                {'Romans 12:2'}
+              </p>
+            </div>
           </CardContent>
         </Card>
         <Separator orientation="vertical" className="hidden md:block" />
