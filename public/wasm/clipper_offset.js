@@ -32,8 +32,8 @@ export function init_panic_hook() {
  * @param {EndType} end_type
  * @param {number} miter_limit
  * @param {number} arc_tolerance
- * @param {number} origin_x
- * @param {number} origin_y
+ * @param {number | null} [origin_x]
+ * @param {number | null} [origin_y]
  * @returns {string}
  */
 export function offset_svg_path(path_data, offset_amount, join_type, end_type, miter_limit, arc_tolerance, origin_x, origin_y) {
@@ -42,7 +42,7 @@ export function offset_svg_path(path_data, offset_amount, join_type, end_type, m
     try {
         const ptr0 = passStringToWasm0(path_data, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.offset_svg_path(ptr0, len0, offset_amount, join_type, end_type, miter_limit, arc_tolerance, origin_x, origin_y);
+        const ret = wasm.offset_svg_path(ptr0, len0, offset_amount, join_type, end_type, miter_limit, arc_tolerance, !isLikeNone(origin_x), isLikeNone(origin_x) ? 0 : origin_x, !isLikeNone(origin_y), isLikeNone(origin_y) ? 0 : origin_y);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {
@@ -133,9 +133,6 @@ function __wbg_get_imports() {
                 wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
             }
         },
-        __wbg_log_6b5ca2e6124b2808: function(arg0) {
-            console.log(arg0);
-        },
         __wbg_new_8a6f238a6ece86ea: function() {
             const ret = new Error();
             return ret;
@@ -187,6 +184,10 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {

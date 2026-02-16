@@ -349,6 +349,15 @@ fn path64_to_svg(path: &Path64, scale: f64) -> String {
     result
 }
 
+// Convert multiple Clipper2 paths back to a single SVG path string
+fn paths64_to_svg(paths: &Paths64, scale: f64) -> String {
+    paths.iter()
+        .filter(|p| !p.is_empty())
+        .map(|p| path64_to_svg(p, scale))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 // Main offset function
 #[wasm_bindgen]
 pub fn offset_svg_path(
@@ -358,8 +367,8 @@ pub fn offset_svg_path(
     end_type: EndType,
     miter_limit: f64,
     arc_tolerance: f64,
-    origin_x: f64,
-    origin_y: f64,
+    origin_x: Option<f64>,
+    origin_y: Option<f64>,
 ) -> Result<String, JsValue> {
     // Guard against NaN/invalid offset
     if offset_amount.is_nan() || offset_amount.is_infinite() {
@@ -423,21 +432,23 @@ pub fn offset_svg_path(
 
     // Pin anchor point: translate offset path so the origin stays fixed
     let (orig_min_x, orig_min_y, orig_max_x, orig_max_y) = bbox(&path);
-    let anchor_x = orig_min_x as f64 + (orig_max_x - orig_min_x) as f64 * origin_x;
-    let anchor_y = orig_min_y as f64 + (orig_max_y - orig_min_y) as f64 * origin_y;
-
     let (off_min_x, off_min_y, off_max_x, off_max_y) = bbox(&offset_paths[0]);
-    let off_anchor_x = off_min_x as f64 + (off_max_x - off_min_x) as f64 * origin_x;
-    let off_anchor_y = off_min_y as f64 + (off_max_y - off_min_y) as f64 * origin_y;
 
-    let dx = (anchor_x - off_anchor_x) as i64;
-    let dy = (anchor_y - off_anchor_y) as i64;
+    let dx = origin_x.map_or(0, |x| {
+        let anchor_x = orig_min_x as f64 + (orig_max_x - orig_min_x) as f64 * x;
+        let off_anchor_x = off_min_x as f64 + (off_max_x - off_min_x) as f64 * x;
+        (anchor_x - off_anchor_x) as i64
+    });
+    
+    let dy = origin_y.map_or(0, |y| {
+        let anchor_y = orig_min_y as f64 + (orig_max_y - orig_min_y) as f64 * y;
+        let off_anchor_y = off_min_y as f64 + (off_max_y - off_min_y) as f64 * y;
+        (anchor_y - off_anchor_y) as i64
+    });
 
-    if dx != 0 || dy != 0 {
-        for point in offset_paths[0].iter_mut() {
-            point.x += dx;
-            point.y += dy;
-        }
+    for point in offset_paths[0].iter_mut() {
+        point.x += dx;
+        point.y += dy;
     }
 
     let result_svg = path64_to_svg(&offset_paths[0], scale);
@@ -458,8 +469,8 @@ pub fn offset_svg_path_simple(
         EndType::Polygon,
         2.0,
         0.25,
-        0.5,
-        0.5,
+        None,
+        None,
     )
 }
 
@@ -476,8 +487,8 @@ pub fn test_simple_offset() -> Result<String, JsValue> {
         EndType::Polygon,
         2.0,
         0.25,
-        0.5,
-        0.5,
+        None,
+        None,
     )
 }
 

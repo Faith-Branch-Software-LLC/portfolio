@@ -80,8 +80,8 @@ export const OffsetPathPlugin: gsap.Plugin = {
       endType: options.endType ?? 0,   // Polygon (default)
       miterLimit: options.miterLimit ?? 2.0,
       arcTolerance: options.arcTolerance ?? 0.25,
-      originX: options.originX ?? 0.5,
-      originY: options.originY ?? 0.5,
+      originX: options.originX ?? null,
+      originY: options.originY ?? null,
     };
 
     // Read current offset from TARGET element (shared across tween instances)
@@ -158,6 +158,13 @@ export const OffsetPathPlugin: gsap.Plugin = {
     }
   },
 };
+
+/**
+ * Get the initialized WASM module (for direct access outside the plugin)
+ */
+export function getWasmModule() {
+  return wasmModule;
+}
 
 // Auto-initialize WASM on module load (client-side only)
 if (typeof window !== "undefined") {

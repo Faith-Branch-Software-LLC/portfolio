@@ -1,9 +1,11 @@
 "use client"
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import gsap from 'gsap'
 import { TransitionRouter } from 'next-transition-router'
 import { generateVerticalSpikePath } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+const SpinnerAnimation = dynamic(() => import('@/components/ui/SpinnerAnimation'), { ssr: false })
 
 const THEME_COLORS = ['#D7263D', '#1B998B', '#2E294E', '#F46036', '#C5D86D']
 const LAYER_COUNT = 3
@@ -12,6 +14,14 @@ const STAGGER = 0.15
 function pickColors(count: number): string[] {
   const shuffled = [...THEME_COLORS].sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count)
+}
+
+function getContrastColor(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.5 ? '#000000' : '#ffffff'
 }
 
 const overlayStyle: React.CSSProperties = {
@@ -28,6 +38,7 @@ export default function PageTransitionProvider({ children }: { children: React.R
   const layerRefs = useRef<(HTMLDivElement | null)[]>([])
   const blockerRef = useRef<HTMLDivElement>(null)
   const spinnerRef = useRef<HTMLDivElement>(null)
+  const [spinnerColor, setSpinnerColor] = useState('#ffffff')
 
   return (
     <TransitionRouter
@@ -36,43 +47,45 @@ export default function PageTransitionProvider({ children }: { children: React.R
         const colors = pickColors(LAYER_COUNT)
         const layers = layerRefs.current.filter(Boolean) as HTMLDivElement[]
 
-        // Block clicks on the page beneath
         if (blockerRef.current) blockerRef.current.style.pointerEvents = 'auto'
-        
+
+        // Pick spinner color that contrasts with the topmost layer
+        setSpinnerColor(getContrastColor(colors[LAYER_COUNT - 1]))
+
         layers.forEach((el, i) => {
           el.style.backgroundColor = colors[i]
           el.style.clipPath = generateVerticalSpikePath(15, 5, 1.5)
-          // Later layers on top so each one visibly sweeps over the previous
           el.style.zIndex = `${9997 + i}`
         })
-        
+
         const tl = gsap.timeline({ onComplete: next })
-        tl.set(spinnerRef.current, {opacity: 0})
         layers.forEach((el, i) => {
           tl.fromTo(el, { xPercent: -100 }, {
             xPercent: 0, duration: 0.4, ease: "power2.inOut",
           }, i * STAGGER)
         })
-        tl.to(spinnerRef.current, {opacity: 1}, (LAYER_COUNT+3) * STAGGER)
-        
-        return () => tl.kill()
+
+        // After layers sweep in, fade in spinner
+        tl.to(spinnerRef.current, { opacity: 1, duration: 0.3 }, (LAYER_COUNT + 1) * STAGGER)
+
+        return () => { tl.kill() }
       }}
       enter={(next) => {
         const layers = layerRefs.current.filter(Boolean) as HTMLDivElement[]
-        
+
+        // Fade out spinner
+        if (spinnerRef.current) gsap.to(spinnerRef.current, { opacity: 0, duration: 0.2 })
+
         layers.forEach((el, i) => {
-          // Earlier layers on top so each one peels off revealing the next
           el.style.zIndex = `${9999 - i}`
         })
-        
+
         const tl = gsap.timeline({
           onComplete: () => {
-            // Re-enable clicks after transition
             if (blockerRef.current) blockerRef.current.style.pointerEvents = 'none'
             next()
           }
         })
-        tl.to(spinnerRef.current, {opacity: 0}, 0)
         layers.forEach((el, i) => {
           tl.fromTo(el, { xPercent: 0 }, {
             xPercent: 100, duration: 0.4, ease: "power2.inOut",
@@ -90,7 +103,6 @@ export default function PageTransitionProvider({ children }: { children: React.R
           style={{ ...overlayStyle, zIndex: 9999 - i }}
         />
       ))}
-      {/* Invisible blocker + loading spinner */}
       <div
         ref={blockerRef}
         style={{
@@ -104,19 +116,14 @@ export default function PageTransitionProvider({ children }: { children: React.R
           ref={spinnerRef}
           style={{
             position: 'absolute',
-            bottom: 32,
-            right: 32,
-            width: 50,
-            height: 50,
-            border: '5px solid rgba(255,255,255,0.3)',
-            borderTopColor: '#fff',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-            opacity: 0
+            bottom: 100,
+            right: 100,
+            opacity: 0,
           }}
-        />
+        >
+          <SpinnerAnimation color={spinnerColor} size={150} />
+        </div>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </TransitionRouter>
   )
 }
