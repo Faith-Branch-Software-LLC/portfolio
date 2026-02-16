@@ -27,6 +27,7 @@ RUN --mount=type=secret,id=ReSendKey \
     export DATABASE_URL=$(cat /run/secrets/DATABASE_URL) && \
     pnpm exec prisma generate && \
     pnpm exec prisma migrate deploy && \
+    pnpm run compile:blog && \
     pnpm run build && \
     ls -la /app/.next/static || (echo "Build failed - static directory not created" && exit 1)
 

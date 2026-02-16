@@ -1,4 +1,6 @@
 import React from 'react';
+import fs from 'fs';
+import path from 'path';
 import { getBlogPostBySlug, markdownToHtml } from '@/lib/blog';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -104,7 +106,14 @@ export default async function BlogPostPage({
     notFound();
   }
   
-  const htmlContent = post.content ? await markdownToHtml(post.content) : '';
+  // Try pre-compiled HTML first, fall back to runtime compilation
+  let htmlContent = '';
+  const compiledPath = path.join(process.cwd(), 'public/blogPages/compiled', `${id}.html`);
+  if (fs.existsSync(compiledPath)) {
+    htmlContent = fs.readFileSync(compiledPath, 'utf8');
+  } else if (post.content) {
+    htmlContent = await markdownToHtml(post.content);
+  }
 
   // JSON-LD structured data for the blog post
   const jsonLd = {

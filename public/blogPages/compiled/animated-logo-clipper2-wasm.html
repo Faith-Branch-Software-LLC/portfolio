@@ -1,0 +1,229 @@
+<h1>Building an Animated Logo with Clipper2 and WebAssembly</h1>
+<p>Most logo animations rely on simple transforms: scale, rotate, and fade. I wanted something different for my portfolio: a tree that <em>grows</em> by having its SVG path geometry inflate in real-time. Not just a scale animation because that takes the whole finished shape into account. A morph didn't work either because the line offsets end up looking super janky. I needed something that felt organic.</p>
+<p>This post covers the journey of building that animation, from the initial concept through the technical challenges of compiling Rust to WebAssembly and integrating it with GSAP's animation timeline.</p>
+<hr>
+<h2>Animation Evolution</h2>
+<div class="comparison-grid">
+    <p><b>1.</b> Scale from 0 to 1 on both the X and Y axes. This is very basic and does not look at all like what we desire.</p>
+    <p><b>2.</b> Morph between pre-made growth stages and then drawing the branches.</p>
+    <p><b>3.</b> Inflate the tree organically using a custom made Clipper2 plugin.</p>
+    <img alt="Logo animation using simple scale transform from 0 to 1" src="../images/logo-scale.gif">
+    <img alt="Logo animation using SVG morph between pre-made growth stages" src="../images/logo-morph.gif">
+    <img alt="Logo animation using Clipper2 polygon offset to organically grow the tree" src="../images/logo-grow.gif">
+</div>
+
+<hr>
+<h2>The Concept</h2>
+<p>My portfolio logo features a olive tree growing out of a git main branch. The animation I envisioned was:</p>
+<ol>
+<li>The branches draw in with clip-path reveals, because they are fast and technical they can just form.</li>
+<li>The tree starts to grow out of the main branch. This would ideally grow in a more organic fasion.</li>
+<li>Leaves and olives pop in with scale animations on the tree.</li>
+<li>A white shadow fades in at the end to outline the entire logo.</li>
+</ol>
+<p>The tricky part is step 2. SVG doesn't have a native "inflate/deflate" operation. CSS <code>scale</code> would just make the tree bigger; it wouldn't change the path geometry. What I needed was <strong>polygon offsetting</strong>: taking every edge of the path and moving it inward (deflate) or outward (inflate) by a fixed distance.</p>
+<hr>
+<h2>Why Clipper2?</h2>
+<p><a href="https://github.com/AngusJohnson/Clipper2">Clipper2</a> is a well-known computational geometry library for polygon clipping and offsetting written in C++ by Angus Johnson. It handles complex paths with curves, self-intersections, and holes. Up to finding this library, I had tried many different svg animation techniques and libraries, unhappy with the result every time. Clipper2 gave me hope again.</p>
+<p>I ended up discovering a <a href="https://github.com/larsbrubaker/clipper2-rust">Rust port</a> that made it a natural fit for compiling to WebAssembly. This port was made by MatterHackers, and included a <a href="https://larsbrubaker.github.io/clipper2-rust/#/offset">web demo</a> showing exactly what I wanted to happen with my tree.</p>
+<p>The key operation is <code>ClipperOffset::execute(delta)</code>:</p>
+<ul>
+<li><strong>Negative delta</strong> = deflate (shrink the path inward)</li>
+<li><strong>Zero delta</strong> = original path</li>
+<li><strong>Positive delta</strong> = inflate (expand the path outward)</li>
+</ul>
+<p>By animating delta from a large negative value to zero, the tree appears to grow from nothing into its full shape.</p>
+<hr>
+<h2>Architecture Overview</h2>
+<p>The system has four layers:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TEXT</span>
+    <button aria-label="Copy code to clipboard" data-code="Q2xpcHBlcjIgKHBvbHlnb24gb2Zmc2V0dGluZyBlbmdpbmUpCiAgICDihpMKY2xpcHBlcl9vZmZzZXQud2FzbSAoUnVzdCDihpIgV2ViQXNzZW1ibHkpCiAgICDihpMKT2Zmc2V0UGF0aFBsdWdpbi50cyAoR1NBUCBwbHVnaW4pCiAgICDihpMKQW5pbWF0ZWRMb2dvLnRzeCAoUmVhY3QgY29tcG9uZW50KQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+    <pre><code class="language-text"><span class="line"><span>Clipper2 (polygon offsetting engine)</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>clipper_offset.wasm (Rust → WebAssembly)</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>OffsetPathPlugin.ts (GSAP plugin)</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>AnimatedLogo.tsx (React component)</span></span></code></pre>
+  </div>
+</div><p><strong>React</strong> manages the SVG elements and refs. <strong>GSAP</strong> handles the animation timeline and easing. The <strong>custom GSAP plugin</strong> bridges JavaScript and WebAssembly. <strong>Rust/WASM</strong> does the heavy computation: parsing SVG paths, flattening Bezier curves, running Clipper2, and converting results back to SVG.</p>
+<hr>
+<h2>The WASM Module</h2>
+<p>The Rust module handles everything between receiving an SVG path string and returning an offset SVG path string.</p>
+<h3>SVG Parsing</h3>
+<p>SVG paths use commands like <code>M</code> (move), <code>L</code> (line), <code>C</code> (cubic Bezier), and <code>Z</code> (close). The tree path is full of cubic Bezier curves:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TEXT</span>
+    <button aria-label="Copy code to clipboard" data-code="TTMwMy4yMDgsNjc3LjM1NiBDMjY5LjEzMiw1OTQuMjE2IDI3Mi4yNTUsNDczLjQ1NSAzMzMuMzYzLDQwNy4xMjcgLi4u" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-text"><span class="line"><span>M303.208,677.356 C269.132,594.216 272.255,473.455 333.363,407.127 ...</span></span></code></pre>
+  </div>
+</div><p>Clipper2 works with integer point arrays, not SVG strings. So the first step is parsing the SVG path into a list of points. I wrote a manual SVG parser that feeds commands into <a href="https://crates.io/crates/lyon_path">lyon_path</a>, which handles curve flattening, converting smooth Bezier curves into sequences of line segments.</p>
+<h3>Coordinate Scaling</h3>
+<p>Clipper2 uses integer coordinates for precision. SVG uses floats. The module scales all coordinates by 1000x going in, and scales back going out:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">RUST</span>
+    <button aria-label="Copy code to clipboard" data-code="bGV0IHNjYWxlID0gMTAwMC4wOwovLyBTVkcgZmxvYXQg4oaSIENsaXBwZXIyIGludGVnZXIKKHBvaW50LnggYXMgZjY0ICogc2NhbGUpIGFzIGk2NAovLyBDbGlwcGVyMiBpbnRlZ2VyIOKGkiBTVkcgZmxvYXQKcG9pbnQueCBhcyBmNjQgLyBzY2FsZQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-rust"><span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> scale </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 1000.0</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#6A737D">// SVG float → Clipper2 integer</span></span>
+<span class="line"><span style="color:#E1E4E8">(point</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">x </span><span style="color:#F97583">as</span><span style="color:#B392F0"> f64</span><span style="color:#F97583"> *</span><span style="color:#E1E4E8"> scale) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> i64</span></span>
+<span class="line"><span style="color:#6A737D">// Clipper2 integer → SVG float</span></span>
+<span class="line"><span style="color:#E1E4E8">point</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">x </span><span style="color:#F97583">as</span><span style="color:#B392F0"> f64</span><span style="color:#F97583"> /</span><span style="color:#E1E4E8"> scale</span></span></code></pre>
+  </div>
+</div><h3>Winding Order</h3>
+<p>This was one of the trickier bugs. Clipper2 expects outer paths in counter-clockwise (CCW) winding order. SVG paths are typically clockwise (because SVG's Y-axis points down). The module detects winding direction using the <a href="https://en.wikipedia.org/wiki/Shoelace_formula">shoelace formula</a> and reverses the path if needed:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">RUST</span>
+    <button aria-label="Copy code to clipboard" data-code="bGV0IG11dCBzaWduZWRfYXJlYTogZjY0ID0gMC4wOwpmb3IgaSBpbiAwLi5wYXRoLmxlbigpIHsKICAgIGxldCBqID0gKGkgKyAxKSAlIHBhdGgubGVuKCk7CiAgICBzaWduZWRfYXJlYSArPSAocGF0aFtqXS54IC0gcGF0aFtpXS54KSBhcyBmNjQKICAgICAgICAgICAgICAgICAqIChwYXRoW2pdLnkgKyBwYXRoW2ldLnkpIGFzIGY2NDsKfQppZiBzaWduZWRfYXJlYSA+IDAuMCB7CiAgICBwYXRoLnJldmVyc2UoKTsgLy8gQ1cg4oaSIENDVwp9" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+    <pre><code class="language-rust"><span class="line"><span style="color:#F97583">let</span><span style="color:#F97583"> mut</span><span style="color:#E1E4E8"> signed_area</span><span style="color:#F97583">:</span><span style="color:#B392F0"> f64</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 0.0</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">for</span><span style="color:#E1E4E8"> i </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> 0</span><span style="color:#F97583">..</span><span style="color:#E1E4E8">path</span><span style="color:#F97583">.</span><span style="color:#B392F0">len</span><span style="color:#E1E4E8">() {</span></span>
+<span class="line"><span style="color:#F97583">    let</span><span style="color:#E1E4E8"> j </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (i </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">%</span><span style="color:#E1E4E8"> path</span><span style="color:#F97583">.</span><span style="color:#B392F0">len</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#E1E4E8">    signed_area </span><span style="color:#F97583">+=</span><span style="color:#E1E4E8"> (path[j]</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">x </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> path[i]</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">x) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> f64</span></span>
+<span class="line"><span style="color:#F97583">                 *</span><span style="color:#E1E4E8"> (path[j]</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">y </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> path[i]</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">y) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> f64</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> signed_area </span><span style="color:#F97583">&gt;</span><span style="color:#79B8FF"> 0.0</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    path</span><span style="color:#F97583">.</span><span style="color:#B392F0">reverse</span><span style="color:#E1E4E8">(); </span><span style="color:#6A737D">// CW → CCW</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+  </div>
+</div><p>Without this fix, Clipper2 silently returned empty results because it interpreted the path as a hole rather than an outer boundary.</p>
+<h3>Anchor-Pinned Offsetting</h3>
+<p>By default, Clipper2's offset shrinks a path toward its center. But I wanted the tree to grow <em>upward from its base</em>, the point where it connects to the horizontal bar.</p>
+<p>The solution: after Clipper2 computes the offset, calculate bounding boxes of both the original and offset paths, then translate the offset path so a chosen anchor point stays fixed.</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">RUST</span>
+    <button aria-label="Copy code to clipboard" data-code="Ly8gQW5jaG9yIGF0ICgxMDAlLCAxMCUpIG9mIGJvdW5kaW5nIGJveCA9IGJvdHRvbS1yaWdodCBuZWFyIHRoZSBiYXIKbGV0IGFuY2hvcl94ID0gb3JpZ19iYm94Lm1heF94OwpsZXQgYW5jaG9yX3kgPSBvcmlnX2Jib3gubWluX3kgKyBoZWlnaHQgKiAwLjE7CgovLyBTYW1lIHJlbGF0aXZlIHBvc2l0aW9uIGluIHRoZSBvZmZzZXQgcGF0aApsZXQgb2ZmX2FuY2hvcl94ID0gb2ZmX2Jib3gubWF4X3g7CmxldCBvZmZfYW5jaG9yX3kgPSBvZmZfYmJveC5taW5feSArIG9mZl9oZWlnaHQgKiAwLjE7CgovLyBUcmFuc2xhdGUgdG8gcGluIHRoZSBhbmNob3IKbGV0IGR4ID0gYW5jaG9yX3ggLSBvZmZfYW5jaG9yX3g7CmxldCBkeSA9IGFuY2hvcl95IC0gb2ZmX2FuY2hvcl95Ow==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
+    <pre><code class="language-rust"><span class="line"><span style="color:#6A737D">// Anchor at (100%, 10%) of bounding box = bottom-right near the bar</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> anchor_x </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> orig_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">max_x;</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> anchor_y </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> orig_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">min_y </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> height </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> 0.1</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Same relative position in the offset path</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> off_anchor_x </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> off_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">max_x;</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> off_anchor_y </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> off_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">min_y </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> off_height </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> 0.1</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Translate to pin the anchor</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> dx </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> anchor_x </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> off_anchor_x;</span></span>
+<span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> dy </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> anchor_y </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> off_anchor_y;</span></span></code></pre>
+  </div>
+</div><p>This makes the tree appear to grow out of the bar rather than materialize from thin air in the center of the SVG.</p>
+<hr>
+<h2>The GSAP Plugin</h2>
+<p><a href="https://gsap.com/">GSAP</a> is the animation engine driving the entire logo sequence. To integrate path offsetting, I wrote a custom GSAP plugin called <code>OffsetPathPlugin</code>.</p>
+<h3>Plugin Structure</h3>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TYPESCRIPT</span>
+    <button aria-label="Copy code to clipboard" data-code="ZXhwb3J0IGNvbnN0IE9mZnNldFBhdGhQbHVnaW4gPSB7CiAgbmFtZTogIm9mZnNldFBhdGgiLAoKICBpbml0KHRhcmdldCwgdmFsdWUsIHR3ZWVuKSB7CiAgICAvLyBTdG9yZSBvcmlnaW5hbCBwYXRoLCBwYXJzZSBvcHRpb25zLCByZWFkIGN1cnJlbnQgb2Zmc2V0CiAgfSwKCiAgcmVuZGVyKHByb2dyZXNzLCBkYXRhKSB7CiAgICAvLyBJbnRlcnBvbGF0ZSBvZmZzZXQsIGNhbGwgV0FTTSwgdXBkYXRlIFNWRyBwYXRoCiAgfSwKfTs=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
+    <pre><code class="language-typescript"><span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> OffsetPathPlugin</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  name: </span><span style="color:#9ECBFF">"offsetPath"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">  init</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">target</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">value</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">tween</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">    // Store original path, parse options, read current offset</span></span>
+<span class="line"><span style="color:#E1E4E8">  },</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">  render</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">progress</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">data</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">    // Interpolate offset, call WASM, update SVG path</span></span>
+<span class="line"><span style="color:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#E1E4E8">};</span></span></code></pre>
+  </div>
+</div><p>The plugin intercepts <code>offsetPath</code> in GSAP's tween vars:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TYPESCRIPT</span>
+    <button aria-label="Copy code to clipboard" data-code="Ly8gRGVmbGF0ZSB0aGUgdHJlZSB0byBub3RoaW5nCmdzYXAuc2V0KHRyZWVQYXRoUmVmLCB7IG9mZnNldFBhdGg6IHsgb2Zmc2V0OiAtNDUsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0gfSk7CgovLyBBbmltYXRlIGl0IGdyb3dpbmcgdG8gZnVsbCBzaXplCmdzYXAudG8odHJlZVBhdGhSZWYsIHsgb2Zmc2V0UGF0aDogeyBvZmZzZXQ6IDAsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0sIGR1cmF0aW9uOiAyIH0pOw==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-typescript"><span class="line"><span style="color:#6A737D">// Deflate the tree to nothing</span></span>
+<span class="line"><span style="color:#E1E4E8">gsap.</span><span style="color:#B392F0">set</span><span style="color:#E1E4E8">(treePathRef, { offsetPath: { offset: </span><span style="color:#F97583">-</span><span style="color:#79B8FF">45</span><span style="color:#E1E4E8">, originX: </span><span style="color:#79B8FF">0.1</span><span style="color:#E1E4E8">, originY: </span><span style="color:#79B8FF">1.0</span><span style="color:#E1E4E8"> } });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Animate it growing to full size</span></span>
+<span class="line"><span style="color:#E1E4E8">gsap.</span><span style="color:#B392F0">to</span><span style="color:#E1E4E8">(treePathRef, { offsetPath: { offset: </span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, originX: </span><span style="color:#79B8FF">0.1</span><span style="color:#E1E4E8">, originY: </span><span style="color:#79B8FF">1.0</span><span style="color:#E1E4E8"> }, duration: </span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8"> });</span></span></code></pre>
+  </div>
+</div><h3>Tween Chaining</h3>
+<p>One challenge was making <code>gsap.set()</code> chain properly with <code>gsap.to()</code>. Each tween creates a fresh plugin instance, so state can't live on <code>this</code>. The solution was tracking the current offset on the <strong>target element</strong> itself:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TYPESCRIPT</span>
+    <button aria-label="Copy code to clipboard" data-code="Ly8gSW4gcmVuZGVyKCk6CihkYXRhLl90YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID0gb2Zmc2V0QW1vdW50OwoKLy8gSW4gaW5pdCgpOgoodGhpcyBhcyBhbnkpLl9zdGFydE9mZnNldCA9ICh0YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID8/IDA7" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-typescript"><span class="line"><span style="color:#6A737D">// In render():</span></span>
+<span class="line"><span style="color:#E1E4E8">(data._target </span><span style="color:#F97583">as</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">).__gsapOffsetPath </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> offsetAmount;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// In init():</span></span>
+<span class="line"><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">this</span><span style="color:#F97583"> as</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">)._startOffset </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (target </span><span style="color:#F97583">as</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">).__gsapOffsetPath </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">;</span></span></code></pre>
+  </div>
+</div><p>This way, when <code>gsap.set(el, { offsetPath: -45 })</code> runs, it stores -45 on the element. When the subsequent <code>.to(el, { offsetPath: 0 })</code> starts, it reads -45 as the starting value and animates to 0.</p>
+<h3>Graceful Degradation</h3>
+<p>When the offset is very negative, Clipper2 deflates the path to nothing; there's no geometry left. Rather than throwing an error, the plugin hides the element with <code>visibility: hidden</code> and reveals it once the offset produces visible geometry:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">TYPESCRIPT</span>
+    <button aria-label="Copy code to clipboard" data-code="aWYgKCFyZXN1bHQgfHwgcmVzdWx0LnRyaW0oKSA9PT0gIiIpIHsKICAgIGRhdGEuX3RhcmdldC5zdHlsZS52aXNpYmlsaXR5ID0gImhpZGRlbiI7CiAgICByZXR1cm47Cn0KZGF0YS5fdGFyZ2V0LnN0eWxlLnZpc2liaWxpdHkgPSAidmlzaWJsZSI7CmRhdGEuX3RhcmdldC5zZXRBdHRyaWJ1dGUoImQiLCByZXN1bHQpOw==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+    <pre><code class="language-typescript"><span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">!</span><span style="color:#E1E4E8">result </span><span style="color:#F97583">||</span><span style="color:#E1E4E8"> result.</span><span style="color:#B392F0">trim</span><span style="color:#E1E4E8">() </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> ""</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#E1E4E8">    data._target.style.visibility </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "hidden"</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#E1E4E8">data._target.style.visibility </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "visible"</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">data._target.</span><span style="color:#B392F0">setAttribute</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"d"</span><span style="color:#E1E4E8">, result);</span></span></code></pre>
+  </div>
+</div><hr>
+<h2>Build Pipeline</h2>
+<p>The WASM module compiles with <code>wasm-pack</code> and integrates into the Next.js build:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">JSON</span>
+    <button aria-label="Copy code to clipboard" data-code="ewogICJ3YXNtOmJ1aWxkIjogImNkIHdhc20vY2xpcHBlci1vZmZzZXQgJiYgd2FzbS1wYWNrIGJ1aWxkIC0tdGFyZ2V0IHdlYiAtLW91dC1kaXIgcGtnIiwKICAid2FzbTpjb3B5IjogIm1rZGlyIC1wIHB1YmxpYy93YXNtICYmIGNwIHdhc20vY2xpcHBlci1vZmZzZXQvcGtnLyoud2FzbSB3YXNtL2NsaXBwZXItb2Zmc2V0L3BrZy8qLmpzIHB1YmxpYy93YXNtLyIsCiAgImRldiI6ICJwbnBtIHJ1biB3YXNtOmJ1aWxkICYmIHBucG0gcnVuIHdhc206Y29weSAmJiBuZXh0IGRldiAtLXR1cmJvcGFjayIKfQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-json"><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "wasm:build"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"cd wasm/clipper-offset &amp;&amp; wasm-pack build --target web --out-dir pkg"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "wasm:copy"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"mkdir -p public/wasm &amp;&amp; cp wasm/clipper-offset/pkg/*.wasm wasm/clipper-offset/pkg/*.js public/wasm/"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "dev"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"pnpm run wasm:build &amp;&amp; pnpm run wasm:copy &amp;&amp; next dev --turbopack"</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+  </div>
+</div><p>The compiled <code>.wasm</code> file is ~165KB and loads asynchronously. The plugin initializes WASM before the animation starts, and if it fails to load, the animation simply skips the offset effect. No crash, no broken UI.</p>
+<hr>
+<h2>Lessons Learned</h2>
+<p><strong>Clipper2 is picky about input.</strong> Winding order, path closure, and coordinate precision all matter. Silent failures (empty results with no error) make debugging difficult. Adding extensive console logging from WASM was essential.</p>
+<p><strong>GSAP's plugin API has subtleties.</strong> The <code>this.add()</code> method for creating PropTweens didn't behave as expected with custom properties. Manual interpolation using the <code>progress</code> parameter was more reliable and easier to reason about.</p>
+<p><strong>WebAssembly is fast enough for animation.</strong> Running Clipper2 on every frame (60 FPS) with a 248-point path works smoothly. The entire offset computation takes less than a millisecond per frame.</p>
+<p><strong>Bounding-box anchoring is simple but effective.</strong> The translate-after-offset approach for pinning an anchor point is easy to implement and produces convincing "growing from a point" animations without modifying the offset algorithm itself.</p>
+<hr>
+<h2>What's Next</h2>
+<p>The <code>OffsetPathPlugin</code> is a general-purpose GSAP plugin; it works with any SVG path element, not just this logo. Potential future uses include:</p>
+<ul>
+<li>Hover effects that inflate/deflate buttons or icons</li>
+<li>Loading animations with pulsing shapes</li>
+<li>Interactive visualizations where paths respond to user input</li>
+<li>Any animation where you want geometry to change, not just transforms</li>
+</ul>
+<p>I would like to release this a full plugin for GSAP in the near future, but I will need to make sure I remove any extra bits from clipper2, before then.</p>

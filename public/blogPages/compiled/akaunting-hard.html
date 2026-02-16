@@ -1,0 +1,441 @@
+<h1>Akaunting Installation Guide (while port 80 is in use)</h1>
+<p>This guide walks you through installing the <a href="https://akaunting.com/">Akaunting</a> web app on a virtual machine running Ubuntu server with Apache, PHP, and MySQL. This is considering that it may be a fresh install of the OS.</p>
+<p>My situation is likely different from many others. I decided to use Kamal to deploy a Next.js app to the main URL (faithbranch.com) on Digital Ocean Droplet. This means that ports 80 and 443 are taken and we have no access to them. This second set of steps is going to put the app at accounting.url.com:8080 (or in my case accounting.faithbranch.com:8080).</p>
+<hr>
+<h2>DNS Setup</h2>
+<p>Update your DNS records to add an <code>A</code> record:</p>
+<ul>
+<li><strong>Type</strong>: A</li>
+<li><strong>Name</strong>: <code>accounting</code></li>
+<li><strong>Value</strong>: your server’s IP address</li>
+<li><strong>TTL</strong>: default (e.g. 3600)</li>
+</ul>
+<p>Wait for it to propagate.</p>
+<hr>
+<h2>📋 Requirements</h2>
+<h3>✅ System Update</h3>
+<p>Update and upgrade your package list:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgdXBkYXRlCnN1ZG8gYXB0IHVwZ3JhZGU=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> update</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> upgrade</span></span></code></pre>
+  </div>
+</div><h3>🌐 Apache Setup</h3>
+<p>Apache may already be installed, but it's good to verify:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgaW5zdGFsbCBhcGFjaGUyCnN1ZG8gYTJlbm1vZCByZXdyaXRl" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> apache2</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> a2enmod</span><span style="color:#9ECBFF"> rewrite</span></span></code></pre>
+  </div>
+</div><p>Change the Apache listening port.</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyB2aW0gL2V0Yy9hcGFjaGUyL3BvcnRzLmNvbmY=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> vim</span><span style="color:#9ECBFF"> /etc/apache2/ports.conf</span></span></code></pre>
+  </div>
+</div><p>Change or add the listening port.</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">APACHECONF</span>
+    <button aria-label="Copy code to clipboard" data-code="TGlzdGVuIDgwODA=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-apacheconf"><span class="line"><span style="color:#F97583">Listen</span><span style="color:#79B8FF"> 8080</span></span></code></pre>
+  </div>
+</div><p>Create a new Apache configuration file:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyB2aW0gL2V0Yy9hcGFjaGUyL3NpdGVzLWF2YWlsYWJsZS9hY2NvdW50aW5nLnVybC5jb20uY29uZg==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> vim</span><span style="color:#9ECBFF"> /etc/apache2/sites-available/accounting.url.com.conf</span></span></code></pre>
+  </div>
+</div><p>Example config:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">APACHECONF</span>
+    <button aria-label="Copy code to clipboard" data-code="PFZpcnR1YWxIb3N0ICo6ODA4MD4KICAgIFNlcnZlck5hbWUgYWNjb3VudGluZy51cmwuY29tCiAgICBEb2N1bWVudFJvb3QgL3Zhci93d3cvYWthdW50aW5nCiAgICAKICAgIDxEaXJlY3RvcnkgL3Zhci93d3cvYWthdW50aW5nPgogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICAgICAgUmVxdWlyZSBhbGwgZ3JhbnRlZAogICAgPC9EaXJlY3Rvcnk+CgkKICAgIEVycm9yTG9nICR7QVBBQ0hFX0xPR19ESVJ9L2FjY291bnRpbmdfZXJyb3IubG9nCiAgICBDdXN0b21Mb2cgJHtBUEFDSEVfTE9HX0RJUn0vYWNjb3VudGluZ19hY2Nlc3MubG9nIGNvbWJpbmVkCjwvVmlydHVhbEhvc3Q+" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span></div>
+    <pre><code class="language-apacheconf"><span class="line"><span style="color:#E1E4E8">&lt;</span><span style="color:#B392F0">VirtualHost</span><span style="color:#9ECBFF"> *:8080</span><span style="color:#E1E4E8">&gt;</span></span>
+<span class="line"><span style="color:#F97583">    ServerName</span><span style="color:#E1E4E8"> accounting.url.com</span></span>
+<span class="line"><span style="color:#F97583">    DocumentRoot</span><span style="color:#E1E4E8"> /var/www/akaunting</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    &lt;</span><span style="color:#B392F0">Directory</span><span style="color:#9ECBFF"> /var/www/akaunting</span><span style="color:#E1E4E8">&gt;</span></span>
+<span class="line"><span style="color:#F97583">        AllowOverride</span><span style="color:#E1E4E8"> All</span></span>
+<span class="line"><span style="color:#F97583">        Require</span><span style="color:#E1E4E8"> all granted</span></span>
+<span class="line"><span style="color:#E1E4E8">    &lt;/</span><span style="color:#B392F0">Directory</span><span style="color:#E1E4E8">&gt;</span></span>
+<span class="line"><span style="color:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#F97583">    ErrorLog</span><span style="color:#E1E4E8"> ${APACHE_LOG_DIR}/accounting_error.log</span></span>
+<span class="line"><span style="color:#F97583">    CustomLog</span><span style="color:#E1E4E8"> ${APACHE_LOG_DIR}/accounting_access.log combined</span></span>
+<span class="line"><span style="color:#E1E4E8">&lt;/</span><span style="color:#B392F0">VirtualHost</span><span style="color:#E1E4E8">&gt;</span></span></code></pre>
+  </div>
+</div><p>Then enable the site and reload Apache:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBta2RpciAtcCAvdmFyL3d3dy9ha2F1bnRpbmcKc3VkbyBhMmVuc2l0ZSBhY2NvdW50aW5nLnVybC5jb20uY29uZgpzdWRvIHN5c3RlbWN0bCByZWxvYWQgYXBhY2hlMg==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> mkdir</span><span style="color:#79B8FF"> -p</span><span style="color:#9ECBFF"> /var/www/akaunting</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> a2ensite</span><span style="color:#9ECBFF"> accounting.url.com.conf</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> reload</span><span style="color:#9ECBFF"> apache2</span></span></code></pre>
+  </div>
+</div><hr>
+<h3>📜 CertBot Install</h3>
+<div class="callout callout-caution">
+  <div class="callout-header">
+    <span class="callout-icon">⚠️</span>
+    <span class="callout-title">Caution</span>
+  </div>
+  <div class="callout-content"><p>This will just assign certificates, but will not get you off of using the 8080 port. You can skip this step for now if you are in a situation like mine and have kamal for your main app.</p>
+<p>If anyone knows a way to reverse proxy an application from a kamal app please contact me.</p>
+</div>
+</div><p>Install Certbot if it’s not already installed:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgaW5zdGFsbCBjZXJ0Ym90IHB5dGhvbjMtY2VydGJvdC1hcGFjaGU=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> certbot</span><span style="color:#9ECBFF"> python3-certbot-apache</span></span></code></pre>
+  </div>
+</div><h4>🔧 Manual DNS Challenge</h4>
+<p>Run:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBjZXJ0Ym90IGNlcnRvbmx5IC0tbWFudWFsIC0tcHJlZmVycmVkLWNoYWxsZW5nZXMgZG5zIC1kIGFjY291bnRpbmcudXJsLmNvbQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> certbot</span><span style="color:#9ECBFF"> certonly</span><span style="color:#79B8FF"> --manual</span><span style="color:#79B8FF"> --preferred-challenges</span><span style="color:#9ECBFF"> dns</span><span style="color:#79B8FF"> -d</span><span style="color:#9ECBFF"> accounting.url.com</span></span></code></pre>
+  </div>
+</div><p>You’ll get a prompt like this:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="UGxlYXNlIGRlcGxveSBhIEROUyBUWFQgcmVjb3JkIHVuZGVyIHRoZSBuYW1lCl9hY21lLWNoYWxsZW5nZS5hY2NvdW50aW5nLnVybC5jb20gd2l0aCB0aGUgZm9sbG93aW5nIHZhbHVlOgoJCiAgICBhYmNkZWZnaGlqa2xtbm9wMTIzNDU2Nzg5MAoJCkJlZm9yZSBjb250aW51aW5nLCB2ZXJpZnkgdGhlIHJlY29yZCBpcyBkZXBsb3llZC4=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">Please</span><span style="color:#9ECBFF"> deploy</span><span style="color:#9ECBFF"> a</span><span style="color:#9ECBFF"> DNS</span><span style="color:#9ECBFF"> TXT</span><span style="color:#9ECBFF"> record</span><span style="color:#9ECBFF"> under</span><span style="color:#9ECBFF"> the</span><span style="color:#9ECBFF"> name</span></span>
+<span class="line"><span style="color:#B392F0">_acme-challenge.accounting.url.com</span><span style="color:#9ECBFF"> with</span><span style="color:#9ECBFF"> the</span><span style="color:#9ECBFF"> following</span><span style="color:#9ECBFF"> value:</span></span>
+<span class="line"><span style="color:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#B392F0">    abcdefghijklmnop1234567890</span></span>
+<span class="line"><span style="color:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#B392F0">Before</span><span style="color:#9ECBFF"> continuing,</span><span style="color:#9ECBFF"> verify</span><span style="color:#9ECBFF"> the</span><span style="color:#9ECBFF"> record</span><span style="color:#9ECBFF"> is</span><span style="color:#9ECBFF"> deployed.</span></span></code></pre>
+  </div>
+</div><h5>🌐 3. Create the TXT Record in Your DNS Provider</h5>
+<ul>
+<li><strong>Go to your DNS management panel</strong> (where your domain is hosted: GoDaddy, Cloudflare, Namecheap, etc.)</li>
+<li><strong>Create a TXT record</strong>:<ul>
+<li><strong>Name</strong>: <code>_acme-challenge.accounting</code> <em>(do not include <code>.url.com</code> if your DNS provider appends it)</em></li>
+<li><strong>Type</strong>: <code>TXT</code></li>
+<li><strong>Value</strong>: The string Certbot gave you (e.g., <code>abcdefghijklmnop1234567890</code>)</li>
+</ul>
+</li>
+</ul>
+<p>⚠️ Wait ~1–5 minutes for DNS to propagate.</p>
+<h5>✅ 4. Verify and Continue</h5>
+<ul>
+<li>Once added, <strong>press Enter</strong> in the terminal to continue Certbot.</li>
+<li>Certbot will verify the record and issue the certificate.</li>
+</ul>
+<p>You should see something like:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="Q29uZ3JhdHVsYXRpb25zISBZb3VyIGNlcnRpZmljYXRlIGFuZCBjaGFpbiBoYXZlIGJlZW4gc2F2ZWQgYXQ6Ci9ldGMvbGV0c2VuY3J5cHQvbGl2ZS9hY2NvdW50aW5nLnVybC5jb20vZnVsbGNoYWluLnBlbQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">Congratulations!</span><span style="color:#9ECBFF"> Your</span><span style="color:#9ECBFF"> certificate</span><span style="color:#9ECBFF"> and</span><span style="color:#9ECBFF"> chain</span><span style="color:#9ECBFF"> have</span><span style="color:#9ECBFF"> been</span><span style="color:#9ECBFF"> saved</span><span style="color:#9ECBFF"> at:</span></span>
+<span class="line"><span style="color:#B392F0">/etc/letsencrypt/live/accounting.url.com/fullchain.pem</span></span></code></pre>
+  </div>
+</div><h5>📁 Step 5: Configure Apache to Use the Certificate</h5>
+<p>Create an SSL VirtualHost (e.g. in <code>/etc/apache2/sites-available/accounting-ssl.conf</code>):</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="PFZpcnR1YWxIb3N0ICo6NDQzPgogICAgU2VydmVyTmFtZSBhY2NvdW50aW5nLnVybC5jb20KICAgIERvY3VtZW50Um9vdCAvdmFyL3d3dy9ha2F1bnRpbmcKCQogICAgU1NMRW5naW5lIG9uCiAgICBTU0xDZXJ0aWZpY2F0ZUZpbGUgL2V0Yy9sZXRzZW5jcnlwdC9saXZlL2FjY291bnRpbmcudXJsLmNvbS9mdWxsY2hhaW4ucGVtCiAgICBTU0xDZXJ0aWZpY2F0ZUtleUZpbGUgL2V0Yy9sZXRzZW5jcnlwdC9saXZlL2FjY291bnRpbmcudXJsLmNvbS9wcml2a2V5LnBlbQoJCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L2FrYXVudGluZz4KICAgICAgICBBbGxvd092ZXJyaWRlIEFsbAogICAgICAgIFJlcXVpcmUgYWxsIGdyYW50ZWQKICAgIDwvRGlyZWN0b3J5Pgo8L1ZpcnR1YWxIb3N0Pg==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">VirtualHost </span><span style="color:#F97583">*</span><span style="color:#E1E4E8">:</span><span style="color:#F97583">443&gt;</span></span>
+<span class="line"><span style="color:#B392F0">    ServerName</span><span style="color:#9ECBFF"> accounting.url.com</span></span>
+<span class="line"><span style="color:#B392F0">    DocumentRoot</span><span style="color:#9ECBFF"> /var/www/akaunting</span></span>
+<span class="line"><span style="color:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#B392F0">    SSLEngine</span><span style="color:#9ECBFF"> on</span></span>
+<span class="line"><span style="color:#B392F0">    SSLCertificateFile</span><span style="color:#9ECBFF"> /etc/letsencrypt/live/accounting.url.com/fullchain.pem</span></span>
+<span class="line"><span style="color:#B392F0">    SSLCertificateKeyFile</span><span style="color:#9ECBFF"> /etc/letsencrypt/live/accounting.url.com/privkey.pem</span></span>
+<span class="line"><span style="color:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#F97583">    &lt;</span><span style="color:#B392F0">Directory</span><span style="color:#9ECBFF"> /var/www/akauntin</span><span style="color:#E1E4E8">g</span><span style="color:#F97583">&gt;</span></span>
+<span class="line"><span style="color:#B392F0">        AllowOverride</span><span style="color:#9ECBFF"> All</span></span>
+<span class="line"><span style="color:#B392F0">        Require</span><span style="color:#9ECBFF"> all</span><span style="color:#9ECBFF"> granted</span></span>
+<span class="line"><span style="color:#F97583">    &lt;</span><span style="color:#B392F0">/Directory</span><span style="color:#E1E4E8">&gt;</span></span>
+<span class="line"><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">/VirtualHost</span><span style="color:#F97583">&gt;</span></span></code></pre>
+  </div>
+</div><p>Enable required modules and the site:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhMmVubW9kIHNzbApzdWRvIGEyZW5zaXRlIGFjY291bnRpbmctc3NsLmNvbmYKc3VkbyBzeXN0ZW1jdGwgcmVsb2FkIGFwYWNoZTI=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> a2enmod</span><span style="color:#9ECBFF"> ssl</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> a2ensite</span><span style="color:#9ECBFF"> accounting-ssl.conf</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> reload</span><span style="color:#9ECBFF"> apache2</span></span></code></pre>
+  </div>
+</div><h5>🔁 Certificate Renewal (Manual)</h5>
+<p>DNS challenges can’t be auto-renewed unless you script it or use a DNS plugin with API access. Otherwise, repeat this process every ~90 days.</p>
+<h4>✅ Step-by-Step: DNS-01 Challenge Automation with DigitalOcean</h4>
+<h5>🔐 1. Create a DigitalOcean API Token</h5>
+<p>Go to: <a href="https://cloud.digitalocean.com/account/api/tokens">https://cloud.digitalocean.com/account/api/tokens</a></p>
+<ul>
+<li>Click <strong>Generate New Token</strong></li>
+<li>Name it something like <code>certbot</code></li>
+<li><strong>Select read &amp; write</strong> scopes (needed for DNS)</li>
+<li>Save the token somewhere safe (you’ll need it in step 3)</li>
+</ul>
+<h5>🧩 2. Install Certbot and the DigitalOcean Plugin</h5>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgaW5zdGFsbCBjZXJ0Ym90IHB5dGhvbjMtY2VydGJvdC1kbnMtZGlnaXRhbG9jZWFu" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> certbot</span><span style="color:#9ECBFF"> python3-certbot-dns-digitalocean</span></span></code></pre>
+  </div>
+</div><h5>📝 3. Create a Config File for the API Token</h5>
+<p>Create a secure credentials file:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBta2RpciAtcCAvZXRjL2xldHNlbmNyeXB0L2RpZ2l0YWxvY2VhbgpzdWRvIG5hbm8gL2V0Yy9sZXRzZW5jcnlwdC9kaWdpdGFsb2NlYW4vY3JlZGVudGlhbHMuaW5p" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> mkdir</span><span style="color:#79B8FF"> -p</span><span style="color:#9ECBFF"> /etc/letsencrypt/digitalocean</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> nano</span><span style="color:#9ECBFF"> /etc/letsencrypt/digitalocean/credentials.ini</span></span></code></pre>
+  </div>
+</div><p>Paste in:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">INI</span>
+    <button aria-label="Copy code to clipboard" data-code="ZG5zX2RpZ2l0YWxvY2Vhbl90b2tlbiA9IFlPVVJfRElHSVRBTE9DRUFOX0FQSV9UT0tFTl9IRVJF" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-ini"><span class="line"><span style="color:#F97583">dns_digitalocean_token</span><span style="color:#E1E4E8"> = YOUR_DIGITALOCEAN_API_TOKEN_HERE</span></span></code></pre>
+  </div>
+</div><p>Then:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBjaG1vZCA2MDAgL2V0Yy9sZXRzZW5jcnlwdC9kaWdpdGFsb2NlYW4vY3JlZGVudGlhbHMuaW5p" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> chmod</span><span style="color:#79B8FF"> 600</span><span style="color:#9ECBFF"> /etc/letsencrypt/digitalocean/credentials.ini</span></span></code></pre>
+  </div>
+</div><h5>🏃‍♂️ 4. Run Certbot Using the DNS Plugin</h5>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBjZXJ0Ym90IGNlcnRvbmx5IFwKICAtLWRucy1kaWdpdGFsb2NlYW4gXAogIC0tZG5zLWRpZ2l0YWxvY2Vhbi1jcmVkZW50aWFscyAvZXRjL2xldHNlbmNyeXB0L2RpZ2l0YWxvY2Vhbi9jcmVkZW50aWFscy5pbmkgXAogIC1kIGFjY291bnRpbmcudXJsLmNvbQoKc3VkbyBzeXN0ZW1jdGwgcmVsb2FkIGFwYWNoZTI=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> certbot</span><span style="color:#9ECBFF"> certonly</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --dns-digitalocean</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --dns-digitalocean-credentials</span><span style="color:#9ECBFF"> /etc/letsencrypt/digitalocean/credentials.ini</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  -d</span><span style="color:#9ECBFF"> accounting.url.com</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> reload</span><span style="color:#9ECBFF"> apache2</span></span></code></pre>
+  </div>
+</div><p>It will automatically create the TXT record, wait, verify, and issue your cert. </p>
+<p>This setup will automatically renew the certificate when <code>certbot renew</code> is run (usually by a cron job or systemd timer).</p>
+<hr>
+<h3>⚙️ PHP Installation</h3>
+<p>Install PHP and required extensions:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgaW5zdGFsbCBwaHAtY29tbW9uIGxpYmFwYWNoZTItbW9kLXBocCBwaHAtY2xpCnN5c3RlbWN0bCByZXN0YXJ0IGFwYWNoZTIKCnN1ZG8gYXB0IGluc3RhbGwgcGhwLWJjbWF0aCBwaHAtY3VybCBwaHAtZG9tIHBocC1pbnRsIHBocC1nZCBwaHAtbWJzdHJpbmcgcGhwLXhtbCBwaHAtemlwIHBocC1teXNxbApzeXN0ZW1jdGwgcmVzdGFydCBhcGFjaGUy" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> php-common</span><span style="color:#9ECBFF"> libapache2-mod-php</span><span style="color:#9ECBFF"> php-cli</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> restart</span><span style="color:#9ECBFF"> apache2</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> php-bcmath</span><span style="color:#9ECBFF"> php-curl</span><span style="color:#9ECBFF"> php-dom</span><span style="color:#9ECBFF"> php-intl</span><span style="color:#9ECBFF"> php-gd</span><span style="color:#9ECBFF"> php-mbstring</span><span style="color:#9ECBFF"> php-xml</span><span style="color:#9ECBFF"> php-zip</span><span style="color:#9ECBFF"> php-mysql</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> restart</span><span style="color:#9ECBFF"> apache2</span></span></code></pre>
+  </div>
+</div><p>Verify the required modules:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="cGhwIC1t" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">php</span><span style="color:#79B8FF"> -m</span></span></code></pre>
+  </div>
+</div><p>Ensure the following are listed:</p>
+<ul>
+<li>BCMath</li>
+<li>Ctype </li>
+<li>cURL </li>
+<li>DOM </li>
+<li>FileInfo </li>
+<li>Intl </li>
+<li>GD</li>
+<li>JSON </li>
+<li>Mbstring</li>
+<li>mysql</li>
+<li>OpenSSL</li>
+<li>PDO</li>
+<li>Tokenizer</li>
+<li>XML</li>
+<li>Zip</li>
+</ul>
+<h3>🛢️ MySQL Installation</h3>
+<p>Install and secure MySQL:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQgaW5zdGFsbCBteXNxbC1zZXJ2ZXIKc3VkbyBzeXN0ZW1jdGwgc3RhcnQgbXlzcWwKc3VkbyBzeXN0ZW1jdGwgZW5hYmxlIG15c3FsCnN1ZG8gbXlzcWxfc2VjdXJlX2luc3RhbGxhdGlvbg==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> mysql-server</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> start</span><span style="color:#9ECBFF"> mysql</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> enable</span><span style="color:#9ECBFF"> mysql</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> mysql_secure_installation</span></span></code></pre>
+  </div>
+</div><p>Create the database and user:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBteXNxbCAtdSByb290IC1w" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> mysql</span><span style="color:#79B8FF"> -u</span><span style="color:#9ECBFF"> root</span><span style="color:#79B8FF"> -p</span></span></code></pre>
+  </div>
+</div><p>In the MySQL shell:</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">SQL</span>
+    <button aria-label="Copy code to clipboard" data-code="Q1JFQVRFIERBVEFCQVNFIGFrYXVudGluZzsKQ1JFQVRFIFVTRVIgJ2FrYSdAJ2xvY2FsaG9zdCcgSURFTlRJRklFRCBCWSAncGFzc3dvcmQnOwpHUkFOVCBBTEwgUFJJVklMRUdFUyBPTiBha2F1bnRpbmcuKiBUTyAnYWthJ0AnbG9jYWxob3N0JzsKRkxVU0ggUFJJVklMRUdFUzsKXHE=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-sql"><span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> DATABASE</span><span style="color:#B392F0"> akaunting</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> USER</span><span style="color:#E1E4E8"> '</span><span style="color:#B392F0">aka</span><span style="color:#E1E4E8">'@</span><span style="color:#9ECBFF">'localhost'</span><span style="color:#E1E4E8"> IDENTIFIED </span><span style="color:#F97583">BY</span><span style="color:#9ECBFF"> 'password'</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">GRANT</span><span style="color:#E1E4E8"> ALL PRIVILEGES </span><span style="color:#F97583">ON</span><span style="color:#E1E4E8"> akaunting.</span><span style="color:#F97583">*</span><span style="color:#F97583"> TO</span><span style="color:#9ECBFF"> 'aka'</span><span style="color:#E1E4E8">@</span><span style="color:#9ECBFF">'localhost'</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">FLUSH PRIVILEGES;</span></span>
+<span class="line"><span style="color:#E1E4E8">\q</span></span></code></pre>
+  </div>
+</div><hr>
+<h2>📦 Akaunting Installation</h2>
+<ol>
+<li>Download Akaunting</li>
+</ol>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBhcHQtZ2V0IGluc3RhbGwgdW56aXAKCmN1cmwgLUwgImh0dHBzOi8vYWthdW50aW5nLmNvbS9kb3dubG9hZC5waHA/dmVyc2lvbj1sYXRlc3QiIC1vIGFrYXVudGluZy1sYXRlc3QuemlwCnVuemlwIGFrYXVudGluZy1sYXRlc3QuemlwIC1kIGFrYXVudGluZwoKY2QgYWthdW50aW5nCm12IC5lbnYuZXhhbXBsZSAuZW52CmNkIH4=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt-get</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> unzip</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -L</span><span style="color:#9ECBFF"> "https://akaunting.com/download.php?version=latest"</span><span style="color:#79B8FF"> -o</span><span style="color:#9ECBFF"> akaunting-latest.zip</span></span>
+<span class="line"><span style="color:#B392F0">unzip</span><span style="color:#9ECBFF"> akaunting-latest.zip</span><span style="color:#79B8FF"> -d</span><span style="color:#9ECBFF"> akaunting</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> akaunting</span></span>
+<span class="line"><span style="color:#B392F0">mv</span><span style="color:#9ECBFF"> .env.example</span><span style="color:#9ECBFF"> .env</span></span>
+<span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> ~</span></span></code></pre>
+  </div>
+</div><ol start="2">
+<li>Replace Apache's default web root</li>
+</ol>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c2hvcHQgLXMgZG90Z2xvYgpzdWRvIG12IGFrYXVudGluZy8qIC92YXIvd3d3L2FrYXVudGluZw==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">shopt</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> dotglob</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> mv</span><span style="color:#9ECBFF"> akaunting/</span><span style="color:#79B8FF">*</span><span style="color:#9ECBFF"> /var/www/akaunting</span></span></code></pre>
+  </div>
+</div><ol start="3">
+<li>Setup Laravel key</li>
+</ol>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="Y2QgL3Zhci93d3cvYWthdW50aW5nCnBocCBhcnRpc2FuIGtleTpnZW5lcmF0ZQ==" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> /var/www/akaunting</span></span>
+<span class="line"><span style="color:#B392F0">php</span><span style="color:#9ECBFF"> artisan</span><span style="color:#9ECBFF"> key:generate</span></span></code></pre>
+  </div>
+</div><ol start="4">
+<li>Verify all files are present</li>
+</ol>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="dmltIC4gIyBDaGVjayBmb3IgLmVudiBhbmQgLmh0YWNjZXNzCmNkIH4KCnN5c3RlbWN0bCByZXN0YXJ0IGFwYWNoZTI=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">vim</span><span style="color:#9ECBFF"> .</span><span style="color:#6A737D"> # Check for .env and .htaccess</span></span>
+<span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> ~</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> restart</span><span style="color:#9ECBFF"> apache2</span></span></code></pre>
+  </div>
+</div><hr>
+<h2>✅ Final Steps</h2>
+<ol>
+<li>Set permissions:</li>
+</ol>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button aria-label="Copy code to clipboard" data-code="c3VkbyBjaG93biAtUiB3d3ctZGF0YTp3d3ctZGF0YSAvdmFyL3d3dy9ha2F1bnRpbmc=" class="code-copy-button">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> chown</span><span style="color:#79B8FF"> -R</span><span style="color:#9ECBFF"> www-data:www-data</span><span style="color:#9ECBFF"> /var/www/akaunting</span></span></code></pre>
+  </div>
+</div><ol start="2">
+<li>Visit the Akaunting site in your browser by going to <a href="http://accounting.url.com:8080">http://accounting.url.com:8080</a> and start the the installation steps.</li>
+</ol>

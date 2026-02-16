@@ -17,7 +17,8 @@
     "studio": "prisma studio",
     "deploy:production": "dotenv -f '.env.production' kamal deploy -d production",
     "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging",
-    "logs": "dotenv -f '.env.production' kamal app logs -f -d production"
+    "logs": "dotenv -f '.env.production' kamal app logs -f -d production",
+    "compile:blog": "tsx scripts/compile-blog.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -71,6 +72,7 @@
     "eslint-config-next": "16.0.7",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3"
   },
   "pnpm": {

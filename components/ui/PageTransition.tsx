@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import gsap from 'gsap'
 import { TransitionRouter } from 'next-transition-router'
 import { generateVerticalSpikePath } from '@/lib/utils'
+import { useLayout } from '@/lib/context/layoutContext'
 import dynamic from 'next/dynamic'
 const SpinnerAnimation = dynamic(() => import('@/components/ui/SpinnerAnimation'), { ssr: false })
 
@@ -39,11 +40,13 @@ export default function PageTransitionProvider({ children }: { children: React.R
   const blockerRef = useRef<HTMLDivElement>(null)
   const spinnerRef = useRef<HTMLDivElement>(null)
   const [spinnerColor, setSpinnerColor] = useState('#ffffff')
+  const { resetLayout } = useLayout()
 
   return (
     <TransitionRouter
       auto={false}
       leave={(next) => {
+        resetLayout()
         const colors = pickColors(LAYER_COUNT)
         const layers = layerRefs.current.filter(Boolean) as HTMLDivElement[]
 

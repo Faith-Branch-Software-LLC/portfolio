@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Section from "@/components/ui/section";
 import Link from "next/link";
-import { Link as TransitionLink } from "next-transition-router";
+import { Link as TransitionLink } from "next-transition-router"
+
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import { FaDiscord, FaLinkedin, FaGithub } from "react-icons/fa";
 import { Separator } from "../ui/separator";
@@ -54,15 +55,12 @@ export default function Footer({ layer }: { layer: number }) {
           </div>
 
           <div className="flex flex-col gap-8 font-gelasio text-xl text-white">
-            <TransitionLink
-              href="/blog"
-              className="flex items-center gap-2 hover:text-white/80 group w-full cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                Blog
-                <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-              </div>
-            </TransitionLink>
+            <UnderlineLink href="/portfolio" icon={ArrowRight} iconSize={20}>
+              Portfolio
+            </UnderlineLink>
+            <UnderlineLink href="/blog" icon={ArrowRight} iconSize={20}>
+              Blog
+            </UnderlineLink>
             <Link
               href="/#about"
               scroll={false}

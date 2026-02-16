@@ -3,7 +3,6 @@
 import { cn, generateSpikePath } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { useElementDimensions } from '@/hooks/useElementDimensions';
-import { Card, CardHeader, CardTitle } from "./card";
 import { useLayout } from "@/lib/context/layoutContext";
 
 /**
@@ -122,10 +121,8 @@ export default function Section({
 
 export function SectionTitle({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
-    <Card>
-      <CardHeader className="p-2">
-        <CardTitle className={cn("text-3xl md:text-4xl lg:text-5xl text-center", className)}>{children}</CardTitle>
-      </CardHeader>
-    </Card>
+    <h2 className={cn("text-3xl md:text-4xl lg:text-5xl text-center font-semibold font-fraunces", className)}>
+      {children}
+    </h2>
   );
 }
