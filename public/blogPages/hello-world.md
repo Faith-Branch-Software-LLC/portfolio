@@ -15,6 +15,8 @@ Welcome! It may be that I only write to myself, or someone may take and interest
 
 I more or less just want to write about things I find interesting to get myself to do more creative writing. 
 
+---
+
 ## Purpose
 
 Like I mentioned before, I want to write more, but there are a few more reasons than that.
@@ -25,11 +27,15 @@ Like I mentioned before, I want to write more, but there are a few more reasons 
 - Get thoughts out of my head. I have been told by multiple people (and my wife multiple times), that I hold things in to much and that I need to express myself more.
 - In my mind, it makes prospect guests of the company feel like I am more approachable. They have the chance to hear my thoughts on different matters and maybe that little extra writing makes me seem more human.
 
+---
+
 ## My style
 
 I'm sure you've noticed the look of the website. You might describe it as unique or maybe even non-professional. It could be viewed as a business suicide from some view points. This doesn't bother me at all.
 
 I'll go into more detail about the website styles in a different post, but the reason i bring this up is to say, I enjoy a bit of flavor in what I do. It's more exciting to make something fun and creative. Websites nowadays are all the same and lack personality. We need more applications like Duolingo that are unapologetically fun.
+
+---
 
 ## Favorites
 
@@ -44,6 +50,8 @@ Everyone has preferences, so here are some of mine.
 | Book                 | The Phoenix Project |
 | Game Company         | Nintendo            |
 | Vacation Locale      | The beach           |
+
+---
 
 ## The End?
 

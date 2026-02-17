@@ -15,6 +15,8 @@ For most of my life, I expected to follow the usual 9-to-5 path: get a good job,
 
 It hasn’t been easy. I went from having a literal 30-minute commute separating work and home, to just five feet between my bed and my desk. So how do I manage that? How do I avoid letting work take over every waking hour?
 
+---
+
 ## How it started
 
 Upon graduating college, I planned to work from home for a startup. But within the first week, I ran into some issues. I could have worked through them, but I needed income quickly — we had just taken on a car payment. (Yes, buying a new car right after college wasn’t ideal, but it was the decision we made.)
@@ -24,6 +26,8 @@ That situation forced me to pivot fast. I reached out to a few contacts and was 
 After a few weeks of back-and-forth conversations with my wife, we decided it was time for me to officially start my own business. I could be a contractor for multiple clients instead of depending on a single job. It was less money than working for an established company, but it gave us flexibility — and more time together.
 
 Separating was hard at first. For me, I would lose track of time and work longer than I wanted too. For my wife, who doesn’t work, treated it more like hanging out all the time. 
+
+---
 
 ## How Things Changed
 
