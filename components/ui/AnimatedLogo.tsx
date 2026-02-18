@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, RefObject, ReactNode } from "react";
 import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
-import { OffsetPathPlugin, initWasm } from "@/lib/gsap/OffsetPathPlugin";
+import { OffsetPathPlugin, initOffsetPath } from "gsap-offset-path";
 
 // Register GSAP plugins
 if (typeof window !== "undefined") {
@@ -81,13 +81,14 @@ export default function AnimatedLogo({
 
   // Initialize WASM module
   useEffect(() => {
-    initWasm()
+    initOffsetPath({
+        glueUrl: "/wasm/clipper_offset.js",
+        wasmUrl: "/wasm/clipper_offset_bg.wasm",
+      })
       .then(() => {
-        console.log("[AnimatedLogo] WASM initialized");
         setWasmReady(true);
       })
-      .catch((err) => {
-        console.error("[AnimatedLogo] WASM init failed:", err);
+      .catch(() => {
         setWasmReady(false);
       });
   }, []);

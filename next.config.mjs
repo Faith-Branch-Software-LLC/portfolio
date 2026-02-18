@@ -35,7 +35,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/wasm/:path*',
+        source: '/wasm/:path*.wasm',
         headers: [
           {
             key: 'Content-Type',
