@@ -14,9 +14,13 @@
     "deploy:production": "dotenv -f '.env.production' kamal deploy -d production",
     "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging",
     "logs": "dotenv -f '.env.production' kamal app logs -f -d production",
-    "compile:blog": "tsx scripts/compile-blog.ts"
+    "compile:blog": "tsx scripts/compile-blog.ts",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/adapter-mariadb": "^7.0.0",
     "@prisma/client": "7",
@@ -46,7 +50,9 @@
     "marked": "^15.0.7",
     "motion": "^12.6.5",
     "next": "16.0.7",
+    "next-auth": "^4.24.13",
     "next-transition-router": "^0.2.11",
+    "otpauth": "^9.5.0",
     "page-flip": "^2.0.7",
     "prisma": "7",
     "react": "19.2.1",

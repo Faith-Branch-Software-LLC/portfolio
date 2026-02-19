@@ -19,4 +19,121 @@ model BlogPost {
   updatedAt   DateTime @updatedAt
   imageUrl    String?
   tags        String?
-} 
+}
+
+model Admin {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  token2FA  String?
+  setup2FA  Boolean   @default(false)
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ── PM System ──────────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum KanbanColumn {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  WAITING
+  DONE
+}
+
+model Client {
+  id              String           @id @default(cuid())
+  name            String
+  color           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  projects        Project[]
+  progressReports ProgressReport[]
+}
+
+model Project {
+  id              String           @id @default(cuid())
+  name            String
+  clientId        String
+  status          ProjectStatus    @default(NOT_STARTED)
+  priority        Priority?
+  due             DateTime?
+  description     String?          @db.Text
+  archived        Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  client       Client        @relation(fields: [clientId], references: [id])
+  tasks        Task[]
+  activityLogs ActivityLog[]
+}
+
+model Task {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?       @db.Text
+  priority     Priority?
+  due          DateTime?
+  projectId    String
+  column       KanbanColumn  @default(BACKLOG)
+  order        Int
+  createdAt    DateTime      @default(now())
+  completedAt  DateTime?
+  updatedAt    DateTime      @updatedAt
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tags         TaskTag[]
+  activityLogs ActivityLog[]
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  color String?
+  tasks TaskTag[]
+}
+
+model TaskTag {
+  taskId String
+  tagId  String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+}
+
+model ActivityLog {
+  id         String        @id @default(cuid())
+  projectId  String
+  taskId     String?
+  action     String
+  fromColumn KanbanColumn?
+  toColumn   KanbanColumn?
+  details    String?
+  createdAt  DateTime      @default(now())
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+}
+
+model ProgressReport {
+  id          String   @id @default(cuid())
+  clientId    String
+  content     String?  @db.Text
+  autoSummary Json?
+  createdAt   DateTime @default(now())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
