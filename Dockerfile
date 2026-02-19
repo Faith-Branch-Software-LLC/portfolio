@@ -23,8 +23,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Set up environment variables first
 RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=DATABASE_URL \
+    --mount=type=secret,id=NEXTAUTH_SECRET \
+    --mount=type=secret,id=NEXTAUTH_URL \
     export NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) && \
     export DATABASE_URL=$(cat /run/secrets/DATABASE_URL) && \
+    export NEXTAUTH_SECRET=$(cat /run/secrets/NEXTAUTH_SECRET) && \
+    export NEXTAUTH_URL=$(cat /run/secrets/NEXTAUTH_URL) && \
     pnpm exec prisma generate && \
     pnpm exec prisma migrate deploy && \
     pnpm run compile:blog && \

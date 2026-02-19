@@ -6,6 +6,8 @@ env:
   secret:
     - DATABASE_URL
     - ReSendKey
+    - NEXTAUTH_SECRET
+    - NEXTAUTH_URL
 
 proxy:
   app_port: 3000
