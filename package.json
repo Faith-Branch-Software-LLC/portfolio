@@ -5,7 +5,7 @@
   "scripts": {
     "wasm:copy": "mkdir -p public/wasm && cp node_modules/gsap-offset-path/wasm/pkg/* public/wasm/",
     "dev": "bun run wasm:copy && next dev --turbopack",
-    "build": "bun run wasm:copy && next build",
+    "build": "bun run wasm:copy && next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "generate": "prisma generate",
