@@ -14,8 +14,8 @@
     "deploy:production": "dotenv -f '.env.production' kamal deploy -d production",
     "deploy:staging": "dotenv -f '.env.staging' kamal deploy -d staging",
     "logs": "dotenv -f '.env.production' kamal app logs -f -d production",
-    "compile:blog": "tsx scripts/compile-blog.ts",
-    "seed": "tsx prisma/seed.ts"
+    "compile:blog": "bun scripts/compile-blog.ts",
+    "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
