@@ -1,0 +1,84 @@
+<h1>Navigating Repos Faster with PowerShell</h1>
+<p>I have a lot of repos, and they're organized into groups. <code>cd</code>-ing into them every time was getting old, especially since they are not located on my <code>C:</code> drive. so I wrote two PowerShell functions that let me navigate to any repo with arrow keys and Enter.</p>
+<hr>
+<h2>The Result</h2>
+<p>Type <code>repos</code> in your terminal. A menu appears. Arrow up/down to pick a group, hit Enter. Another menu for the repo. Hit Enter again. You're there.</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">BASH</span>
+    <button class="code-copy-button" data-code="U2VsZWN0IGdyb3VwOgoKICA+IEZhaXRoQnJhbmNoCiAgICBQZXJzb25hbAogICAgU2Nob29s" aria-label="Copy code to clipboard">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <pre><code class="language-bash"><span class="line"><span style="color:#B392F0">Select</span><span style="color:#9ECBFF"> group:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">  &gt;</span><span style="color:#B392F0"> FaithBranch</span></span>
+<span class="line"><span style="color:#B392F0">    Personal</span></span>
+<span class="line"><span style="color:#B392F0">    School</span></span></code></pre>
+  </div>
+</div><hr>
+<h2>The Code</h2>
+<p>Drop these in your PowerShell profile (<code>$PROFILE</code>).</p>
+<div class="code-block-wrapper">
+  <div class="code-block-header">
+    <span class="code-block-language">POWERSHELL</span>
+    <button class="code-copy-button" data-code="ZnVuY3Rpb24gSW52b2tlLU1lbnUgewogICAgcGFyYW0oW3N0cmluZ1tdXSRJdGVtcywgW3N0cmluZ10kUHJvbXB0ID0gIlNlbGVjdDoiKQogICAgJHNlbGVjdGVkID0gMAogICAgd2hpbGUgKCR0cnVlKSB7CiAgICAgICAgQ2xlYXItSG9zdAogICAgICAgIFdyaXRlLUhvc3QgIiRQcm9tcHRgbiIgLUZvcmVncm91bmRDb2xvciBDeWFuCiAgICAgICAgZm9yICgkaSA9IDA7ICRpIC1sdCAkSXRlbXMuQ291bnQ7ICRpKyspIHsKICAgICAgICAgICAgaWYgKCRpIC1lcSAkc2VsZWN0ZWQpIHsKICAgICAgICAgICAgICAgIFdyaXRlLUhvc3QgIiAgPiAkKCRJdGVtc1skaV0pIiAtRm9yZWdyb3VuZENvbG9yIFllbGxvdwogICAgICAgICAgICB9IGVsc2UgewogICAgICAgICAgICAgICAgV3JpdGUtSG9zdCAiICAgICQoJEl0ZW1zWyRpXSkiCiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICAgICAgJGtleSA9ICRIb3N0LlVJLlJhd1VJLlJlYWRLZXkoIk5vRWNobyxJbmNsdWRlS2V5RG93biIpCiAgICAgICAgc3dpdGNoICgka2V5LlZpcnR1YWxLZXlDb2RlKSB7CiAgICAgICAgICAgIDM4IHsgaWYgKCRzZWxlY3RlZCAtZ3QgMCkgeyAkc2VsZWN0ZWQtLSB9IH0gICAgICAgICAgICAgICAgICAgICAgIyBVcAogICAgICAgICAgICA0MCB7IGlmICgkc2VsZWN0ZWQgLWx0ICRJdGVtcy5Db3VudCAtIDEpIHsgJHNlbGVjdGVkKysgfSB9ICAgICAgICMgRG93bgogICAgICAgICAgICAxMyB7IHJldHVybiAkSXRlbXNbJHNlbGVjdGVkXSB9ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIEVudGVyCiAgICAgICAgICAgIDI3IHsgcmV0dXJuICRudWxsIH0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICMgRXNjYXBlCiAgICAgICAgfQogICAgfQp9CgpmdW5jdGlvbiByZXBvcyB7CiAgICAkcm9vdCA9ICJFOi9yZXBvcyIKCiAgICAjIExheWVyIDE6IHRvcC1sZXZlbCBmb2xkZXJzCiAgICAkbGF5ZXIxID0gR2V0LUNoaWxkSXRlbSAtUGF0aCAkcm9vdCAtRGlyZWN0b3J5IHwgU2VsZWN0LU9iamVjdCAtRXhwYW5kUHJvcGVydHkgTmFtZQogICAgJGNob2ljZTEgPSBJbnZva2UtTWVudSAtSXRlbXMgJGxheWVyMSAtUHJvbXB0ICJTZWxlY3QgZ3JvdXA6IgogICAgaWYgKC1ub3QgJGNob2ljZTEpIHsgQ2xlYXItSG9zdDsgcmV0dXJuIH0KCiAgICAjIExheWVyIDI6IHN1Yi1mb2xkZXJzCiAgICAkbGF5ZXIyUGF0aCA9IEpvaW4tUGF0aCAkcm9vdCAkY2hvaWNlMQogICAgJGxheWVyMiA9IEdldC1DaGlsZEl0ZW0gLVBhdGggJGxheWVyMlBhdGggLURpcmVjdG9yeSB8IFNlbGVjdC1PYmplY3QgLUV4cGFuZFByb3BlcnR5IE5hbWUKICAgICRjaG9pY2UyID0gSW52b2tlLU1lbnUgLUl0ZW1zICRsYXllcjIgLVByb21wdCAiU2VsZWN0IHJlcG86IgogICAgaWYgKC1ub3QgJGNob2ljZTIpIHsgQ2xlYXItSG9zdDsgcmV0dXJuIH0KCiAgICAkZmluYWxQYXRoID0gSm9pbi1QYXRoICRsYXllcjJQYXRoICRjaG9pY2UyCiAgICBDbGVhci1Ib3N0CiAgICBTZXQtTG9jYXRpb24gJGZpbmFsUGF0aAogICAgV3JpdGUtSG9zdCAiLT4gJGZpbmFsUGF0aCIgLUZvcmVncm91bmRDb2xvciBHcmVlbgp9" aria-label="Copy code to clipboard">Copy</button>
+  </div>
+  <div class="code-block-content">
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span>32</span><span>33</span><span>34</span><span>35</span><span>36</span><span>37</span><span>38</span><span>39</span><span>40</span><span>41</span><span>42</span></div>
+    <pre><code class="language-powershell"><span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> Invoke-Menu</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    param</span><span style="color:#E1E4E8">([</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">[]]$Items</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">]$Prompt </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "Select:"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    $selected </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#F97583">    while</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">$true</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#79B8FF">        Clear-Host</span></span>
+<span class="line"><span style="color:#79B8FF">        Write-Host</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$Prompt</span><span style="color:#79B8FF">`n</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">ForegroundColor Cyan</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> ($i </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">; $i </span><span style="color:#F97583">-lt</span><span style="color:#E1E4E8"> $Items.Count; $i</span><span style="color:#F97583">++</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> ($i </span><span style="color:#F97583">-eq</span><span style="color:#E1E4E8"> $selected) {</span></span>
+<span class="line"><span style="color:#79B8FF">                Write-Host</span><span style="color:#9ECBFF"> "  &gt; </span><span style="color:#F97583">$</span><span style="color:#9ECBFF">(</span><span style="color:#E1E4E8">$Items</span><span style="color:#9ECBFF">[</span><span style="color:#E1E4E8">$i</span><span style="color:#9ECBFF">])</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">ForegroundColor Yellow</span></span>
+<span class="line"><span style="color:#E1E4E8">            } </span><span style="color:#F97583">else</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#79B8FF">                Write-Host</span><span style="color:#9ECBFF"> "    </span><span style="color:#F97583">$</span><span style="color:#9ECBFF">(</span><span style="color:#E1E4E8">$Items</span><span style="color:#9ECBFF">[</span><span style="color:#E1E4E8">$i</span><span style="color:#9ECBFF">])</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#E1E4E8">        $key </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> $Host</span><span style="color:#E1E4E8">.UI.RawUI.ReadKey(</span><span style="color:#9ECBFF">"NoEcho,IncludeKeyDown"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        switch</span><span style="color:#E1E4E8"> ($key.VirtualKeyCode) {</span></span>
+<span class="line"><span style="color:#79B8FF">            38</span><span style="color:#E1E4E8"> { </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> ($selected </span><span style="color:#F97583">-gt</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">) { $selected</span><span style="color:#F97583">--</span><span style="color:#E1E4E8"> } }                      </span><span style="color:#6A737D"># Up</span></span>
+<span class="line"><span style="color:#79B8FF">            40</span><span style="color:#E1E4E8"> { </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> ($selected </span><span style="color:#F97583">-lt</span><span style="color:#E1E4E8"> $Items.Count </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">) { $selected</span><span style="color:#F97583">++</span><span style="color:#E1E4E8"> } }       </span><span style="color:#6A737D"># Down</span></span>
+<span class="line"><span style="color:#79B8FF">            13</span><span style="color:#E1E4E8"> { </span><span style="color:#F97583">return</span><span style="color:#E1E4E8"> $Items[$selected] }                                   </span><span style="color:#6A737D"># Enter</span></span>
+<span class="line"><span style="color:#79B8FF">            27</span><span style="color:#E1E4E8"> { </span><span style="color:#F97583">return</span><span style="color:#79B8FF"> $null</span><span style="color:#E1E4E8"> }                                               </span><span style="color:#6A737D"># Escape</span></span>
+<span class="line"><span style="color:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> repos</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    $root </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "E:/repos"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Layer 1: top-level folders</span></span>
+<span class="line"><span style="color:#E1E4E8">    $layer1 </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Get-ChildItem</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">Path $root </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">Directory </span><span style="color:#F97583">|</span><span style="color:#79B8FF"> Select-Object</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">ExpandProperty Name</span></span>
+<span class="line"><span style="color:#E1E4E8">    $choice1 </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Invoke-Menu</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">Items $layer1 </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">Prompt </span><span style="color:#9ECBFF">"Select group:"</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">-not</span><span style="color:#E1E4E8"> $choice1) { </span><span style="color:#79B8FF">Clear-Host</span><span style="color:#E1E4E8">; </span><span style="color:#F97583">return</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Layer 2: sub-folders</span></span>
+<span class="line"><span style="color:#E1E4E8">    $layer2Path </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Join-Path</span><span style="color:#E1E4E8"> $root $choice1</span></span>
+<span class="line"><span style="color:#E1E4E8">    $layer2 </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Get-ChildItem</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">Path $layer2Path </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">Directory </span><span style="color:#F97583">|</span><span style="color:#79B8FF"> Select-Object</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">ExpandProperty Name</span></span>
+<span class="line"><span style="color:#E1E4E8">    $choice2 </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Invoke-Menu</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">Items $layer2 </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">Prompt </span><span style="color:#9ECBFF">"Select repo:"</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">-not</span><span style="color:#E1E4E8"> $choice2) { </span><span style="color:#79B8FF">Clear-Host</span><span style="color:#E1E4E8">; </span><span style="color:#F97583">return</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    $finalPath </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> Join-Path</span><span style="color:#E1E4E8"> $layer2Path $choice2</span></span>
+<span class="line"><span style="color:#79B8FF">    Clear-Host</span></span>
+<span class="line"><span style="color:#79B8FF">    Set-Location</span><span style="color:#E1E4E8"> $finalPath</span></span>
+<span class="line"><span style="color:#79B8FF">    Write-Host</span><span style="color:#9ECBFF"> "-&gt; </span><span style="color:#E1E4E8">$finalPath</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">ForegroundColor Green</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+  </div>
+</div><hr>
+<h2>How It Works</h2>
+<p><code>Invoke-Menu</code> is a reusable interactive menu. It reads raw key input with no <code>Enter</code> needed to move the cursor. Virtual key codes <code>38</code> and <code>40</code> are arrow up/down. <code>13</code> is Enter, <code>27</code> is Escape. It clears and redraws the screen on every keypress, highlighting the selected item in yellow.</p>
+<p><code>repos</code> calls <code>Invoke-Menu</code> twice, once for the top-level group folder, once for the repo inside it. Then <code>Set-Location</code> to move you to the correct spot.</p>
+<hr>
+<h2>Setup</h2>
+<ol>
+<li>Open your profile: <code>notepad $PROFILE</code></li>
+<li>Paste both functions</li>
+<li>Update <code>$root</code> to match your repos directory</li>
+<li>Save and reload: <code>. $PROFILE</code></li>
+</ol>
+<p>Escape at any point cancels out cleanly. Add more layers if your structure goes deeper.</p>

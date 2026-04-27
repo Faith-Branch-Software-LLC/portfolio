@@ -5,7 +5,7 @@ RUN corepack enable
 
 # Disabling Telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN apk add --no-cache libc6-compat curl
+RUN apt-get update && apt-get install -y --no-install-recommends libc6 curl && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
 WORKDIR /app

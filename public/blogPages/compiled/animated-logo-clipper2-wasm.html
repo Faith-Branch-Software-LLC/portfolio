@@ -7,9 +7,9 @@
     <p><b>1.</b> Scale from 0 to 1 on both the X and Y axes. This is very basic and does not look at all like what we desire.</p>
     <p><b>2.</b> Morph between pre-made growth stages and then drawing the branches.</p>
     <p><b>3.</b> Inflate the tree organically using a custom made Clipper2 plugin.</p>
-    <img alt="Logo animation using simple scale transform from 0 to 1" src="../images/logo-scale.gif">
-    <img alt="Logo animation using SVG morph between pre-made growth stages" src="../images/logo-morph.gif">
-    <img alt="Logo animation using Clipper2 polygon offset to organically grow the tree" src="../images/logo-grow.gif">
+    <img src="../images/logo-scale.gif" alt="Logo animation using simple scale transform from 0 to 1">
+    <img src="../images/logo-morph.gif" alt="Logo animation using SVG morph between pre-made growth stages">
+    <img src="../images/logo-grow.gif" alt="Logo animation using Clipper2 polygon offset to organically grow the tree">
 </div>
 
 <hr>
@@ -39,10 +39,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TEXT</span>
-    <button aria-label="Copy code to clipboard" data-code="Q2xpcHBlcjIgKHBvbHlnb24gb2Zmc2V0dGluZyBlbmdpbmUpCiAgICDihpMKY2xpcHBlcl9vZmZzZXQud2FzbSAoUnVzdCDihpIgV2ViQXNzZW1ibHkpCiAgICDihpMKT2Zmc2V0UGF0aFBsdWdpbi50cyAoR1NBUCBwbHVnaW4pCiAgICDihpMKQW5pbWF0ZWRMb2dvLnRzeCAoUmVhY3QgY29tcG9uZW50KQ==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="Q2xpcHBlcjIgKHBvbHlnb24gb2Zmc2V0dGluZyBlbmdpbmUpCiAgICDihpMKY2xpcHBlcl9vZmZzZXQud2FzbSAoUnVzdCDihpIgV2ViQXNzZW1ibHkpCiAgICDihpMKT2Zmc2V0UGF0aFBsdWdpbi50cyAoR1NBUCBwbHVnaW4pCiAgICDihpMKQW5pbWF0ZWRMb2dvLnRzeCAoUmVhY3QgY29tcG9uZW50KQ==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
     <pre><code class="language-text"><span class="line"><span>Clipper2 (polygon offsetting engine)</span></span>
 <span class="line"><span>    ↓</span></span>
 <span class="line"><span>clipper_offset.wasm (Rust → WebAssembly)</span></span>
@@ -60,10 +60,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TEXT</span>
-    <button aria-label="Copy code to clipboard" data-code="TTMwMy4yMDgsNjc3LjM1NiBDMjY5LjEzMiw1OTQuMjE2IDI3Mi4yNTUsNDczLjQ1NSAzMzMuMzYzLDQwNy4xMjcgLi4u" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="TTMwMy4yMDgsNjc3LjM1NiBDMjY5LjEzMiw1OTQuMjE2IDI3Mi4yNTUsNDczLjQ1NSAzMzMuMzYzLDQwNy4xMjcgLi4u" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span></div>
     <pre><code class="language-text"><span class="line"><span>M303.208,677.356 C269.132,594.216 272.255,473.455 333.363,407.127 ...</span></span></code></pre>
   </div>
 </div><p>Clipper2 works with integer point arrays, not SVG strings. So the first step is parsing the SVG path into a list of points. I wrote a manual SVG parser that feeds commands into <a href="https://crates.io/crates/lyon_path">lyon_path</a>, which handles curve flattening, converting smooth Bezier curves into sequences of line segments.</p>
@@ -72,10 +72,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">RUST</span>
-    <button aria-label="Copy code to clipboard" data-code="bGV0IHNjYWxlID0gMTAwMC4wOwovLyBTVkcgZmxvYXQg4oaSIENsaXBwZXIyIGludGVnZXIKKHBvaW50LnggYXMgZjY0ICogc2NhbGUpIGFzIGk2NAovLyBDbGlwcGVyMiBpbnRlZ2VyIOKGkiBTVkcgZmxvYXQKcG9pbnQueCBhcyBmNjQgLyBzY2FsZQ==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="bGV0IHNjYWxlID0gMTAwMC4wOwovLyBTVkcgZmxvYXQg4oaSIENsaXBwZXIyIGludGVnZXIKKHBvaW50LnggYXMgZjY0ICogc2NhbGUpIGFzIGk2NAovLyBDbGlwcGVyMiBpbnRlZ2VyIOKGkiBTVkcgZmxvYXQKcG9pbnQueCBhcyBmNjQgLyBzY2FsZQ==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
     <pre><code class="language-rust"><span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> scale </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 1000.0</span><span style="color:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#6A737D">// SVG float → Clipper2 integer</span></span>
 <span class="line"><span style="color:#E1E4E8">(point</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">x </span><span style="color:#F97583">as</span><span style="color:#B392F0"> f64</span><span style="color:#F97583"> *</span><span style="color:#E1E4E8"> scale) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> i64</span></span>
@@ -87,10 +87,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">RUST</span>
-    <button aria-label="Copy code to clipboard" data-code="bGV0IG11dCBzaWduZWRfYXJlYTogZjY0ID0gMC4wOwpmb3IgaSBpbiAwLi5wYXRoLmxlbigpIHsKICAgIGxldCBqID0gKGkgKyAxKSAlIHBhdGgubGVuKCk7CiAgICBzaWduZWRfYXJlYSArPSAocGF0aFtqXS54IC0gcGF0aFtpXS54KSBhcyBmNjQKICAgICAgICAgICAgICAgICAqIChwYXRoW2pdLnkgKyBwYXRoW2ldLnkpIGFzIGY2NDsKfQppZiBzaWduZWRfYXJlYSA+IDAuMCB7CiAgICBwYXRoLnJldmVyc2UoKTsgLy8gQ1cg4oaSIENDVwp9" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="bGV0IG11dCBzaWduZWRfYXJlYTogZjY0ID0gMC4wOwpmb3IgaSBpbiAwLi5wYXRoLmxlbigpIHsKICAgIGxldCBqID0gKGkgKyAxKSAlIHBhdGgubGVuKCk7CiAgICBzaWduZWRfYXJlYSArPSAocGF0aFtqXS54IC0gcGF0aFtpXS54KSBhcyBmNjQKICAgICAgICAgICAgICAgICAqIChwYXRoW2pdLnkgKyBwYXRoW2ldLnkpIGFzIGY2NDsKfQppZiBzaWduZWRfYXJlYSA+IDAuMCB7CiAgICBwYXRoLnJldmVyc2UoKTsgLy8gQ1cg4oaSIENDVwp9" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
     <pre><code class="language-rust"><span class="line"><span style="color:#F97583">let</span><span style="color:#F97583"> mut</span><span style="color:#E1E4E8"> signed_area</span><span style="color:#F97583">:</span><span style="color:#B392F0"> f64</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 0.0</span><span style="color:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#F97583">for</span><span style="color:#E1E4E8"> i </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> 0</span><span style="color:#F97583">..</span><span style="color:#E1E4E8">path</span><span style="color:#F97583">.</span><span style="color:#B392F0">len</span><span style="color:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#F97583">    let</span><span style="color:#E1E4E8"> j </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (i </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">%</span><span style="color:#E1E4E8"> path</span><span style="color:#F97583">.</span><span style="color:#B392F0">len</span><span style="color:#E1E4E8">();</span></span>
@@ -108,10 +108,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">RUST</span>
-    <button aria-label="Copy code to clipboard" data-code="Ly8gQW5jaG9yIGF0ICgxMDAlLCAxMCUpIG9mIGJvdW5kaW5nIGJveCA9IGJvdHRvbS1yaWdodCBuZWFyIHRoZSBiYXIKbGV0IGFuY2hvcl94ID0gb3JpZ19iYm94Lm1heF94OwpsZXQgYW5jaG9yX3kgPSBvcmlnX2Jib3gubWluX3kgKyBoZWlnaHQgKiAwLjE7CgovLyBTYW1lIHJlbGF0aXZlIHBvc2l0aW9uIGluIHRoZSBvZmZzZXQgcGF0aApsZXQgb2ZmX2FuY2hvcl94ID0gb2ZmX2Jib3gubWF4X3g7CmxldCBvZmZfYW5jaG9yX3kgPSBvZmZfYmJveC5taW5feSArIG9mZl9oZWlnaHQgKiAwLjE7CgovLyBUcmFuc2xhdGUgdG8gcGluIHRoZSBhbmNob3IKbGV0IGR4ID0gYW5jaG9yX3ggLSBvZmZfYW5jaG9yX3g7CmxldCBkeSA9IGFuY2hvcl95IC0gb2ZmX2FuY2hvcl95Ow==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="Ly8gQW5jaG9yIGF0ICgxMDAlLCAxMCUpIG9mIGJvdW5kaW5nIGJveCA9IGJvdHRvbS1yaWdodCBuZWFyIHRoZSBiYXIKbGV0IGFuY2hvcl94ID0gb3JpZ19iYm94Lm1heF94OwpsZXQgYW5jaG9yX3kgPSBvcmlnX2Jib3gubWluX3kgKyBoZWlnaHQgKiAwLjE7CgovLyBTYW1lIHJlbGF0aXZlIHBvc2l0aW9uIGluIHRoZSBvZmZzZXQgcGF0aApsZXQgb2ZmX2FuY2hvcl94ID0gb2ZmX2Jib3gubWF4X3g7CmxldCBvZmZfYW5jaG9yX3kgPSBvZmZfYmJveC5taW5feSArIG9mZl9oZWlnaHQgKiAwLjE7CgovLyBUcmFuc2xhdGUgdG8gcGluIHRoZSBhbmNob3IKbGV0IGR4ID0gYW5jaG9yX3ggLSBvZmZfYW5jaG9yX3g7CmxldCBkeSA9IGFuY2hvcl95IC0gb2ZmX2FuY2hvcl95Ow==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
     <pre><code class="language-rust"><span class="line"><span style="color:#6A737D">// Anchor at (100%, 10%) of bounding box = bottom-right near the bar</span></span>
 <span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> anchor_x </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> orig_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">max_x;</span></span>
 <span class="line"><span style="color:#F97583">let</span><span style="color:#E1E4E8"> anchor_y </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> orig_bbox</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">min_y </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> height </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> 0.1</span><span style="color:#E1E4E8">;</span></span>
@@ -132,10 +132,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TYPESCRIPT</span>
-    <button aria-label="Copy code to clipboard" data-code="ZXhwb3J0IGNvbnN0IE9mZnNldFBhdGhQbHVnaW4gPSB7CiAgbmFtZTogIm9mZnNldFBhdGgiLAoKICBpbml0KHRhcmdldCwgdmFsdWUsIHR3ZWVuKSB7CiAgICAvLyBTdG9yZSBvcmlnaW5hbCBwYXRoLCBwYXJzZSBvcHRpb25zLCByZWFkIGN1cnJlbnQgb2Zmc2V0CiAgfSwKCiAgcmVuZGVyKHByb2dyZXNzLCBkYXRhKSB7CiAgICAvLyBJbnRlcnBvbGF0ZSBvZmZzZXQsIGNhbGwgV0FTTSwgdXBkYXRlIFNWRyBwYXRoCiAgfSwKfTs=" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="ZXhwb3J0IGNvbnN0IE9mZnNldFBhdGhQbHVnaW4gPSB7CiAgbmFtZTogIm9mZnNldFBhdGgiLAoKICBpbml0KHRhcmdldCwgdmFsdWUsIHR3ZWVuKSB7CiAgICAvLyBTdG9yZSBvcmlnaW5hbCBwYXRoLCBwYXJzZSBvcHRpb25zLCByZWFkIGN1cnJlbnQgb2Zmc2V0CiAgfSwKCiAgcmVuZGVyKHByb2dyZXNzLCBkYXRhKSB7CiAgICAvLyBJbnRlcnBvbGF0ZSBvZmZzZXQsIGNhbGwgV0FTTSwgdXBkYXRlIFNWRyBwYXRoCiAgfSwKfTs=" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
     <pre><code class="language-typescript"><span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> OffsetPathPlugin</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#E1E4E8">  name: </span><span style="color:#9ECBFF">"offsetPath"</span><span style="color:#E1E4E8">,</span></span>
 <span class="line"></span>
@@ -152,10 +152,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TYPESCRIPT</span>
-    <button aria-label="Copy code to clipboard" data-code="Ly8gRGVmbGF0ZSB0aGUgdHJlZSB0byBub3RoaW5nCmdzYXAuc2V0KHRyZWVQYXRoUmVmLCB7IG9mZnNldFBhdGg6IHsgb2Zmc2V0OiAtNDUsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0gfSk7CgovLyBBbmltYXRlIGl0IGdyb3dpbmcgdG8gZnVsbCBzaXplCmdzYXAudG8odHJlZVBhdGhSZWYsIHsgb2Zmc2V0UGF0aDogeyBvZmZzZXQ6IDAsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0sIGR1cmF0aW9uOiAyIH0pOw==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="Ly8gRGVmbGF0ZSB0aGUgdHJlZSB0byBub3RoaW5nCmdzYXAuc2V0KHRyZWVQYXRoUmVmLCB7IG9mZnNldFBhdGg6IHsgb2Zmc2V0OiAtNDUsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0gfSk7CgovLyBBbmltYXRlIGl0IGdyb3dpbmcgdG8gZnVsbCBzaXplCmdzYXAudG8odHJlZVBhdGhSZWYsIHsgb2Zmc2V0UGF0aDogeyBvZmZzZXQ6IDAsIG9yaWdpblg6IDAuMSwgb3JpZ2luWTogMS4wIH0sIGR1cmF0aW9uOiAyIH0pOw==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
     <pre><code class="language-typescript"><span class="line"><span style="color:#6A737D">// Deflate the tree to nothing</span></span>
 <span class="line"><span style="color:#E1E4E8">gsap.</span><span style="color:#B392F0">set</span><span style="color:#E1E4E8">(treePathRef, { offsetPath: { offset: </span><span style="color:#F97583">-</span><span style="color:#79B8FF">45</span><span style="color:#E1E4E8">, originX: </span><span style="color:#79B8FF">0.1</span><span style="color:#E1E4E8">, originY: </span><span style="color:#79B8FF">1.0</span><span style="color:#E1E4E8"> } });</span></span>
 <span class="line"></span>
@@ -167,10 +167,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TYPESCRIPT</span>
-    <button aria-label="Copy code to clipboard" data-code="Ly8gSW4gcmVuZGVyKCk6CihkYXRhLl90YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID0gb2Zmc2V0QW1vdW50OwoKLy8gSW4gaW5pdCgpOgoodGhpcyBhcyBhbnkpLl9zdGFydE9mZnNldCA9ICh0YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID8/IDA7" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="Ly8gSW4gcmVuZGVyKCk6CihkYXRhLl90YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID0gb2Zmc2V0QW1vdW50OwoKLy8gSW4gaW5pdCgpOgoodGhpcyBhcyBhbnkpLl9zdGFydE9mZnNldCA9ICh0YXJnZXQgYXMgYW55KS5fX2dzYXBPZmZzZXRQYXRoID8/IDA7" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
     <pre><code class="language-typescript"><span class="line"><span style="color:#6A737D">// In render():</span></span>
 <span class="line"><span style="color:#E1E4E8">(data._target </span><span style="color:#F97583">as</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">).__gsapOffsetPath </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> offsetAmount;</span></span>
 <span class="line"></span>
@@ -183,10 +183,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">TYPESCRIPT</span>
-    <button aria-label="Copy code to clipboard" data-code="aWYgKCFyZXN1bHQgfHwgcmVzdWx0LnRyaW0oKSA9PT0gIiIpIHsKICAgIGRhdGEuX3RhcmdldC5zdHlsZS52aXNpYmlsaXR5ID0gImhpZGRlbiI7CiAgICByZXR1cm47Cn0KZGF0YS5fdGFyZ2V0LnN0eWxlLnZpc2liaWxpdHkgPSAidmlzaWJsZSI7CmRhdGEuX3RhcmdldC5zZXRBdHRyaWJ1dGUoImQiLCByZXN1bHQpOw==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="aWYgKCFyZXN1bHQgfHwgcmVzdWx0LnRyaW0oKSA9PT0gIiIpIHsKICAgIGRhdGEuX3RhcmdldC5zdHlsZS52aXNpYmlsaXR5ID0gImhpZGRlbiI7CiAgICByZXR1cm47Cn0KZGF0YS5fdGFyZ2V0LnN0eWxlLnZpc2liaWxpdHkgPSAidmlzaWJsZSI7CmRhdGEuX3RhcmdldC5zZXRBdHRyaWJ1dGUoImQiLCByZXN1bHQpOw==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
     <pre><code class="language-typescript"><span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">!</span><span style="color:#E1E4E8">result </span><span style="color:#F97583">||</span><span style="color:#E1E4E8"> result.</span><span style="color:#B392F0">trim</span><span style="color:#E1E4E8">() </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> ""</span><span style="color:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#E1E4E8">    data._target.style.visibility </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "hidden"</span><span style="color:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8">;</span></span>
@@ -200,10 +200,10 @@
 <div class="code-block-wrapper">
   <div class="code-block-header">
     <span class="code-block-language">JSON</span>
-    <button aria-label="Copy code to clipboard" data-code="ewogICJ3YXNtOmJ1aWxkIjogImNkIHdhc20vY2xpcHBlci1vZmZzZXQgJiYgd2FzbS1wYWNrIGJ1aWxkIC0tdGFyZ2V0IHdlYiAtLW91dC1kaXIgcGtnIiwKICAid2FzbTpjb3B5IjogIm1rZGlyIC1wIHB1YmxpYy93YXNtICYmIGNwIHdhc20vY2xpcHBlci1vZmZzZXQvcGtnLyoud2FzbSB3YXNtL2NsaXBwZXItb2Zmc2V0L3BrZy8qLmpzIHB1YmxpYy93YXNtLyIsCiAgImRldiI6ICJwbnBtIHJ1biB3YXNtOmJ1aWxkICYmIHBucG0gcnVuIHdhc206Y29weSAmJiBuZXh0IGRldiAtLXR1cmJvcGFjayIKfQ==" class="code-copy-button">Copy</button>
+    <button class="code-copy-button" data-code="ewogICJ3YXNtOmJ1aWxkIjogImNkIHdhc20vY2xpcHBlci1vZmZzZXQgJiYgd2FzbS1wYWNrIGJ1aWxkIC0tdGFyZ2V0IHdlYiAtLW91dC1kaXIgcGtnIiwKICAid2FzbTpjb3B5IjogIm1rZGlyIC1wIHB1YmxpYy93YXNtICYmIGNwIHdhc20vY2xpcHBlci1vZmZzZXQvcGtnLyoud2FzbSB3YXNtL2NsaXBwZXItb2Zmc2V0L3BrZy8qLmpzIHB1YmxpYy93YXNtLyIsCiAgImRldiI6ICJwbnBtIHJ1biB3YXNtOmJ1aWxkICYmIHBucG0gcnVuIHdhc206Y29weSAmJiBuZXh0IGRldiAtLXR1cmJvcGFjayIKfQ==" aria-label="Copy code to clipboard">Copy</button>
   </div>
   <div class="code-block-content">
-    <div aria-hidden="true" class="code-line-numbers"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+    <div class="code-line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
     <pre><code class="language-json"><span class="line"><span style="color:#E1E4E8">{</span></span>
 <span class="line"><span style="color:#79B8FF">  "wasm:build"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"cd wasm/clipper-offset &amp;&amp; wasm-pack build --target web --out-dir pkg"</span><span style="color:#E1E4E8">,</span></span>
 <span class="line"><span style="color:#79B8FF">  "wasm:copy"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"mkdir -p public/wasm &amp;&amp; cp wasm/clipper-offset/pkg/*.wasm wasm/clipper-offset/pkg/*.js public/wasm/"</span><span style="color:#E1E4E8">,</span></span>
