@@ -6,9 +6,8 @@ import Section from '@/components/ui/section';
 import { useLayout } from '@/lib/context/layoutContext';
 import Footer from '@/components/app/footer';
 import { motion } from 'motion/react';
-import { ArrowUpRight } from 'lucide-react';
-import UnderlineLink from '@/components/ui/underline-link';
 import gsap from 'gsap';
+import { Hand, ScrapColors, StickyNote, TapeColor } from '@/components/app/scrapbookElements';
 
 interface Project {
   title: string;
@@ -16,6 +15,8 @@ interface Project {
   url: string;
   images: string[];
   isRed: boolean;
+  noteRot: number;
+  tapeColor: TapeColor;
 }
 
 const projects: Project[] = [
@@ -26,6 +27,8 @@ const projects: Project[] = [
     url: 'https://homeworkmuffin.com',
     images: ['/scrapBookImages/hwm-1.jpg', '/scrapBookImages/hwm-2.jpg'],
     isRed: true,
+    noteRot: -1.5,
+    tapeColor: TapeColor.Purple,
   },
   {
     title: 'Austintown Fence',
@@ -34,6 +37,8 @@ const projects: Project[] = [
     url: 'https://austintownfence.org',
     images: ['/scrapBookImages/afc-1.jpg', '/scrapBookImages/afc-2.jpg'],
     isRed: false,
+    noteRot: 1,
+    tapeColor: TapeColor.Red,
   },
   {
     title: 'EyeOnFi',
@@ -42,6 +47,8 @@ const projects: Project[] = [
     url: 'https://app.eyeonfi.com',
     images: ['/scrapBookImages/eof-1.jpg', '/scrapBookImages/eof-2.jpg'],
     isRed: true,
+    noteRot: -0.8,
+    tapeColor: TapeColor.Teal,
   },
 ];
 
@@ -117,23 +124,24 @@ export default function PortfolioPageContent() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex flex-col gap-4"
             >
-              <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold font-fraunces ${project.isRed ? 'text-white' : ''}`}>
-                {project.title}
-              </h2>
-              <p className={`font-gelasio md:text-lg ${project.isRed ? 'text-white' : ''}`}>
-                {project.description}
-              </p>
-              <UnderlineLink
-                href={project.url}
-                icon={ArrowUpRight}
-                iconSize={18}
-                color={project.isRed ? 'white' : '#2E294E'}
-                className={`font-fraunces text-lg ${project.isRed ? 'text-white' : 'text-darkPurple'}`}
-              >
-                Visit Project
-              </UnderlineLink>
+              <StickyNote rot={project.noteRot} tapeColor={project.tapeColor}>
+                <h2 className="text-3xl md:text-4xl font-black font-fraunces mb-3">
+                  {project.title}
+                </h2>
+                <p className="font-gelasio text-base leading-relaxed mb-5">
+                  {project.description}
+                </p>
+                <Hand
+                  color={ScrapColors.red}
+                  size={24}
+                  rot={-3}
+                  href={project.url}
+                  style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
+                >
+                  Visit project →
+                </Hand>
+              </StickyNote>
             </motion.div>
           </div>
         </Section>

@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "portfolio",
@@ -29,7 +30,7 @@
         "fs": "0.0.1-security",
         "gray-matter": "^4.0.3",
         "gsap": "^3.14.2",
-        "gsap-offset-path": "^1.0.1",
+        "gsap-offset-path": "1.1.0",
         "jsdom": "^24.0.0",
         "lucide-react": "^0.472.0",
         "mariadb": "^3.4.5",
@@ -64,6 +65,18 @@
         "typescript": "^5.7.3",
       },
     },
+  },
+  "trustedDependencies": [
+    "esbuild",
+    "sharp",
+    "@prisma/engines",
+    "@prisma/client",
+    "prisma",
+    "unrs-resolver",
+  ],
+  "overrides": {
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.3",
   },
   "packages": {
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
@@ -892,7 +905,7 @@
 
     "gsap": ["gsap@3.15.0", "", {}, "sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A=="],
 
-    "gsap-offset-path": ["gsap-offset-path@1.0.10", "", { "peerDependencies": { "gsap": "^3.12.0" } }, "sha512-yuDmKmR7tJ6ch/xAGzWIjc1C5KJEQ0mxwuY2w76o9/3+VjRIkbF8MzkTBzJ2Emg6iKjURFYo8hwk0ACca1qn9g=="],
+    "gsap-offset-path": ["gsap-offset-path@1.1.0", "", { "peerDependencies": { "gsap": "^3.12.0" } }, "sha512-ZII9JlI22szo9Bq4zqIF/hRiCCxy5nFzPBR2Sb2aOduvdkZKeY5BNgyiMPMkTYUwmcNoN7OjHWfUBlN7g+lXmw=="],
 
     "has-bigints": ["has-bigints@1.1.0", "", {}, "sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg=="],
 

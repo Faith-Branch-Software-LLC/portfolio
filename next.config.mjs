@@ -2,21 +2,10 @@
 const nextConfig = {
   output: 'standalone',
 
-  // WASM support
+  // Forces Next.js to follow symlinks for local file: dependencies
+  transpilePackages: ['gsap-offset-path'],
+
   webpack: (config, { isServer }) => {
-    // Enable async WebAssembly
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-    };
-
-    // Add WASM file handling
-    config.module.rules.push({
-      test: /\.wasm$/,
-      type: 'webassembly/async',
-    });
-
-    // Fallback for Node.js globals in WASM (client-side only)
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -24,23 +13,7 @@ const nextConfig = {
         path: false,
       };
     }
-
     return config;
-  },
-
-  // Ensure WASM files are served with correct Content-Type
-  async headers() {
-    return [
-      {
-        source: '/wasm/:path*.wasm',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/wasm',
-          },
-        ],
-      },
-    ];
   },
 };
 

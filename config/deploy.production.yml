@@ -15,3 +15,4 @@ proxy:
   ssl: true
   healthcheck:
     path: /up
+    

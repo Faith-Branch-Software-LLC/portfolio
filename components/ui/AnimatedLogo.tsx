@@ -81,10 +81,7 @@ export default function AnimatedLogo({
 
   // Initialize WASM module
   useEffect(() => {
-    initOffsetPath({
-        glueUrl: "/wasm/clipper_offset.js",
-        wasmUrl: "/wasm/clipper_offset_bg.wasm",
-      })
+    initOffsetPath()
       .then(() => {
         setWasmReady(true);
       })
