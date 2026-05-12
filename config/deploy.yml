@@ -6,6 +6,8 @@ registry:
     - KAMAL_REGISTRY_PASSWORD
 ssh:
   keys_only: true
+  keys:
+    - ~/.ssh/faithbranch_DO.pub
 
 builder:
   arch: amd64
