@@ -7,6 +7,11 @@ registry:
 ssh:
   forward_agent: true
 
+ssh:
+  keys_only: true
+  keys:
+    - ~/.ssh/faithbranch_DO
+
 builder:
   arch: amd64
   secrets:
