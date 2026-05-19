@@ -37,10 +37,7 @@ export default function BlogPostContent({ post, htmlContent }: BlogPostContentPr
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="h-fit"
-      style={{
-        height: `calc(100vh - ${totalTranslation}px)`,
-        marginBottom: `-${totalTranslation}px`
-      }}
+      style={{ marginBottom: `-${totalTranslation}px` }}
     >
       {/* Header Section with Post Metadata */}
       <Section className="bg-olive" layer={1}>

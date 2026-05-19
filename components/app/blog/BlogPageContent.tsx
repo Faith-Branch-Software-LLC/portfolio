@@ -56,10 +56,7 @@ export default function BlogPageContent({ posts, pagination }: BlogPageContentPr
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="h-fit"
-      style={{ 
-        height: `calc(100vh - ${totalTranslation}px)`,
-        marginBottom: `-${totalTranslation}px`
-      }}
+      style={{ marginBottom: `-${totalTranslation}px` }}
     >
       <Section className="bg-teal" layer={1}>
         <div className="container mx-auto px-4 py-8">

@@ -104,10 +104,7 @@ export default function PortfolioPageContent() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      style={{
-        height: `calc(100vh - ${totalTranslation}px)`,
-        marginBottom: `-${totalTranslation}px`,
-      }}
+      style={{ marginBottom: `-${totalTranslation}px` }}
     >
       {projects.map((project, i) => (
         <Section key={project.title} className={project.isRed ? "bg-backgroundRed" : "bg-teal"} layer={i + 1}>

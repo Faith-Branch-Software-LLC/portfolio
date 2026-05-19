@@ -1,4 +1,5 @@
 import { CSSProperties, ReactNode } from "react";
+import { Link } from "next-transition-router";
 
 const C = {
   red: "#D7263D",
@@ -94,9 +95,9 @@ export function Hand({ children, color = C.red, size = 26, rot = -4, style, clas
   };
   if (href) {
     return (
-      <a href={href} style={{ ...shared, textDecoration: "underline", textUnderlineOffset: 3 }} className={className}>
+      <Link href={href} style={{ ...shared, textDecoration: "underline", textUnderlineOffset: 3 }} className={className}>
         {children}
-      </a>
+      </Link>
     );
   }
   return (

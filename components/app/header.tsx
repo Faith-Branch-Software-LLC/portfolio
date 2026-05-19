@@ -3,20 +3,18 @@
 import { Link } from "next-transition-router";
 import Image from "next/image";
 import Section from "@/components/ui/section";
+import { ScrapNavLink } from "@/components/app/ScrapNavLink";
 
-/**
- * Header component for the blog section that includes navigation links and logo
- */
 export default function Header() {
   return (
     <Section className="bg-darkPurple" layer={0}>
       <nav className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Image 
-              src="/logo.svg" 
-              alt="Faith Branch Logo" 
-              width={100} 
+            <Image
+              src="/logo.svg"
+              alt="Faith Branch Logo"
+              width={100}
               height={32}
               priority
             />
@@ -24,16 +22,10 @@ export default function Header() {
               Faith Branch Software LLC
             </span>
           </Link>
-          <div className="flex gap-6">
-            <Link href="/" className="text-white hover:text-white/80">
-              Home
-            </Link>
-            <Link href="/portfolio" className="text-white hover:text-white/80">
-              Portfolio
-            </Link>
-            <Link href="/blog" className="text-white hover:text-white/80">
-              Blog
-            </Link>
+          <div className="flex gap-6 items-center">
+            <ScrapNavLink href="/">Home</ScrapNavLink>
+            <ScrapNavLink href="/portfolio">Portfolio</ScrapNavLink>
+            <ScrapNavLink href="/blog">Blog</ScrapNavLink>
           </div>
         </div>
       </nav>
