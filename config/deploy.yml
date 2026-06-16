@@ -4,8 +4,6 @@ registry:
   username: sebastianneiswanger
   password:
     - KAMAL_REGISTRY_PASSWORD
-ssh:
-  forward_agent: true
 
 ssh:
   keys_only: true
