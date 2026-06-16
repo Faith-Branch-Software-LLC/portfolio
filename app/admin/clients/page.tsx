@@ -7,9 +7,5 @@ export default async function ClientsPage() {
     include: { _count: { select: { projects: true } } },
   });
 
-  return (
-    <div className="container mx-auto px-6 py-8 max-w-3xl">
-      <ClientList clients={clients} />
-    </div>
-  );
+  return <ClientList clients={clients} />;
 }

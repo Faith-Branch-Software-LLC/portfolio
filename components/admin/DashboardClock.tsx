@@ -8,7 +8,6 @@ function formatInET(date: Date) {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
-    year: 'numeric',
   });
 
   const timeStr = date.toLocaleTimeString('en-US', {
@@ -18,16 +17,23 @@ function formatInET(date: Date) {
     hour12: true,
   });
 
-  // EST vs EDT
-  const etLabel = date
-    .toLocaleDateString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' })
-    .split(', ')
-    .pop() ?? 'ET';
+  const etLabel =
+    date
+      .toLocaleDateString('en-US', {
+        timeZone: 'America/New_York',
+        timeZoneName: 'short',
+      })
+      .split(', ')
+      .pop() ?? 'ET';
 
   return { dateStr, timeStr, etLabel };
 }
 
-export default function DashboardClock() {
+interface DashboardClockProps {
+  taskCount?: number;
+}
+
+export default function DashboardClock({ taskCount }: DashboardClockProps) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -41,10 +47,31 @@ export default function DashboardClock() {
   const { dateStr, timeStr, etLabel } = formatInET(now);
 
   return (
-    <div className="mb-2">
-      <p className="text-2xl font-fraunces font-semibold">{dateStr}</p>
-      <p className="text-sm text-gray-400 mt-0.5">
-        {timeStr} <span className="text-xs">{etLabel}</span>
+    <div>
+      <h1
+        className="text-[18px] sm:text-[25px]"
+        style={{
+          fontFamily: 'Fraunces, serif',
+          fontWeight: 600,
+          margin: 0,
+          letterSpacing: '-0.01em',
+          color: '#2E294E',
+        }}
+      >
+        {dateStr}
+      </h1>
+      <p
+        style={{
+          margin: '2px 0 0',
+          fontFamily: "'Courier New', monospace",
+          fontSize: '12.5px',
+          color: '#6b6580',
+        }}
+      >
+        {timeStr} {etLabel}
+        {taskCount !== undefined && taskCount > 0 && (
+          <> · {taskCount} task{taskCount !== 1 ? 's' : ''} in flight</>
+        )}
       </p>
     </div>
   );

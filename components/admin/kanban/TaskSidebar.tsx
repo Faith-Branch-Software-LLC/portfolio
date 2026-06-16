@@ -7,8 +7,6 @@ import * as z from 'zod';
 import { KanbanColumn, Priority } from '@prisma/client';
 import { createTask, deleteTask, updateTask } from '@/lib/actions/admin/tasks';
 import { TaskWithTags } from '@/lib/types/pm';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -16,12 +14,12 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form';
-import { X, Trash2 } from 'lucide-react';
+import { Trash2, X, Check } from 'lucide-react';
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  priority: z.nativeEnum(Priority).optional(),
+  priority: z.string().optional(),
   due: z.string().optional(),
 });
 
@@ -35,11 +33,26 @@ const columnLabels: Record<KanbanColumn, string> = {
   DONE: 'Done',
 };
 
-const priorityLabels: Record<Priority, string> = {
-  LOW: 'Low',
-  MEDIUM: 'Medium',
-  HIGH: 'High',
-  URGENT: 'Urgent',
+const columnDot: Record<KanbanColumn, string> = {
+  BACKLOG: '#8a8499',
+  TODO: '#2E294E',
+  IN_PROGRESS: '#1B998B',
+  WAITING: '#F46036',
+  DONE: '#C5D86D',
+};
+
+const priorityOptions: [Priority, string][] = [
+  ['LOW', 'Low'],
+  ['MEDIUM', 'Medium'],
+  ['HIGH', 'High'],
+  ['URGENT', 'Urgent'],
+];
+
+const priorityColors: Record<Priority, string> = {
+  LOW: '#00bfff',
+  MEDIUM: '#ffaf00',
+  HIGH: '#ff3b3b',
+  URGENT: '#ff0000',
 };
 
 interface TaskSidebarProps {
@@ -64,28 +77,25 @@ export default function TaskSidebar({
   onDeleted,
 }: TaskSidebarProps) {
   const isEditing = !!task;
+  const activeColumn = task?.column ?? column ?? KanbanColumn.BACKLOG;
+  const dot = columnDot[activeColumn];
+  const colLabel = columnLabels[activeColumn];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      title: '',
-      description: '',
-      priority: undefined,
-      due: '',
-    },
+    defaultValues: { title: '', description: '', priority: '', due: '' },
   });
 
-  // Reset form whenever the sidebar target changes
   useEffect(() => {
     if (task) {
       form.reset({
         title: task.title,
         description: task.description ?? '',
-        priority: task.priority ?? undefined,
+        priority: task.priority ?? '',
         due: task.due ? task.due.toISOString().split('T')[0] : '',
       });
     } else {
-      form.reset({ title: '', description: '', priority: undefined, due: '' });
+      form.reset({ title: '', description: '', priority: '', due: '' });
     }
   }, [task, open]);
 
@@ -93,14 +103,17 @@ export default function TaskSidebar({
     const data = {
       ...values,
       due: values.due ? new Date(values.due) : undefined,
-      priority: values.priority ?? undefined,
+      priority: (values.priority && values.priority !== '') ? values.priority as Priority : undefined,
     };
-
     if (isEditing) {
       const updated = await updateTask(task.id, projectId, data);
       onUpdated(updated);
     } else {
-      const created = await createTask({ ...data, projectId, column: column ?? KanbanColumn.BACKLOG });
+      const created = await createTask({
+        ...data,
+        projectId,
+        column: column ?? KanbanColumn.BACKLOG,
+      });
       onCreated(created);
     }
   };
@@ -112,74 +125,181 @@ export default function TaskSidebar({
     onDeleted(task.id);
   };
 
+  const priorityValue = form.watch('priority');
+
   return (
     <>
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(46,41,78,0.18)',
+            zIndex: 40,
+          }}
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar panel */}
+      {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-96 bg-white border-l border-black/10 shadow-xl z-50 flex flex-col transition-transform duration-200 ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          height: '100vh',
+          width: 'min(380px, 95vw)',
+          background: '#fff',
+          borderLeft: '2px solid #2E294E',
+          boxShadow: '-8px 0 24px rgba(46,41,78,0.18)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 50,
+          transition: 'transform 0.2s ease',
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-black/10 flex-shrink-0">
-          <p className="text-sm font-semibold text-gray-500">
-            {isEditing
-              ? columnLabels[task.column]
-              : column
-                ? `New task — ${columnLabels[column]}`
-                : 'New task'}
-          </p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '2px solid #2E294E',
+            background: '#F4EAD4',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <span
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '3px',
+                background: dot,
+                display: 'inline-block',
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'Fraunces, serif',
+                fontWeight: 600,
+                fontSize: '15px',
+                color: '#2E294E',
+              }}
+            >
+              {isEditing ? colLabel : `New task — ${colLabel}`}
+            </span>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 transition-colors"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '30px',
+              height: '30px',
+              background: '#fff',
+              border: '1.5px solid #2E294E',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              color: '#2E294E',
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} />
           </button>
         </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
           <Form {...form}>
-            <form id="task-sidebar-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form id="task-sidebar-form" onSubmit={form.handleSubmit(onSubmit)}>
+
               {/* Title */}
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem style={{ marginBottom: '20px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontWeight: 600,
+                        fontSize: '11px',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: '#8a8499',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      Title
+                    </label>
                     <FormControl>
                       <input
                         {...field}
                         autoFocus
                         placeholder="Task title"
-                        className="w-full text-lg font-medium bg-transparent border-0 border-b border-black/10 pb-2 focus:outline-none focus:border-black/30 placeholder:text-gray-300"
+                        style={{
+                          width: '100%',
+                          fontFamily: 'Fraunces, serif',
+                          fontWeight: 600,
+                          fontSize: '19px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: '2px solid rgba(46,41,78,0.2)',
+                          paddingBottom: '9px',
+                          outline: 'none',
+                          color: '#2E294E',
+                          boxSizing: 'border-box',
+                        }}
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
-              {/* Description */}
+              {/* Notes */}
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs text-gray-400 uppercase tracking-wide">Notes</FormLabel>
+                  <FormItem style={{ marginBottom: '18px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontWeight: 600,
+                        fontSize: '11px',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: '#8a8499',
+                        marginBottom: '7px',
+                      }}
+                    >
+                      Notes
+                    </label>
                     <FormControl>
                       <textarea
                         {...field}
                         rows={5}
                         placeholder="Add notes, context, links..."
-                        className="w-full rounded-lg border border-black/10 bg-gray-50 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/10 placeholder:text-gray-300"
+                        style={{
+                          width: '100%',
+                          background: '#F7F3EA',
+                          border: '1.5px solid rgba(46,41,78,0.16)',
+                          borderRadius: '7px',
+                          padding: '11px 12px',
+                          fontFamily: 'Gelasio, serif',
+                          fontSize: '14px',
+                          lineHeight: 1.5,
+                          color: '#3b3550',
+                          resize: 'none',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
                       />
                     </FormControl>
                   </FormItem>
@@ -187,37 +307,117 @@ export default function TaskSidebar({
               />
 
               {/* Priority + Due */}
-              <div className="flex gap-3">
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
                 <FormField
                   control={form.control}
                   name="priority"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel className="text-xs text-gray-400 uppercase tracking-wide">Priority</FormLabel>
+                    <FormItem style={{ flex: 1 }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontWeight: 600,
+                          fontSize: '11px',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: '#8a8499',
+                          marginBottom: '7px',
+                        }}
+                      >
+                        Priority
+                      </label>
                       <FormControl>
-                        <select
-                          {...field}
-                          className="w-full h-9 rounded-lg border border-black/10 bg-gray-50 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+                        <div
+                          style={{
+                            background: '#F7F3EA',
+                            border: '1.5px solid rgba(46,41,78,0.2)',
+                            borderRadius: '7px',
+                            padding: '9px 11px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '7px',
+                          }}
                         >
-                          <option value="">None</option>
-                          {Object.entries(priorityLabels).map(([val, label]) => (
-                            <option key={val} value={val}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
+                          <span
+                            style={{
+                              width: '9px',
+                              height: '9px',
+                              borderRadius: '50%',
+                              background: field.value && field.value in priorityColors
+                                ? priorityColors[field.value as Priority]
+                                : '#c4c0cf',
+                              flexShrink: 0,
+                              display: 'inline-block',
+                            }}
+                          />
+                          <select
+                            {...field}
+                            style={{
+                              flex: 1,
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              fontSize: '14px',
+                              color: '#2E294E',
+                              cursor: 'pointer',
+                              fontFamily: "'DM Sans', sans-serif",
+                            }}
+                          >
+                            <option value="">None</option>
+                            {priorityOptions.map(([val, label]) => (
+                              <option key={val} value={val}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="due"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel className="text-xs text-gray-400 uppercase tracking-wide">Due date</FormLabel>
+                    <FormItem style={{ flex: 1 }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontWeight: 600,
+                          fontSize: '11px',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: '#8a8499',
+                          marginBottom: '7px',
+                        }}
+                      >
+                        Due date
+                      </label>
                       <FormControl>
-                        <Input type="date" className="h-9 text-sm border-black/10 bg-gray-50" {...field} />
+                        <div
+                          style={{
+                            background: '#F7F3EA',
+                            border: '1.5px solid rgba(46,41,78,0.2)',
+                            borderRadius: '7px',
+                            padding: '9px 11px',
+                          }}
+                        >
+                          <input
+                            type="date"
+                            {...field}
+                            style={{
+                              width: '100%',
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              fontSize: '14px',
+                              color: field.value ? '#2E294E' : '#8a8499',
+                              fontFamily: "'DM Sans', sans-serif",
+                              cursor: 'pointer',
+                            }}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -228,28 +428,82 @@ export default function TaskSidebar({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-black/10 flex-shrink-0">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 20px',
+            borderTop: '2px solid #2E294E',
+            flexShrink: 0,
+          }}
+        >
           {isEditing ? (
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
               onClick={handleDelete}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: '#fff',
+                color: '#D7263D',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '13px',
+                padding: '9px 13px',
+                border: '1.5px solid rgba(215,38,61,0.45)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
             >
-              <Trash2 className="w-4 h-4 mr-1.5" />
+              <Trash2 size={15} />
               Delete
-            </Button>
+            </button>
           ) : (
             <div />
           )}
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+
+          <div style={{ display: 'flex', gap: '9px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                color: '#2E294E',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '13px',
+                padding: '9px 15px',
+                border: '1.5px solid #2E294E',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
               Cancel
-            </Button>
-            <Button type="submit" form="task-sidebar-form" size="sm">
+            </button>
+            <button
+              type="submit"
+              form="task-sidebar-form"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: '#1B998B',
+                color: '#fff',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '13px',
+                padding: '9px 16px',
+                border: '2px solid #2E294E',
+                borderRadius: '6px',
+                boxShadow: '3px 3px 0 0 #2E294E',
+                cursor: 'pointer',
+              }}
+            >
+              <Check size={15} />
               {isEditing ? 'Save' : 'Create task'}
-            </Button>
+            </button>
           </div>
         </div>
       </div>

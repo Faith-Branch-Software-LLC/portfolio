@@ -11,11 +11,13 @@ interface AdminLinkProps {
 export default function AdminLink({ href, className, children }: AdminLinkProps) {
   const router = useTransitionRouter();
   return (
-    <button
+    <div
+      role="presentation"
       onClick={() => router.push(href)}
       className={className}
+      style={{ display: 'contents' }}
     >
       {children}
-    </button>
+    </div>
   );
 }

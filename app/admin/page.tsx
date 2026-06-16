@@ -3,18 +3,10 @@ import { KanbanColumn } from '@prisma/client';
 import AdminLink from '@/components/admin/AdminLink';
 import WorkToDo, { ActiveTask } from '@/components/admin/WorkToDo';
 import DashboardClock from '@/components/admin/DashboardClock';
-import { Check, Clock } from 'lucide-react';
+import { Check, Clock, Plus, Code } from 'lucide-react';
 
-/**
- * Returns the UTC timestamps for the start and end of a given date's
- * calendar day in Eastern Time (handles EST/EDT automatically).
- */
 function etDayBoundaries(date: Date): { start: Date; end: Date } {
-  // Get YYYY-MM-DD in ET
   const etDate = date.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
-  // ET is UTC-4 (EDT) or UTC-5 (EST). Midnight ET = 4am or 5am UTC.
-  // Find the correct one by checking which candidate still falls on the same ET date.
   const candidates = [4, 5].map(
     (h) => new Date(`${etDate}T${String(h).padStart(2, '0')}:00:00Z`),
   );
@@ -22,32 +14,50 @@ function etDayBoundaries(date: Date): { start: Date; end: Date } {
     candidates.find(
       (c) => c.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === etDate,
     ) ?? candidates[1];
-
   return { start: dayStart, end: new Date(dayStart.getTime() + 24 * 60 * 60 * 1000) };
 }
 
 function progressColor(pct: number) {
-  if (pct < 30) return 'from-[#ff5555] to-[#ff7777]';
-  if (pct < 70) return 'from-[#ffaa44] to-[#ffcc55]';
-  return 'from-[#44bb44] to-[#66cc66]';
+  if (pct < 30) return '#D7263D';
+  if (pct < 70) return '#F46036';
+  return '#1B998B';
 }
+
+function statusStyle(s: string): { bg: string; color: string } {
+  if (s === 'IN_PROGRESS') return { bg: '#1B998B', color: '#fff' };
+  if (s === 'COMPLETED') return { bg: '#C5D86D', color: '#2E294E' };
+  if (s === 'ON_HOLD') return { bg: '#F46036', color: '#fff' };
+  return { bg: 'rgba(46,41,78,0.12)', color: '#2E294E' };
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  NOT_STARTED: 'Not started',
+  IN_PROGRESS: 'In progress',
+  ON_HOLD: 'On hold',
+  COMPLETED: 'Completed',
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  LOW: '#00bfff',
+  MEDIUM: '#ffaf00',
+  HIGH: '#ff3b3b',
+  URGENT: '#ff0000',
+};
 
 function buildHeatmap(logs: { createdAt: Date }[]): number[] {
   const now = new Date();
   const counts: number[] = Array(14).fill(0);
-
   for (const log of logs) {
-    const diffMs = now.getTime() - log.createdAt.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays >= 0 && diffDays < 14) {
-      counts[13 - diffDays]++;
-    }
+    const diffDays = Math.floor(
+      (now.getTime() - log.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    if (diffDays >= 0 && diffDays < 14) counts[13 - diffDays]++;
   }
   return counts;
 }
 
 function heatColor(count: number) {
-  return count === 0 ? 'bg-black/5' : 'bg-green-400';
+  return count === 0 ? 'rgba(46,41,78,0.1)' : count === 1 ? '#C5D86D' : '#1B998B';
 }
 
 type DoneEntry = {
@@ -60,7 +70,6 @@ type DoneEntry = {
 export default async function AdminDashboard() {
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
-  // Find the most recent activity to determine the "last active day"
   const lastLog = await prisma.activityLog.findFirst({
     orderBy: { createdAt: 'desc' },
     select: { createdAt: true },
@@ -72,7 +81,6 @@ export default async function AdminDashboard() {
   if (lastLog) {
     const { start: dayStart, end: dayEnd } = etDayBoundaries(lastLog.createdAt);
     lastActiveDate = dayStart;
-
     lastTimeDone = await prisma.activityLog.findMany({
       where: {
         action: 'moved',
@@ -87,13 +95,11 @@ export default async function AdminDashboard() {
     }) as DoneEntry[];
   }
 
-  // Group by project
   const doneByProject = lastTimeDone.reduce<Record<string, DoneEntry[]>>((acc, entry) => {
     (acc[entry.project.id] ??= []).push(entry);
     return acc;
   }, {});
 
-  // Active tasks (IN_PROGRESS first, then TODO)
   const activeTasks = await prisma.task.findMany({
     where: { column: { in: [KanbanColumn.IN_PROGRESS, KanbanColumn.TODO] } },
     orderBy: [{ column: 'desc' }, { order: 'asc' }],
@@ -126,157 +132,540 @@ export default async function AdminDashboard() {
   });
 
   return (
-    <div className="h-full flex">
-      {/* Left — Active Projects */}
-      <aside className="w-72 flex-shrink-0 overflow-y-auto border-r border-black/10 bg-white px-4 py-5 space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3 px-1">
-          Projects
-        </p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-        {projects.length === 0 ? (
-          <p className="text-sm text-gray-400 px-1">No active projects.</p>
-        ) : (
-          projects.map((project) => {
-            const total = project.tasks.filter(
-              (t) => t.column !== KanbanColumn.BACKLOG,
-            ).length;
-            const done = project.tasks.filter(
-              (t) => t.column === KanbanColumn.DONE,
-            ).length;
-            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-            const heatmap = buildHeatmap(project.activityLogs);
-            const todayCount = heatmap[13];
+      {/* Header bar */}
+      <div
+        className="px-4 sm:px-[26px]"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '18px 26px',
+          background: 'rgba(255,255,255,0.55)',
+          borderBottom: '2px solid #2E294E',
+          flexShrink: 0,
+        }}
+      >
+        <DashboardClock taskCount={activeTasks.length} />
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <AdminLink href="/admin/api-docs">
+            <button
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#ffffff',
+                color: '#2E294E',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 15px',
+                border: '2px solid #2E294E',
+                borderRadius: '6px',
+                boxShadow: '3px 3px 0 0 #2E294E',
+                cursor: 'pointer',
+              }}
+            >
+              <Code size={16} />
+              <span className="hidden sm:inline">API Docs</span>
+            </button>
+          </AdminLink>
+          <AdminLink href="/admin/projects">
+            <button
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#F46036',
+                color: '#fff',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 15px',
+                border: '2px solid #2E294E',
+                borderRadius: '6px',
+                boxShadow: '3px 3px 0 0 #2E294E',
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">New project</span>
+            </button>
+          </AdminLink>
+        </div>
+      </div>
 
-            return (
-              <AdminLink
-                key={project.id}
-                href={`/admin/projects/${project.id}`}
-                className="block w-full text-left rounded-lg px-3 py-2.5 hover:bg-black/5 transition-colors group"
+      {/* Scrollable content */}
+      <div className="p-4 sm:p-[22px_26px]" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+
+        {/* Active projects */}
+        {projects.length > 0 && (
+          <section style={{ marginBottom: '24px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '10px',
+                marginBottom: '14px',
+              }}
+            >
+              <h2
+                style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 600,
+                  fontSize: '18px',
+                  margin: 0,
+                  color: '#2E294E',
+                }}
               >
-                {/* Client label */}
-                <div className="flex items-center gap-1.5 mb-1">
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: project.client.color ?? '#888' }}
-                  />
-                  <span className="text-xs text-gray-400 truncate">
-                    {project.client.name}
-                  </span>
-                </div>
-
-                {/* Project name */}
-                <p className="text-sm font-medium truncate group-hover:underline mb-2">
-                  {project.name}
-                </p>
-
-                {/* Progress bar */}
-                <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${progressColor(pct)} transition-all`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-1 mb-2">
-                  {pct}% · {done}/{total} tasks
-                </p>
-
-                {/* Heatmap */}
-                <div className="flex gap-0.5">
-                  {heatmap.map((count, i) => (
-                    <div
-                      key={i}
-                      title={`${count} activit${count === 1 ? 'y' : 'ies'}`}
-                      className={`w-[7px] h-[7px] rounded-sm ${heatColor(count)} ${
-                        i === 13
-                          ? todayCount > 0
-                            ? 'ring-1 ring-green-600 ring-offset-1'
-                            : 'ring-1 ring-black/20 ring-offset-1'
-                          : ''
-                      }`}
-                    />
-                  ))}
-                </div>
-              </AdminLink>
-            );
-          })
-        )}
-      </aside>
-
-      {/* Right — Dashboard sections */}
-      <main className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        <DashboardClock />
-
-        {/* Work Done Last Time */}
-        <section className="bg-white rounded-xl border border-black/10 p-6">
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="font-semibold text-sm text-gray-700">Work Done Last Time</h2>
-            {lastActiveDate && (
-              <span className="text-xs text-gray-400">
-                {lastActiveDate.toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                  timeZone: 'America/New_York',
-                })}
+                Active projects
+              </h2>
+              <span
+                className="hidden sm:inline-block"
+                style={{
+                  fontFamily: '"Send Flowers", cursive',
+                  fontSize: '17px',
+                  color: '#F46036',
+                  transform: 'rotate(-2deg)',
+                  display: 'inline-block',
+                }}
+              >
+                click one to open its board ↓
               </span>
-            )}
-          </div>
+            </div>
 
-          {!lastActiveDate ? (
-            <p className="text-sm text-gray-400">No activity recorded yet.</p>
-          ) : lastTimeDone.length === 0 ? (
-            <p className="text-sm text-gray-400">No tasks completed or sent for review on this day.</p>
-          ) : (
-            <div className="space-y-4">
-              {Object.values(doneByProject).map((entries) => {
-                const { project } = entries[0];
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((project) => {
+                const total = project.tasks.filter(
+                  (t) => t.column !== KanbanColumn.BACKLOG,
+                ).length;
+                const done = project.tasks.filter(
+                  (t) => t.column === KanbanColumn.DONE,
+                ).length;
+                const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+                const heatmap = buildHeatmap(project.activityLogs);
+                const st = statusStyle(project.status);
+                const nextTask = project.tasks.find(
+                  (t) => t.column === KanbanColumn.IN_PROGRESS || t.column === KanbanColumn.TODO,
+                );
+
                 return (
-                  <div key={project.id}>
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <AdminLink
+                    key={project.id}
+                    href={`/admin/projects/${project.id}`}
+                    className="block"
+                  >
+                    <div
+                      style={{
+                        background: '#ffffff',
+                        border: '2px solid #2E294E',
+                        borderRadius: '9px',
+                        boxShadow: '4px 4px 0 0 rgba(46,41,78,0.18)',
+                        padding: '15px 16px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {/* Client + name */}
                       <div
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: project.client.color ?? '#888' }}
-                      />
-                      <span className="text-sm font-medium">{project.name}</span>
-                      <span className="text-xs text-gray-400">{project.client.name}</span>
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '7px',
+                          marginBottom: '7px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            background: project.client.color ?? '#888',
+                            display: 'inline-block',
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontFamily: "'Courier New', monospace",
+                            fontSize: '11px',
+                            color: '#8a8499',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1,
+                          }}
+                        >
+                          {project.client.name}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          fontFamily: 'Fraunces, serif',
+                          fontWeight: 600,
+                          fontSize: '17px',
+                          marginBottom: '9px',
+                          color: '#2E294E',
+                        }}
+                      >
+                        {project.name}
+                      </div>
+
+                      {/* Status + priority */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '7px',
+                          marginBottom: '11px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <span
+                          style={{
+                            background: st.bg,
+                            color: st.color,
+                            fontSize: '10.5px',
+                            fontWeight: 700,
+                            padding: '3px 9px',
+                            borderRadius: '20px',
+                          }}
+                        >
+                          {STATUS_LABELS[project.status] ?? project.status}
+                        </span>
+                        {project.priority && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: PRIORITY_COLORS[project.priority] ?? '#888',
+                            }}
+                          >
+                            ⚑ {project.priority.charAt(0) + project.priority.slice(1).toLowerCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Progress bar */}
+                      <div
+                        style={{
+                          height: '9px',
+                          borderRadius: '5px',
+                          background: 'rgba(46,41,78,0.1)',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${pct}%`,
+                            background: progressColor(pct),
+                            borderRadius: '5px',
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Courier New', monospace",
+                          fontSize: '11px',
+                          color: '#8a8499',
+                          margin: '6px 0 10px',
+                        }}
+                      >
+                        {pct}% · {done}/{total} tasks
+                      </div>
+
+                      {/* Heatmap */}
+                      <div
+                        style={{ display: 'flex', gap: '3px', marginBottom: '11px' }}
+                      >
+                        {heatmap.map((count, i) => (
+                          <span
+                            key={i}
+                            title={`${count} activit${count === 1 ? 'y' : 'ies'}`}
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '2px',
+                              background: heatColor(count),
+                              display: 'inline-block',
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Next task */}
+                      <div
+                        style={{
+                          borderTop: '1px solid rgba(46,41,78,0.1)',
+                          paddingTop: '9px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <span style={{ color: '#1B998B', display: 'inline-flex' }}>▶</span>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: '#3b3550',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Next: {nextTask ? '—' : 'all done'}
+                        </span>
+                      </div>
                     </div>
-                    <ul className="space-y-1 pl-4">
-                      {entries.map((entry) => (
-                        <li key={entry.id} className="flex items-center gap-2 text-sm text-gray-600">
-                          {entry.toColumn === KanbanColumn.DONE ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          )}
-                          <span>{entry.task?.title ?? '(deleted task)'}</span>
-                          {entry.toColumn === KanbanColumn.WAITING && (
-                            <span className="text-xs text-amber-500">waiting</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  </AdminLink>
                 );
               })}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* Work To Do */}
-        <section className="bg-white rounded-xl border border-black/10 p-6">
-          <h2 className="font-semibold text-sm text-gray-700 mb-4">Work To Do</h2>
-          <WorkToDo initialTasks={activeTasks} />
-        </section>
+        {/* Bottom row: Work to do + Upcoming / Work Done */}
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-4">
 
-        {/* Upcoming Meetings */}
-        <section className="bg-white rounded-xl border border-black/10 p-6">
-          <h2 className="font-semibold text-sm text-gray-700 mb-1">Upcoming Meetings</h2>
-          <p className="text-xs text-gray-400 mb-4">
-            Scheduled calls and check-ins
-          </p>
-          <p className="text-sm text-gray-300 italic">Coming soon.</p>
-        </section>
-      </main>
+          {/* Work to do */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '2px solid #2E294E',
+              borderRadius: '8px',
+              boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
+              padding: '20px 22px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '9px',
+                marginBottom: '14px',
+              }}
+            >
+              <span style={{ color: '#F46036', display: 'inline-flex' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="6" height="6" rx="1"/><path d="M4.5 6.7L5.7 8 8 5.3"/>
+                  <rect x="3" y="14" width="6" height="6" rx="1"/>
+                  <path d="M12 6h9M12 12h9M12 18h9"/>
+                </svg>
+              </span>
+              <h2
+                style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 600,
+                  fontSize: '17px',
+                  margin: 0,
+                  color: '#2E294E',
+                }}
+              >
+                Work to do
+              </h2>
+            </div>
+            <WorkToDo initialTasks={activeTasks} />
+          </div>
+
+          {/* Right column: Upcoming + Work done */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Upcoming meetings */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '2px solid #2E294E',
+                borderRadius: '8px',
+                boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
+                padding: '20px 22px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '2px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                  <span style={{ color: '#1B998B', display: 'inline-flex' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="5" width="18" height="16" rx="2"/>
+                      <path d="M3 10h18M8 3v4M16 3v4"/>
+                    </svg>
+                  </span>
+                  <h2
+                    style={{
+                      fontFamily: 'Fraunces, serif',
+                      fontWeight: 600,
+                      fontSize: '17px',
+                      margin: 0,
+                      color: '#2E294E',
+                    }}
+                  >
+                    Upcoming
+                  </h2>
+                </div>
+              </div>
+              <p
+                style={{
+                  fontFamily: "'Courier New', monospace",
+                  fontSize: '11.5px',
+                  color: '#8a8499',
+                  margin: '0 0 12px',
+                }}
+              >
+                from your connected calendars
+              </p>
+              <AdminLink href="/admin/connections">
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    color: '#1B998B',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Connect calendars →
+                </span>
+              </AdminLink>
+            </div>
+
+            {/* Work done last time */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '2px solid #2E294E',
+                borderRadius: '8px',
+                boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
+                padding: '20px 22px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: 'Fraunces, serif',
+                    fontWeight: 600,
+                    fontSize: '17px',
+                    margin: 0,
+                    color: '#2E294E',
+                  }}
+                >
+                  Last session
+                </h2>
+                {lastActiveDate && (
+                  <span
+                    style={{
+                      fontFamily: "'Courier New', monospace",
+                      fontSize: '11px',
+                      color: '#8a8499',
+                    }}
+                  >
+                    {lastActiveDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      timeZone: 'America/New_York',
+                    })}
+                  </span>
+                )}
+              </div>
+
+              {!lastActiveDate ? (
+                <p style={{ fontSize: '13px', color: '#8a8499', fontStyle: 'italic' }}>
+                  No activity recorded yet.
+                </p>
+              ) : lastTimeDone.length === 0 ? (
+                <p style={{ fontSize: '13px', color: '#8a8499', fontStyle: 'italic' }}>
+                  Nothing moved to done or waiting.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {Object.values(doneByProject).map((entries) => {
+                    const { project } = entries[0];
+                    return (
+                      <div key={project.id}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '6px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: '7px',
+                              height: '7px',
+                              borderRadius: '50%',
+                              background: project.client.color ?? '#888',
+                              flexShrink: 0,
+                              display: 'inline-block',
+                            }}
+                          />
+                          <span
+                            style={{ fontSize: '12.5px', fontWeight: 600, color: '#2E294E' }}
+                          >
+                            {project.name}
+                          </span>
+                        </div>
+                        <ul
+                          style={{
+                            margin: 0,
+                            padding: '0 0 0 15px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                          }}
+                        >
+                          {entries.map((entry) => (
+                            <li
+                              key={entry.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '12.5px',
+                                color: '#3b3550',
+                                listStyle: 'none',
+                              }}
+                            >
+                              {entry.toColumn === KanbanColumn.DONE ? (
+                                <Check
+                                  size={12}
+                                  style={{ color: '#1B998B', flexShrink: 0 }}
+                                />
+                              ) : (
+                                <Clock
+                                  size={12}
+                                  style={{ color: '#F46036', flexShrink: 0 }}
+                                />
+                              )}
+                              <span>{entry.task?.title ?? '(deleted task)'}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

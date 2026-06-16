@@ -10,9 +10,5 @@ export default async function ProjectsPage() {
     prisma.client.findMany({ orderBy: { name: 'asc' } }),
   ]);
 
-  return (
-    <div className="container mx-auto px-6 py-8 max-w-4xl">
-      <ProjectList projects={projects} clients={clients} />
-    </div>
-  );
+  return <ProjectList projects={projects} clients={clients} />;
 }

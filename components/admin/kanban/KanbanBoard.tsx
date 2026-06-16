@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -31,21 +31,35 @@ const COLUMNS: { key: KanbanColumnEnum; label: string }[] = [
 interface KanbanBoardProps {
   projectId: string;
   initialTasks: TaskWithTags[];
+  pendingAddColumn?: KanbanColumnEnum | null;
+  onPendingAddConsumed?: () => void;
 }
 
-export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProps) {
-  // useRef keeps tasks always current inside DnD event handlers (avoids stale closure)
+export default function KanbanBoard({
+  projectId,
+  initialTasks,
+  pendingAddColumn,
+  onPendingAddConsumed,
+}: KanbanBoardProps) {
   const tasksRef = useRef<TaskWithTags[]>(initialTasks);
   const [tasks, setTasksState] = useState<TaskWithTags[]>(initialTasks);
   const dragOverColumnRef = useRef<KanbanColumnEnum | null>(null);
   const [activeTask, setActiveTask] = useState<TaskWithTags | null>(null);
 
-  // Sidebar state
   const [sidebarTask, setSidebarTask] = useState<TaskWithTags | null>(null);
   const [sidebarColumn, setSidebarColumn] = useState<KanbanColumnEnum | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Always update both state and ref together
+  // Consume pendingAddColumn from parent
+  useEffect(() => {
+    if (pendingAddColumn) {
+      setSidebarTask(null);
+      setSidebarColumn(pendingAddColumn);
+      setSidebarOpen(true);
+      onPendingAddConsumed?.();
+    }
+  }, [pendingAddColumn]);
+
   const setTasks = (updater: TaskWithTags[] | ((prev: TaskWithTags[]) => TaskWithTags[])) => {
     setTasksState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
@@ -60,8 +74,6 @@ export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProp
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
-
-  // ── Sidebar handlers ──────────────────────────────────────────────────────
 
   const openTask = (task: TaskWithTags) => {
     setSidebarTask(task);
@@ -88,7 +100,7 @@ export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProp
 
   const handleTaskUpdated = (task: TaskWithTags) => {
     setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
-    setSidebarTask(task); // keep sidebar showing fresh data
+    setSidebarTask(task);
   };
 
   const handleTaskDeleted = (taskId: string) => {
@@ -96,31 +108,23 @@ export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProp
     closeSidebar();
   };
 
-  // ── DnD handlers ──────────────────────────────────────────────────────────
-
   const onDragStart = ({ active }: DragStartEvent) => {
     setActiveTask(tasksRef.current.find((t) => t.id === active.id) ?? null);
   };
 
   const onDragOver = ({ active, over }: DragOverEvent) => {
     if (!over) return;
-
     const activeId = active.id as string;
     const overId = over.id as string;
     const current = tasksRef.current;
-
     const dragged = current.find((t) => t.id === activeId);
     if (!dragged) return;
-
     const destColumn =
       Object.values(KanbanColumnEnum).includes(overId as KanbanColumnEnum)
         ? (overId as KanbanColumnEnum)
         : current.find((t) => t.id === overId)?.column;
-
     if (!destColumn || dragged.column === destColumn) return;
-
     dragOverColumnRef.current = destColumn;
-
     setTasks((prev) =>
       prev.map((t) =>
         t.id === activeId
@@ -134,44 +138,34 @@ export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProp
     setActiveTask(null);
     const destColumn = dragOverColumnRef.current;
     dragOverColumnRef.current = null;
-
     if (!over) return;
-
     const activeId = active.id as string;
     const overId = over.id as string;
     const current = tasksRef.current;
-
     const task = current.find((t) => t.id === activeId);
     if (!task) return;
-
-    // If it's a same-column reorder (destColumn was never set by onDragOver)
     if (!destColumn) {
       const col = task.column;
       const columnTasks = getColumnTasks(col, current);
       const oldIndex = columnTasks.findIndex((t) => t.id === activeId);
       const newIndex = columnTasks.findIndex((t) => t.id === overId);
-
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-
       const reordered = arrayMove(columnTasks, oldIndex, newIndex);
       const updated = current.map((t) => {
         const idx = reordered.findIndex((r) => r.id === t.id);
         return idx !== -1 ? { ...t, order: idx } : t;
       });
       setTasks(updated);
-
       const finalIds = getColumnTasks(col, updated).map((t) => t.id);
       await moveTask(activeId, projectId, col, finalIds);
       return;
     }
-
-    // Cross-column move — state already updated optimistically in onDragOver
     const finalIds = getColumnTasks(destColumn, current).map((t) => t.id);
     await moveTask(activeId, projectId, destColumn, finalIds);
   };
 
   return (
-    <div className="flex h-full min-h-0">
+    <div style={{ position: 'relative', height: '100%', display: 'flex', overflow: 'hidden' }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -179,7 +173,16 @@ export default function KanbanBoard({ projectId, initialTasks }: KanbanBoardProp
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-2 px-1 flex-1 h-full">
+        <div
+          className="flex flex-nowrap overflow-x-auto md:overflow-hidden h-full"
+          style={{
+            gap: '13px',
+            flex: 1,
+            padding: '20px 16px',
+            scrollSnapType: 'x mandatory',
+            overscrollBehaviorX: 'contain',
+          }}
+        >
           {COLUMNS.map(({ key, label }) => (
             <KanbanColumnComponent
               key={key}

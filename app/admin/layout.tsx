@@ -2,6 +2,15 @@ import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import authOptions from '@/lib/actions/authOptions';
 import AdminNav from '@/components/admin/AdminNav';
+import { prisma } from '@/lib/db';
+import { KanbanColumn } from '@prisma/client';
+
+export type NavProject = {
+  id: string;
+  name: string;
+  clientColor: string;
+  pct: number;
+};
 
 export default async function AdminLayout({
   children,
@@ -14,10 +23,35 @@ export default async function AdminLayout({
     redirect('/auth/login');
   }
 
+  const projects = await prisma.project.findMany({
+    where: { archived: false },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      client: { select: { color: true } },
+      tasks: { select: { column: true } },
+    },
+  });
+
+  const navProjects: NavProject[] = projects.map((p) => {
+    const total = p.tasks.filter((t) => t.column !== KanbanColumn.BACKLOG).length;
+    const done = p.tasks.filter((t) => t.column === KanbanColumn.DONE).length;
+    return {
+      id: p.id,
+      name: p.name,
+      clientColor: p.client.color ?? '#888888',
+      pct: total === 0 ? 0 : Math.round((done / total) * 100),
+    };
+  });
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
-      <AdminNav />
-      <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+    <div
+      className="h-screen flex overflow-hidden"
+      style={{ background: '#EFE9DC', fontFamily: "'DM Sans', system-ui, sans-serif" }}
+    >
+      <AdminNav projects={navProjects} />
+      <main className="flex-1 min-h-0 overflow-hidden pt-14 md:pt-0">{children}</main>
     </div>
   );
 }

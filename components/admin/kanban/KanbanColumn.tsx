@@ -7,6 +7,14 @@ import { Plus } from 'lucide-react';
 import { TaskWithTags } from '@/lib/types/pm';
 import TaskCard from './TaskCard';
 
+const COLUMN_DOT: Record<KanbanColumnEnum, string> = {
+  BACKLOG: '#8a8499',
+  TODO: '#2E294E',
+  IN_PROGRESS: '#1B998B',
+  WAITING: '#F46036',
+  DONE: '#C5D86D',
+};
+
 interface KanbanColumnProps {
   column: KanbanColumnEnum;
   label: string;
@@ -23,44 +31,122 @@ export default function KanbanColumnComponent({
   onAddTask,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column });
+  const isInProgress = column === KanbanColumnEnum.IN_PROGRESS;
+  const dot = COLUMN_DOT[column];
 
   return (
-    <div className="flex flex-col w-72 flex-shrink-0 h-full">
+    <div
+      className="flex-shrink-0 w-[280px] md:flex-1 md:min-w-0 md:w-auto flex flex-col max-h-full"
+      style={{ scrollSnapAlign: 'start' }}
+    >
       <div
-        className={`flex flex-col flex-1 rounded-xl transition-colors ${
-          isOver ? 'bg-blue-100 ring-2 ring-blue-300' : 'bg-white'
-        }`}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          borderRadius: '9px',
+          border: isInProgress
+            ? '1.5px solid rgba(27,153,139,0.45)'
+            : `1.5px solid ${isOver ? '#1B998B' : 'rgba(46,41,78,0.16)'}`,
+          background: isInProgress
+            ? 'rgba(27,153,139,0.14)'
+            : isOver
+            ? 'rgba(27,153,139,0.06)'
+            : 'rgba(255,255,255,0.5)',
+          transition: 'background 0.15s ease, border-color 0.15s ease',
+          maxHeight: '100%',
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 pt-3 pb-2 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">{label}</h3>
-            <span className="text-xs text-gray-400 bg-black/5 rounded-full px-2 py-0.5 min-w-[24px] text-center tabular-nums">
+        {/* Column header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 12px 9px',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <span
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '3px',
+                background: dot,
+                display: 'inline-block',
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'Fraunces, serif',
+                fontWeight: 600,
+                fontSize: '14px',
+                color: '#2E294E',
+              }}
+            >
+              {label}
+            </span>
+            <span
+              style={{
+                fontFamily: "'Courier New', monospace",
+                fontSize: '11px',
+                borderRadius: '10px',
+                padding: '1px 7px',
+                background: isInProgress
+                  ? 'rgba(27,153,139,0.2)'
+                  : 'rgba(46,41,78,0.1)',
+                color: '#2E294E',
+              }}
+            >
               {tasks.length}
             </span>
           </div>
           <button
             onClick={() => onAddTask(column)}
-            className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors"
             title={`Add task to ${label}`}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#8a8499',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2px',
+              borderRadius: '4px',
+            }}
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus size={15} />
           </button>
         </div>
 
-        {/* Task list — scrollable */}
+        {/* Tasks */}
         <div
           ref={setNodeRef}
-          className="flex-1 overflow-y-auto px-2 min-h-0"
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '0 9px 4px',
+            minHeight: 0,
+          }}
         >
-          <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-2 py-1">
+          <SortableContext
+            items={tasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '2px' }}>
               {tasks.map((task) => (
                 <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />
               ))}
-              {/* Empty drop target padding */}
               {tasks.length === 0 && (
-                <div className="h-16 rounded-lg border-2 border-dashed border-black/10" />
+                <div
+                  style={{
+                    height: '56px',
+                    borderRadius: '6px',
+                    border: '1.5px dashed rgba(46,41,78,0.2)',
+                  }}
+                />
               )}
             </div>
           </SortableContext>
@@ -69,9 +155,25 @@ export default function KanbanColumnComponent({
         {/* Add task footer */}
         <button
           onClick={() => onAddTask(column)}
-          className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors rounded-b-xl flex-shrink-0 border-t border-black/5"
+          style={{
+            margin: 'auto 9px 9px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            background: 'transparent',
+            border: '1.5px dashed rgba(46,41,78,0.3)',
+            borderRadius: '6px',
+            padding: '8px',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '12px',
+            fontWeight: 600,
+            color: '#6b6580',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus size={13} />
           Add task
         </button>
       </div>

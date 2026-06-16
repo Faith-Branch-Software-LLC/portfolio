@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import ReportsList from '@/components/admin/reports/ReportsList';
+import AdminLink from '@/components/admin/AdminLink';
+import { ChevronLeft } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,21 +21,74 @@ export default async function ClientReportsPage({ params }: PageProps) {
   if (!client) notFound();
 
   return (
-    <div className="px-6 py-6 max-w-3xl mx-auto">
-      <Link
-        href="/admin/clients"
-        className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 mb-6"
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '11px',
+          padding: '18px 26px',
+          background: 'rgba(255,255,255,0.55)',
+          borderBottom: '2px solid #2E294E',
+          flexShrink: 0,
+        }}
       >
-        <ChevronLeft className="w-4 h-4" />
-        Clients
-      </Link>
+        <AdminLink href="/admin/clients">
+          <button
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '13px',
+              color: '#6b6580',
+              cursor: 'pointer',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+            }}
+          >
+            <ChevronLeft size={15} />
+            Clients
+          </button>
+        </AdminLink>
+        <span style={{ color: 'rgba(46,41,78,0.2)', fontSize: '16px' }}>·</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '4px',
+              background: client.color ?? '#888',
+              display: 'inline-block',
+            }}
+          />
+          <h1
+            style={{
+              fontFamily: 'Fraunces, serif',
+              fontWeight: 600,
+              fontSize: '22px',
+              margin: 0,
+              color: '#2E294E',
+            }}
+          >
+            {client.name} — Reports
+          </h1>
+        </div>
+      </div>
 
-      <ReportsList
-        clientId={client.id}
-        clientName={client.name}
-        clientColor={client.color}
-        initialReports={client.progressReports}
-      />
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 26px' }}>
+        <div style={{ maxWidth: '720px' }}>
+          <ReportsList
+            clientId={client.id}
+            clientName={client.name}
+            clientColor={client.color}
+            initialReports={client.progressReports}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,9 +2,9 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Priority } from '@prisma/client';
-import { GripVertical } from 'lucide-react';
+import { Priority, KanbanColumn } from '@prisma/client';
 import { TaskWithTags } from '@/lib/types/pm';
+import { Check } from 'lucide-react';
 
 interface TaskCardProps {
   task: TaskWithTags;
@@ -37,45 +37,106 @@ export default function TaskCard({ task, onTaskClick, isDragOverlay = false }: T
     transition,
   };
 
+  const isDone = task.column === KanbanColumn.DONE;
+
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`bg-white rounded-lg border border-black/10 shadow-sm transition-opacity ${
-        isDragging ? 'opacity-40' : 'opacity-100'
-      } ${isDragOverlay ? 'shadow-lg rotate-1 cursor-grabbing' : ''}`}
+      style={{
+        ...style,
+        background: '#ffffff',
+        border: '1.5px solid rgba(46,41,78,0.16)',
+        borderRadius: '7px',
+        boxShadow: isDragOverlay
+          ? '6px 6px 0 0 rgba(46,41,78,0.25)'
+          : '2px 2px 0 0 rgba(46,41,78,0.1)',
+        overflow: 'hidden',
+        opacity: isDragging ? 0.4 : isDone ? 0.8 : 1,
+        transform: isDragOverlay ? 'rotate(1deg)' : style.transform,
+        cursor: isDragOverlay ? 'grabbing' : 'default',
+      }}
     >
+      {/* Priority stripe */}
       {task.priority && (
         <div
-          className="h-1 rounded-t-lg"
-          style={{ backgroundColor: priorityColors[task.priority] }}
+          style={{
+            height: '4px',
+            background: priorityColors[task.priority],
+          }}
         />
       )}
-      <div className="flex items-start gap-1.5 p-2.5">
-        {/* Drag handle */}
+
+      <div style={{ padding: '10px', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+        {/* Drag handle / done icon */}
         <button
           {...attributes}
           {...listeners}
-          className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
           onClick={(e) => e.stopPropagation()}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            marginTop: '1px',
+            flexShrink: 0,
+            cursor: 'grab',
+            color: isDone ? '#1B998B' : '#c4c0cf',
+            display: 'inline-flex',
+            touchAction: 'none',
+          }}
         >
-          <GripVertical className="w-3.5 h-3.5" />
+          {isDone ? (
+            <Check size={13} />
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="9" cy="6" r="1.3"/>
+              <circle cx="9" cy="12" r="1.3"/>
+              <circle cx="9" cy="18" r="1.3"/>
+              <circle cx="15" cy="6" r="1.3"/>
+              <circle cx="15" cy="12" r="1.3"/>
+              <circle cx="15" cy="18" r="1.3"/>
+            </svg>
+          )}
         </button>
 
-        {/* Card body — click to open sidebar */}
+        {/* Card body */}
         <div
-          className="flex-1 min-w-0 cursor-pointer"
+          style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
           onClick={() => onTaskClick(task)}
         >
-          <p className="text-sm font-medium leading-snug">{task.title}</p>
+          <p
+            style={{
+              fontSize: '13px',
+              lineHeight: 1.35,
+              fontWeight: isDone ? 400 : 500,
+              color: isDone ? '#6b6580' : '#2E294E',
+              textDecoration: isDone ? 'line-through' : 'none',
+              margin: 0,
+            }}
+          >
+            {task.title}
+          </p>
 
-          {/* Meta row */}
-          {(task.priority || task.tags.length > 0 || task.due) && (
-            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+          {(task.priority || task.tags.length > 0 || task.due || task.column === KanbanColumn.WAITING) && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                marginTop: '8px',
+                paddingLeft: '0',
+                flexWrap: 'wrap',
+              }}
+            >
               {task.priority && (
                 <span
-                  className="text-xs px-1.5 py-0.5 rounded text-white leading-none"
-                  style={{ backgroundColor: priorityColors[task.priority] }}
+                  style={{
+                    background: priorityColors[task.priority],
+                    color: '#fff',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '2px 7px',
+                    borderRadius: '4px',
+                  }}
                 >
                   {priorityLabels[task.priority]}
                 </span>
@@ -83,18 +144,49 @@ export default function TaskCard({ task, onTaskClick, isDragOverlay = false }: T
               {task.tags.map(({ tag }) => (
                 <span
                   key={tag.id}
-                  className="text-xs px-1.5 py-0.5 rounded text-white leading-none"
-                  style={{ backgroundColor: tag.color ?? '#888' }}
+                  style={{
+                    background: tag.color ?? '#888',
+                    color: '#fff',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '2px 7px',
+                    borderRadius: '4px',
+                  }}
                 >
                   {tag.name}
                 </span>
               ))}
               {task.due && (
-                <span className="text-xs text-gray-400">
+                <span
+                  style={{
+                    fontFamily: "'Courier New', monospace",
+                    fontSize: '10px',
+                    color: '#8a8499',
+                  }}
+                >
                   {new Date(task.due).toLocaleDateString('en-US', {
                     month: 'short',
                     day: 'numeric',
                   })}
+                </span>
+              )}
+              {task.column === KanbanColumn.WAITING && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    fontFamily: "'Courier New', monospace",
+                    fontSize: '10px',
+                    color: '#F46036',
+                  }}
+                >
+                  {(() => {
+                    const days = Math.floor(
+                      (Date.now() - new Date(task.updatedAt).getTime()) / (1000 * 60 * 60 * 24),
+                    );
+                    return days === 0 ? '⏳ waiting' : `⏳ ${days}d waiting`;
+                  })()}
                 </span>
               )}
             </div>
