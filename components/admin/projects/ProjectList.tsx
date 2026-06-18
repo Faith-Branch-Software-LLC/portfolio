@@ -412,7 +412,8 @@ export default function ProjectList({ projects, clients }: ProjectListProps) {
                       gap: '4px',
                     }}
                   >
-                    <AdminLink href={`/admin/projects/${project.id}`} style={{ flex: 1 }}>
+                    <div style={{ flex: 1 }}>
+                    <AdminLink href={`/admin/projects/${project.id}`}>
                       <button
                         style={{
                           display: 'inline-flex',
@@ -435,6 +436,7 @@ export default function ProjectList({ projects, clients }: ProjectListProps) {
                         Board
                       </button>
                     </AdminLink>
+                    </div>
 
                     <button
                       onClick={() => setEditing(project)}
