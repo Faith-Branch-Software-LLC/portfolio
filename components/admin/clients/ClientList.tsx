@@ -273,7 +273,8 @@ export default function ClientList({ clients }: ClientListProps) {
                       gap: '4px',
                     }}
                   >
-                    <AdminLink href={`/admin/clients/${client.id}/reports`} style={{ flex: 1 }}>
+                    <div style={{ flex: 1 }}>
+                    <AdminLink href={`/admin/clients/${client.id}/reports`}>
                       <button
                         style={{
                           display: 'inline-flex',
@@ -296,6 +297,7 @@ export default function ClientList({ clients }: ClientListProps) {
                         Reports
                       </button>
                     </AdminLink>
+                    </div>
 
                     <button
                       onClick={() => setEditing(client)}
