@@ -13,13 +13,22 @@ interface Project {
   title: string;
   description: string;
   url: string;
-  images: string[];
+  images?: string[];
   isRed: boolean;
   noteRot: number;
   tapeColor: TapeColor;
 }
 
 const projects: Project[] = [
+  {
+    title: 'Ferric',
+    description:
+      'A nostalgic cassette player for iPhone. Create virtual tapes, add tracks from Apple Music or your local library, decorate with a drawing editor, and watch the reels spin through an animated cassette UI. Built with SwiftUI and AVFoundation.',
+    url: '/ferric',
+    isRed: false,
+    noteRot: 1.2,
+    tapeColor: TapeColor.Orange,
+  },
   {
     title: 'Homework Muffin',
     description:
@@ -51,6 +60,22 @@ const projects: Project[] = [
     tapeColor: TapeColor.Teal,
   },
 ];
+
+function AppPlaceholder({ title }: { title: string }) {
+  return (
+    <div className="relative w-[220px] h-[340px] md:w-[300px] md:h-[430px] mx-auto md:mx-0 flex items-center justify-center">
+      <div
+        className="w-full h-full rounded-lg flex items-center justify-center shadow-card"
+        style={{ background: '#f3ead4', transform: 'rotate(-2deg)' }}
+      >
+        <div className="text-center p-6">
+          <p className="font-fraunces font-black text-2xl mb-2">{title}</p>
+          <p className="font-gelasio text-sm opacity-60">Screenshots coming soon</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PageStack({ images, title }: { images: string[]; title: string }) {
   const img0Ref = useRef<HTMLDivElement>(null);
@@ -114,7 +139,11 @@ export default function PortfolioPageContent() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <PageStack images={project.images} title={project.title} />
+              {project.images?.length ? (
+                <PageStack images={project.images} title={project.title} />
+              ) : (
+                <AppPlaceholder title={project.title} />
+              )}
             </motion.div>
 
             <motion.div

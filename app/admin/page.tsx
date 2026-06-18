@@ -68,8 +68,6 @@ type DoneEntry = {
 };
 
 export default async function AdminDashboard() {
-  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-
   const lastLog = await prisma.activityLog.findFirst({
     orderBy: { createdAt: 'desc' },
     select: { createdAt: true },
@@ -118,18 +116,27 @@ export default async function AdminDashboard() {
     },
   }) as ActiveTask[];
 
-  const projects = await prisma.project.findMany({
+  const allProjects = await prisma.project.findMany({
     where: { archived: false },
-    orderBy: { createdAt: 'desc' },
     include: {
       client: { select: { name: true, color: true } },
       tasks: { select: { column: true } },
       activityLogs: {
-        where: { createdAt: { gte: fourteenDaysAgo } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
         select: { createdAt: true },
       },
     },
   });
+
+  const sortedProjects = [...allProjects].sort((a, b) => {
+    const aLast = a.activityLogs[0]?.createdAt?.getTime() ?? a.createdAt.getTime();
+    const bLast = b.activityLogs[0]?.createdAt?.getTime() ?? b.createdAt.getTime();
+    return bLast - aLast;
+  });
+
+  const projects = sortedProjects.slice(0, 3);
+  const remainingCount = sortedProjects.length - projects.length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -237,6 +244,7 @@ export default async function AdminDashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {projects.map((project) => {
+
                 const total = project.tasks.filter(
                   (t) => t.column !== KanbanColumn.BACKLOG,
                 ).length;
@@ -414,7 +422,7 @@ export default async function AdminDashboard() {
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          Next: {nextTask ? '—' : 'all done'}
+                          {nextTask ? nextTask.title : 'all done'}
                         </span>
                       </div>
                     </div>
@@ -422,6 +430,31 @@ export default async function AdminDashboard() {
                 );
               })}
             </div>
+
+            {remainingCount > 0 && (
+              <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                <AdminLink href="/admin/projects">
+                  <button
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: '#ffffff',
+                      color: '#2E294E',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      padding: '8px 14px',
+                      border: '1.5px solid rgba(46,41,78,0.28)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    +{remainingCount} more project{remainingCount !== 1 ? 's' : ''} →
+                  </button>
+                </AdminLink>
+              </div>
+            )}
           </section>
         )}
 

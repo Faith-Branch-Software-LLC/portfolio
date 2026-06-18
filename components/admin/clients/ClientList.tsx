@@ -3,24 +3,47 @@
 import { useState } from 'react';
 import { Client } from '@prisma/client';
 import { deleteClient } from '@/lib/actions/admin/clients';
-import { Plus, FileText, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Plus, FileText, Pencil, Trash2, UserPlus, ArrowUpDown } from 'lucide-react';
 import ClientForm from './ClientForm';
 import AdminLink from '@/components/admin/AdminLink';
 
+type ClientWithCount = Client & { _count: { projects: number } };
+
 interface ClientListProps {
-  clients: (Client & { _count: { projects: number } })[];
+  clients: ClientWithCount[];
+}
+
+type SortKey = 'name' | 'projects';
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'name', label: 'Name' },
+  { value: 'projects', label: 'Projects' },
+];
+
+function sortClients(clients: ClientWithCount[], key: SortKey): ClientWithCount[] {
+  return [...clients].sort((a, b) => {
+    if (key === 'projects') return b._count.projects - a._count.projects;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export default function ClientList({ clients }: ClientListProps) {
   const [editing, setEditing] = useState<Client | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'name';
+    return (localStorage.getItem('clients:sortKey') as SortKey) ?? 'name';
+  });
 
-  const handleDelete = async (client: Client & { _count: { projects: number } }) => {
+  function handleSortChange(key: SortKey) {
+    setSortKey(key);
+    localStorage.setItem('clients:sortKey', key);
+  }
+
+  const handleDelete = async (client: ClientWithCount) => {
     if (client._count.projects > 0) {
-      alert(
-        `"${client.name}" has ${client._count.projects} project(s). Reassign or delete them first.`,
-      );
+      alert(`"${client.name}" has ${client._count.projects} project(s). Reassign or delete them first.`);
       return;
     }
     if (!confirm(`Delete "${client.name}"?`)) return;
@@ -28,6 +51,8 @@ export default function ClientList({ clients }: ClientListProps) {
     await deleteClient(client.id);
     setDeletingId(null);
   };
+
+  const visible = sortClients(clients, sortKey);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -67,27 +92,52 @@ export default function ClientList({ clients }: ClientListProps) {
             {clients.length} client{clients.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={() => setCreating(true)}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#F46036',
-            color: '#fff',
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600,
-            fontSize: '14px',
-            padding: '10px 15px',
-            border: '2px solid #2E294E',
-            borderRadius: '6px',
-            boxShadow: '3px 3px 0 0 #2E294E',
-            cursor: 'pointer',
-          }}
-        >
-          <UserPlus size={16} />
-          <span className="hidden sm:inline">New client</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowUpDown size={13} style={{ color: '#6b6580', flexShrink: 0 }} />
+            <select
+              value={sortKey}
+              onChange={(e) => handleSortChange(e.target.value as SortKey)}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '13px',
+                color: '#2E294E',
+                background: '#fff',
+                border: '1.5px solid rgba(46,41,78,0.28)',
+                borderRadius: '6px',
+                padding: '7px 10px',
+                cursor: 'pointer',
+                appearance: 'none',
+              }}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => setCreating(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#F46036',
+              color: '#fff',
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 600,
+              fontSize: '14px',
+              padding: '10px 15px',
+              border: '2px solid #2E294E',
+              borderRadius: '6px',
+              boxShadow: '3px 3px 0 0 #2E294E',
+              cursor: 'pointer',
+            }}
+          >
+            <UserPlus size={16} />
+            <span className="hidden sm:inline">New client</span>
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -102,7 +152,7 @@ export default function ClientList({ clients }: ClientListProps) {
               borderRadius: '10px',
               boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
               padding: '22px',
-              marginBottom: '16px',
+              marginBottom: '20px',
             }}
           >
             <h2
@@ -116,10 +166,7 @@ export default function ClientList({ clients }: ClientListProps) {
             >
               New Client
             </h2>
-            <ClientForm
-              onSuccess={() => setCreating(false)}
-              onCancel={() => setCreating(false)}
-            />
+            <ClientForm onSuccess={() => setCreating(false)} onCancel={() => setCreating(false)} />
           </div>
         )}
 
@@ -137,8 +184,14 @@ export default function ClientList({ clients }: ClientListProps) {
             No clients yet. Create one to get started.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {clients.map((client) =>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: '12px',
+            }}
+          >
+            {visible.map((client) =>
               editing?.id === client.id ? (
                 <div
                   key={client.id}
@@ -147,7 +200,8 @@ export default function ClientList({ clients }: ClientListProps) {
                     border: '2px solid #2E294E',
                     borderRadius: '10px',
                     boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
-                    padding: '22px',
+                    padding: '20px',
+                    gridColumn: '1 / -1',
                   }}
                 >
                   <ClientForm
@@ -163,119 +217,125 @@ export default function ClientList({ clients }: ClientListProps) {
                     background: '#fff',
                     border: '2px solid #2E294E',
                     borderRadius: '8px',
-                    boxShadow: '4px 4px 0 0 rgba(46,41,78,0.18)',
+                    boxShadow: '3px 3px 0 0 rgba(46,41,78,0.18)',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    padding: '16px 20px',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
                   }}
                 >
-                  {/* Color swatch */}
-                  <span
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '6px',
-                      background: client.color ?? '#888',
-                      flexShrink: 0,
-                      display: 'inline-block',
-                    }}
-                  />
+                  {/* Top color bar */}
+                  <div style={{ height: '4px', background: client.color ?? '#888', flexShrink: 0 }} />
 
-                  {/* Info + actions wrapper */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
-                    {/* Client info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
+                  {/* Card body */}
+                  <div style={{ padding: '14px 14px 10px', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '4px',
+                          background: client.color ?? '#888',
+                          flexShrink: 0,
+                          display: 'inline-block',
+                        }}
+                      />
+                      <span
                         style={{
                           fontFamily: 'Fraunces, serif',
                           fontWeight: 600,
-                          fontSize: '16px',
+                          fontSize: '15px',
                           color: '#2E294E',
+                          lineHeight: 1.3,
                         }}
                       >
                         {client.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "'Courier New', monospace",
-                          fontSize: '11.5px',
-                          color: '#8a8499',
-                          marginTop: '2px',
-                        }}
-                      >
-                        {client._count.projects} project{client._count.projects !== 1 ? 's' : ''}
-                      </div>
+                      </span>
                     </div>
+                    <div
+                      style={{
+                        fontFamily: "'Courier New', monospace",
+                        fontSize: '11px',
+                        color: '#8a8499',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {client._count.projects} project{client._count.projects !== 1 ? 's' : ''}
+                    </div>
+                  </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <AdminLink href={`/admin/clients/${client.id}/reports`}>
-                        <button
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: '#ffffff',
-                            color: '#2E294E',
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            padding: '8px 12px',
-                            border: '1.5px solid rgba(46,41,78,0.28)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <FileText size={14} />
-                          <span className="hidden sm:inline">Reports</span>
-                        </button>
-                      </AdminLink>
-
+                  {/* Card footer — actions */}
+                  <div
+                    style={{
+                      borderTop: '1.5px solid rgba(46,41,78,0.1)',
+                      padding: '8px 10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <AdminLink href={`/admin/clients/${client.id}/reports`} style={{ flex: 1 }}>
                       <button
-                        onClick={() => setEditing(client)}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          background: '#ffffff',
-                          color: '#2E294E',
+                          background: '#2E294E',
+                          color: '#fff',
                           fontFamily: "'DM Sans', sans-serif",
                           fontWeight: 600,
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          border: '1.5px solid rgba(46,41,78,0.28)',
-                          borderRadius: '6px',
+                          fontSize: '12px',
+                          padding: '6px 10px',
+                          border: 'none',
+                          borderRadius: '5px',
                           cursor: 'pointer',
+                          width: '100%',
+                          justifyContent: 'center',
                         }}
                       >
-                        <Pencil size={14} />
-                        <span className="hidden sm:inline">Edit</span>
+                        <FileText size={13} />
+                        Reports
                       </button>
+                    </AdminLink>
 
-                      <button
-                        onClick={() => handleDelete(client)}
-                        disabled={deletingId === client.id}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          background: '#ffffff',
-                          color: '#D7263D',
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontWeight: 600,
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          border: '1.5px solid rgba(215,38,61,0.4)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          opacity: deletingId === client.id ? 0.5 : 1,
-                        }}
-                      >
-                        <Trash2 size={14} />
-                        <span className="hidden sm:inline">Delete</span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setEditing(client)}
+                      title="Edit"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#ffffff',
+                        color: '#2E294E',
+                        padding: '6px 8px',
+                        border: '1.5px solid rgba(46,41,78,0.2)',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Pencil size={13} />
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(client)}
+                      disabled={deletingId === client.id}
+                      title="Delete"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#ffffff',
+                        color: '#D7263D',
+                        padding: '6px 8px',
+                        border: '1.5px solid rgba(215,38,61,0.3)',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        opacity: deletingId === client.id ? 0.5 : 1,
+                      }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 </div>
               ),

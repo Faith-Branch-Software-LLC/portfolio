@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { IntegrationType } from '@prisma/client';
 import ProjectBoardPage from '@/components/admin/projects/ProjectBoardPage';
 
 interface PageProps {
@@ -9,7 +10,7 @@ interface PageProps {
 export default async function ProjectPage({ params }: PageProps) {
   const { id } = await params;
 
-  const [project, clients] = await Promise.all([
+  const [project, clients, tfIntegration] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -21,9 +22,15 @@ export default async function ProjectPage({ params }: PageProps) {
       },
     }),
     prisma.client.findMany({ orderBy: { name: 'asc' } }),
+    prisma.integration.findUnique({ where: { type: IntegrationType.TESTFLIGHT } }),
   ]);
 
   if (!project) notFound();
+
+  const isTestFlightTarget =
+    !!tfIntegration &&
+    (tfIntegration.config as { targetProjectId?: string }).targetProjectId === id;
+  const isBasecampLinked = !!project.basecampTodolistId;
 
   return (
     <ProjectBoardPage
@@ -35,10 +42,14 @@ export default async function ProjectPage({ params }: PageProps) {
         status: project.status,
         priority: project.priority,
         due: project.due,
+        apiToken: project.apiToken,
+        basecampTodolistId: project.basecampTodolistId,
         client: { name: project.client.name, color: project.client.color },
       }}
       clients={clients}
       tasks={project.tasks}
+      isTestFlightTarget={isTestFlightTarget}
+      isBasecampLinked={isBasecampLinked}
     />
   );
 }

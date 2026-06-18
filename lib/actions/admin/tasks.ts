@@ -1,9 +1,11 @@
 'use server';
 
-import { KanbanColumn, Priority } from '@prisma/client';
+import { KanbanColumn, ExternalSource, IntegrationType, Priority } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '../../db';
 import { logActivity } from './activity';
+import { completeTodo } from '../../utils/basecampApi';
+import { deleteFeedback } from '../../utils/testflightApi';
 
 const taskInclude = {
   tags: { include: { tag: true } },
@@ -16,6 +18,9 @@ export async function createTask(data: {
   description?: string;
   priority?: Priority;
   due?: Date;
+  basecampTodoId?: string;
+  testflightFeedbackId?: string;
+  externalSource?: ExternalSource;
 }) {
   const column = data.column ?? KanbanColumn.BACKLOG;
 
@@ -91,6 +96,21 @@ export async function moveTask(
     await logActivity(projectId, taskId, 'moved', fromColumn, newColumn);
   }
 
+  if (newColumn === KanbanColumn.DONE && task.basecampTodoId) {
+    try {
+      const integration = await prisma.integration.findUnique({
+        where: { type: IntegrationType.BASECAMP },
+      });
+      if (integration) {
+        const { token, accountId } = integration.config as { token: string; accountId: string };
+        const project = await prisma.project.findUnique({ where: { id: projectId } });
+        if (project?.basecampProjectId) {
+          await completeTodo(token, accountId, project.basecampProjectId, task.basecampTodoId);
+        }
+      }
+    } catch {}
+  }
+
   revalidatePath(`/admin/projects/${projectId}`);
 }
 
@@ -100,5 +120,22 @@ export async function deleteTask(id: string, projectId: string) {
 
   await prisma.task.delete({ where: { id } });
   await logActivity(projectId, null, 'deleted', task.column, undefined, task.title);
+
+  if (task.testflightFeedbackId) {
+    try {
+      const integration = await prisma.integration.findUnique({
+        where: { type: IntegrationType.TESTFLIGHT },
+      });
+      if (integration) {
+        const { issuerId, keyId, privateKey } = integration.config as {
+          issuerId: string;
+          keyId: string;
+          privateKey: string;
+        };
+        await deleteFeedback(issuerId, keyId, privateKey, task.testflightFeedbackId);
+      }
+    } catch {}
+  }
+
   revalidatePath(`/admin/projects/${projectId}`);
 }

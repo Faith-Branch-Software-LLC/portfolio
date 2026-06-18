@@ -9,7 +9,7 @@ export default function PortfolioSection() {
         <Hand color={ScrapColors.olive} size={28} rot={-4}>~ what we&apos;ve made ~</Hand>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 w-full max-w-5xl">
         <StickyNote rot={-1.5} tapeColor={TapeColor.Purple}>
           <h3 className="font-fraunces font-black text-3xl mb-3">Portfolio</h3>
           <p className="font-gelasio text-base leading-relaxed mb-5">
@@ -21,7 +21,18 @@ export default function PortfolioSection() {
           </Hand>
         </StickyNote>
 
-        <StickyNote rot={1.5} tapeColor={TapeColor.Teal}>
+        <StickyNote rot={1.5} tapeColor={TapeColor.Orange}>
+          <h3 className="font-fraunces font-black text-3xl mb-3">Ferric</h3>
+          <p className="font-gelasio text-base leading-relaxed mb-5">
+            A nostalgic cassette player for iPhone. Create virtual tapes, add
+            your music, and watch the reels spin.
+          </p>
+          <Hand color={ScrapColors.teal} size={24} rot={-3} href="/ferric" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            See the app →
+          </Hand>
+        </StickyNote>
+
+        <StickyNote rot={-0.8} tapeColor={TapeColor.Teal}>
           <h3 className="font-fraunces font-black text-3xl mb-3">Blog</h3>
           <p className="font-gelasio text-base leading-relaxed mb-5">
             Thoughts on software development, web technologies, and insights from

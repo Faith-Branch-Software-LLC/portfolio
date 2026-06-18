@@ -1,9 +1,28 @@
 import { Plug } from 'lucide-react';
+import { prisma } from '@/lib/db';
+import { IntegrationType } from '@prisma/client';
+import ConnectionsClient from '@/components/admin/connections/ConnectionsClient';
 
-export default function ConnectionsPage() {
+export default async function ConnectionsPage() {
+  const [basecampIntegration, testflightIntegration, projects, clients] = await Promise.all([
+    prisma.integration.findUnique({ where: { type: IntegrationType.BASECAMP } }),
+    prisma.integration.findUnique({ where: { type: IntegrationType.TESTFLIGHT } }),
+    prisma.project.findMany({
+      where: { archived: false },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        basecampProjectId: true,
+        basecampTodolistId: true,
+        client: { select: { name: true, color: true } },
+      },
+    }),
+    prisma.client.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, color: true } }),
+  ]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -38,65 +57,24 @@ export default function ConnectionsPage() {
               color: '#6b6580',
             }}
           >
-            sync projects and calendars into the workshop
+            sync projects and feedback into the workshop
           </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '40px 26px' }}>
-        <div style={{ maxWidth: '720px' }}>
-          <div
-            style={{
-              background: '#fff',
-              border: '2px solid #2E294E',
-              borderRadius: '10px',
-              boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)',
-              padding: '32px',
-              textAlign: 'center',
-            }}
-          >
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: '#2E294E',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px',
-                color: '#C5D86D',
-              }}
-            >
-              <Plug size={24} />
-            </div>
-            <h2
-              style={{
-                fontFamily: 'Fraunces, serif',
-                fontWeight: 600,
-                fontSize: '20px',
-                margin: '0 0 8px',
-                color: '#2E294E',
-              }}
-            >
-              Connections coming soon
-            </h2>
-            <p
-              style={{
-                fontFamily: 'Gelasio, serif',
-                fontSize: '15px',
-                color: '#6b6580',
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
-              Connect Basecamp projects and calendars (Google, Outlook, Apple) to sync
-              your work into the workshop.
-            </p>
-          </div>
-        </div>
-      </div>
+      <ConnectionsClient
+        basecampConnected={!!basecampIntegration}
+        basecampLastSync={basecampIntegration?.lastSyncedAt?.toISOString() ?? null}
+        testflightConnected={!!testflightIntegration}
+        testflightLastSync={testflightIntegration?.lastSyncedAt?.toISOString() ?? null}
+        testflightTargetProjectId={
+          testflightIntegration
+            ? (testflightIntegration.config as { targetProjectId?: string }).targetProjectId ?? null
+            : null
+        }
+        projects={projects}
+        clients={clients}
+      />
     </div>
   );
 }

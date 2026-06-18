@@ -57,6 +57,16 @@ enum KanbanColumn {
   DONE
 }
 
+enum ExternalSource {
+  BASECAMP
+  TESTFLIGHT
+}
+
+enum IntegrationType {
+  BASECAMP
+  TESTFLIGHT
+}
+
 model Client {
   id              String           @id @default(cuid())
   name            String
@@ -68,36 +78,43 @@ model Client {
 }
 
 model Project {
-  id              String           @id @default(cuid())
-  name            String
-  clientId        String
-  status          ProjectStatus    @default(NOT_STARTED)
-  priority        Priority?
-  due             DateTime?
-  description     String?          @db.Text
-  archived        Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  client       Client        @relation(fields: [clientId], references: [id])
-  tasks        Task[]
-  activityLogs ActivityLog[]
+  id                 String        @id @default(cuid())
+  name               String
+  clientId           String
+  status             ProjectStatus @default(NOT_STARTED)
+  priority           Priority?
+  due                DateTime?
+  description        String?       @db.Text
+  archived           Boolean       @default(false)
+  apiToken           String?       @unique
+  basecampProjectId  String?
+  basecampTodolistId String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  client             Client        @relation(fields: [clientId], references: [id])
+  tasks              Task[]
+  activityLogs       ActivityLog[]
 }
 
 model Task {
-  id           String        @id @default(cuid())
-  title        String
-  description  String?       @db.Text
-  priority     Priority?
-  due          DateTime?
-  projectId    String
-  column       KanbanColumn  @default(BACKLOG)
-  order        Int
-  createdAt    DateTime      @default(now())
-  completedAt  DateTime?
-  updatedAt    DateTime      @updatedAt
-  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tags         TaskTag[]
-  activityLogs ActivityLog[]
+  id                   String         @id @default(cuid())
+  title                String
+  description          String?        @db.Text
+  priority             Priority?
+  due                  DateTime?
+  projectId            String
+  column               KanbanColumn   @default(BACKLOG)
+  order                Int
+  createdAt            DateTime       @default(now())
+  completedAt          DateTime?
+  updatedAt            DateTime       @updatedAt
+  basecampTodoId       String?
+  testflightFeedbackId String?
+  screenshotUrl        String?        @db.Text
+  externalSource       ExternalSource?
+  project              Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tags                 TaskTag[]
+  activityLogs         ActivityLog[]
 }
 
 model Tag {
@@ -136,4 +153,13 @@ model ProgressReport {
   autoSummary Json?
   createdAt   DateTime @default(now())
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Integration {
+  id           String          @id @default(cuid())
+  type         IntegrationType @unique
+  config       Json
+  lastSyncedAt DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 }

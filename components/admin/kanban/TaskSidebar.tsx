@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,7 +14,7 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form';
-import { Trash2, X, Check } from 'lucide-react';
+import { Trash2, X, Check, Copy, ClipboardCheck } from 'lucide-react';
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -60,6 +60,7 @@ interface TaskSidebarProps {
   task: TaskWithTags | null;
   column: KanbanColumn | null;
   projectId: string;
+  projectName?: string;
   onClose: () => void;
   onCreated: (task: TaskWithTags) => void;
   onUpdated: (task: TaskWithTags) => void;
@@ -71,6 +72,7 @@ export default function TaskSidebar({
   task,
   column,
   projectId,
+  projectName,
   onClose,
   onCreated,
   onUpdated,
@@ -80,6 +82,30 @@ export default function TaskSidebar({
   const activeColumn = task?.column ?? column ?? KanbanColumn.BACKLOG;
   const dot = columnDot[activeColumn];
   const colLabel = columnLabels[activeColumn];
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!task) return;
+    const payload = {
+      id: task.id,
+      project: projectName ?? projectId,
+      title: task.title,
+      status: columnLabels[task.column],
+      priority: task.priority ?? null,
+      description: task.description ?? null,
+      due: task.due ? task.due.toISOString().split('T')[0] : null,
+      tags: task.tags.map((t) => t.tag.name),
+      screenshotUrl: task.screenshotUrl ?? null,
+      externalSource: task.externalSource ?? null,
+      basecampTodoId: task.basecampTodoId ?? null,
+      testflightFeedbackId: task.testflightFeedbackId ?? null,
+      createdAt: task.createdAt,
+      completedAt: task.completedAt ?? null,
+    };
+    navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -148,7 +174,7 @@ export default function TaskSidebar({
           position: 'fixed',
           top: 0,
           right: 0,
-          height: '100vh',
+          height: '100dvh',
           width: 'min(380px, 95vw)',
           background: '#fff',
           borderLeft: '2px solid #2E294E',
@@ -293,7 +319,7 @@ export default function TaskSidebar({
                           borderRadius: '7px',
                           padding: '11px 12px',
                           fontFamily: 'Gelasio, serif',
-                          fontSize: '14px',
+                          fontSize: '16px',
                           lineHeight: 1.5,
                           color: '#3b3550',
                           resize: 'none',
@@ -305,6 +331,40 @@ export default function TaskSidebar({
                   </FormItem>
                 )}
               />
+
+              {/* Screenshot */}
+              {task?.screenshotUrl && (
+                <div style={{ marginBottom: '18px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontWeight: 600,
+                      fontSize: '11px',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: '#8a8499',
+                      marginBottom: '7px',
+                    }}
+                  >
+                    Screenshot
+                  </label>
+                  <a href={task.screenshotUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                    <img
+                      src={task.screenshotUrl}
+                      alt="TestFlight screenshot"
+                      style={{
+                        width: '100%',
+                        borderRadius: '8px',
+                        border: '1.5px solid rgba(46,41,78,0.16)',
+                        display: 'block',
+                        objectFit: 'contain',
+                        background: '#F7F3EA',
+                      }}
+                    />
+                  </a>
+                </div>
+              )}
 
               {/* Priority + Due */}
               <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
@@ -358,7 +418,7 @@ export default function TaskSidebar({
                               background: 'transparent',
                               border: 'none',
                               outline: 'none',
-                              fontSize: '14px',
+                              fontSize: '16px',
                               color: '#2E294E',
                               cursor: 'pointer',
                               fontFamily: "'DM Sans', sans-serif",
@@ -411,7 +471,7 @@ export default function TaskSidebar({
                               background: 'transparent',
                               border: 'none',
                               outline: 'none',
-                              fontSize: '14px',
+                              fontSize: '16px',
                               color: field.value ? '#2E294E' : '#8a8499',
                               fontFamily: "'DM Sans', sans-serif",
                               cursor: 'pointer',
@@ -439,49 +499,57 @@ export default function TaskSidebar({
           }}
         >
           {isEditing ? (
-            <button
-              type="button"
-              onClick={handleDelete}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '7px',
-                background: '#fff',
-                color: '#D7263D',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-                fontSize: '13px',
-                padding: '9px 13px',
-                border: '1.5px solid rgba(215,38,61,0.45)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-              }}
-            >
-              <Trash2 size={15} />
-              Delete
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={handleCopy}
+                title="Copy task as JSON for AI"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: copied ? '#1B998B' : '#fff',
+                  color: copied ? '#fff' : '#2E294E',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  padding: '9px 13px',
+                  border: `1.5px solid ${copied ? '#1B998B' : 'rgba(46,41,78,0.35)'}`,
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {copied ? <ClipboardCheck size={15} /> : <Copy size={15} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: '#fff',
+                  color: '#D7263D',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  padding: '9px 13px',
+                  border: '1.5px solid rgba(215,38,61,0.45)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                <Trash2 size={15} />
+                Delete
+              </button>
+            </div>
           ) : (
             <div />
           )}
 
           <div style={{ display: 'flex', gap: '9px' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'transparent',
-                color: '#2E294E',
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 600,
-                fontSize: '13px',
-                padding: '9px 15px',
-                border: '1.5px solid #2E294E',
-                borderRadius: '6px',
-                cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
             <button
               type="submit"
               form="task-sidebar-form"

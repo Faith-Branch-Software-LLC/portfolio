@@ -30,6 +30,7 @@ const COLUMNS: { key: KanbanColumnEnum; label: string }[] = [
 
 interface KanbanBoardProps {
   projectId: string;
+  projectName?: string;
   initialTasks: TaskWithTags[];
   pendingAddColumn?: KanbanColumnEnum | null;
   onPendingAddConsumed?: () => void;
@@ -37,6 +38,7 @@ interface KanbanBoardProps {
 
 export default function KanbanBoard({
   projectId,
+  projectName,
   initialTasks,
   pendingAddColumn,
   onPendingAddConsumed,
@@ -204,6 +206,7 @@ export default function KanbanBoard({
         task={sidebarTask}
         column={sidebarColumn}
         projectId={projectId}
+        projectName={projectName}
         onClose={closeSidebar}
         onCreated={handleTaskCreated}
         onUpdated={handleTaskUpdated}
