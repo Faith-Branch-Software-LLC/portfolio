@@ -120,7 +120,7 @@ export default async function AdminDashboard() {
     where: { archived: false },
     include: {
       client: { select: { name: true, color: true } },
-      tasks: { select: { column: true } },
+      tasks: { select: { column: true, title: true } },
       activityLogs: {
         orderBy: { createdAt: 'desc' },
         take: 50,
