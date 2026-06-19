@@ -115,6 +115,33 @@ model Task {
   project              Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tags                 TaskTag[]
   activityLogs         ActivityLog[]
+  timeEntries          TimeEntry[]
+  activeTimer          ActiveTimer?
+}
+
+model TimeEntry {
+  id        String   @id @default(cuid())
+  taskId    String
+  date      DateTime
+  minutes   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, date])
+  @@index([taskId])
+}
+
+model ActiveTimer {
+  id        String   @id @default(cuid())
+  taskId    String   @unique
+  clockedIn DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model AdminSetting {
+  key   String @id
+  value String
 }
 
 model Tag {

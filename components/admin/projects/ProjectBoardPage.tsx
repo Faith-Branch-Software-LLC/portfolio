@@ -6,7 +6,7 @@ import { Client, KanbanColumn, Priority, ProjectStatus } from '@prisma/client';
 import { TaskWithTags } from '@/lib/types/pm';
 import KanbanBoard from '../kanban/KanbanBoard';
 import ProjectForm from './ProjectForm';
-import { Plus, Zap, Pencil, ChevronLeft, X, Copy, RefreshCw } from 'lucide-react';
+import { Plus, Zap, Pencil, ChevronLeft, X, Copy, RefreshCw, Clock } from 'lucide-react';
 import { generateProjectApiToken } from '@/lib/actions/admin/integrations';
 
 interface ProjectBoardPageProps {
@@ -24,11 +24,20 @@ interface ProjectBoardPageProps {
   };
   clients: Client[];
   tasks: TaskWithTags[];
+  totalMinutes?: number;
   isTestFlightTarget?: boolean;
   isBasecampLinked?: boolean;
 }
 
-export default function ProjectBoardPage({ project, clients, tasks, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
+function formatMinutes(total: number): string {
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+export default function ProjectBoardPage({ project, clients, tasks, totalMinutes, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
   const router = useTransitionRouter();
   const [pendingAddColumn, setPendingAddColumn] = useState<KanbanColumn | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -154,6 +163,32 @@ export default function ProjectBoardPage({ project, clients, tasks, isTestFlight
               >
                 {project.description}
               </p>
+            )}
+            {totalMinutes != null && totalMinutes > 0 && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  marginTop: '6px',
+                  background: 'rgba(27,153,139,0.1)',
+                  border: '1px solid rgba(27,153,139,0.3)',
+                  borderRadius: '5px',
+                  padding: '3px 8px',
+                }}
+              >
+                <Clock size={12} style={{ color: '#1B998B' }} />
+                <span
+                  style={{
+                    fontFamily: "'Courier New', monospace",
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: '#1B998B',
+                  }}
+                >
+                  {formatMinutes(totalMinutes)} logged
+                </span>
+              </div>
             )}
           </div>
 

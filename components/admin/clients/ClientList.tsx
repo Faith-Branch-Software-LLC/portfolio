@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Client } from '@prisma/client';
 import { deleteClient } from '@/lib/actions/admin/clients';
-import { Plus, FileText, Pencil, Trash2, UserPlus, ArrowUpDown } from 'lucide-react';
+import { FileText, Pencil, Trash2, UserPlus, ArrowUpDown, Clock } from 'lucide-react';
 import ClientForm from './ClientForm';
 import AdminLink from '@/components/admin/AdminLink';
 
@@ -273,30 +273,52 @@ export default function ClientList({ clients }: ClientListProps) {
                       gap: '4px',
                     }}
                   >
-                    <div style={{ flex: 1 }}>
-                    <AdminLink href={`/admin/clients/${client.id}/reports`}>
-                      <button
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          background: '#2E294E',
-                          color: '#fff',
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontWeight: 600,
-                          fontSize: '12px',
-                          padding: '6px 10px',
-                          border: 'none',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          width: '100%',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <FileText size={13} />
-                        Reports
-                      </button>
-                    </AdminLink>
+                    <div style={{ flex: 1, display: 'flex', gap: '4px' }}>
+                      <AdminLink href={`/admin/clients/${client.id}/reports`} className="flex-1">
+                        <button
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: '#2E294E',
+                            color: '#fff',
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontWeight: 600,
+                            fontSize: '12px',
+                            padding: '6px 10px',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            width: '100%',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <FileText size={13} />
+                          Reports
+                        </button>
+                      </AdminLink>
+                      <AdminLink href={`/admin/clients/${client.id}/time`}>
+                        <button
+                          title="Time tracking"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            background: '#1B998B',
+                            color: '#fff',
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontWeight: 600,
+                            fontSize: '12px',
+                            padding: '6px 9px',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Clock size={13} />
+                        </button>
+                      </AdminLink>
                     </div>
 
                     <button

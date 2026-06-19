@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
 import ProjectBoardPage from '@/components/admin/projects/ProjectBoardPage';
+import { getProjectTotalMinutes } from '@/lib/actions/admin/time';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -10,7 +11,7 @@ interface PageProps {
 export default async function ProjectPage({ params }: PageProps) {
   const { id } = await params;
 
-  const [project, clients, tfIntegration] = await Promise.all([
+  const [project, clients, tfIntegration, totalMinutes] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -23,6 +24,7 @@ export default async function ProjectPage({ params }: PageProps) {
     }),
     prisma.client.findMany({ orderBy: { name: 'asc' } }),
     prisma.integration.findUnique({ where: { type: IntegrationType.TESTFLIGHT } }),
+    getProjectTotalMinutes(id),
   ]);
 
   if (!project) notFound();
@@ -48,6 +50,7 @@ export default async function ProjectPage({ params }: PageProps) {
       }}
       clients={clients}
       tasks={project.tasks}
+      totalMinutes={totalMinutes}
       isTestFlightTarget={isTestFlightTarget}
       isBasecampLinked={isBasecampLinked}
     />

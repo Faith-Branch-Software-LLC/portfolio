@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   X,
+  Clock,
 } from 'lucide-react';
 import type { NavProject } from '@/app/admin/layout';
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/projects', label: 'Projects', icon: FolderKanban, exact: false },
   { href: '/admin/clients', label: 'Clients', icon: Users, exact: false },
+  { href: '/admin/clock', label: 'Clock', icon: Clock, exact: false },
   { href: '/admin/connections', label: 'Connections', icon: Plug, exact: false },
   { href: '/admin/api-docs', label: 'API Docs', icon: Code, exact: false },
 ];
