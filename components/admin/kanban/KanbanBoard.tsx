@@ -8,7 +8,8 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  closestCorners,
+  pointerWithin,
+  closestCenter,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -170,7 +171,7 @@ export default function KanbanBoard({
     <div style={{ position: 'relative', height: '100%', display: 'flex', overflow: 'hidden' }}>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={(args) => pointerWithin(args).length ? pointerWithin(args) : closestCenter(args)}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
