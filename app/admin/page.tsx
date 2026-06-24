@@ -1,9 +1,12 @@
 import { prisma } from '@/lib/db';
+import ProjectHeatmap from '@/components/admin/projects/ProjectHeatmap';
+import { buildHeatmapGrid } from '@/lib/utils/heatmap';
 import { KanbanColumn } from '@prisma/client';
 import AdminLink from '@/components/admin/AdminLink';
 import WorkToDo, { ActiveTask } from '@/components/admin/WorkToDo';
 import DashboardClock from '@/components/admin/DashboardClock';
-import { Check, Clock, Plus, Code } from 'lucide-react';
+import { Check, Clock, Plus, Code, Video } from 'lucide-react';
+import type { NormalizedEvent } from '@/lib/types/calendar';
 
 function etDayBoundaries(date: Date): { start: Date; end: Date } {
   const etDate = date.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -44,21 +47,6 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: '#ff0000',
 };
 
-function buildHeatmap(logs: { createdAt: Date }[]): number[] {
-  const now = new Date();
-  const counts: number[] = Array(14).fill(0);
-  for (const log of logs) {
-    const diffDays = Math.floor(
-      (now.getTime() - log.createdAt.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    if (diffDays >= 0 && diffDays < 14) counts[13 - diffDays]++;
-  }
-  return counts;
-}
-
-function heatColor(count: number) {
-  return count === 0 ? 'rgba(46,41,78,0.1)' : count === 1 ? '#C5D86D' : '#1B998B';
-}
 
 type DoneEntry = {
   id: string;
@@ -67,7 +55,76 @@ type DoneEntry = {
   project: { id: string; name: string; client: { name: string; color: string | null } };
 };
 
+// ─── Calendar helpers ─────────────────────────────────────────────────────────
+
+interface UpcomingEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: boolean;
+  calendarName: string;
+  calendarColor: string;
+  meetingUrl?: string;
+}
+
+function parseUpcomingEvents(raw: NormalizedEvent[]): UpcomingEvent[] {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const results: UpcomingEvent[] = [];
+
+  for (const ev of raw) {
+    const parseDate = (iso: string, allDay: boolean): Date => {
+      if (allDay && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(iso);
+    };
+    const start = parseDate(ev.startIso, ev.allDay);
+    const end   = parseDate(ev.endIso, ev.allDay);
+    if (isNaN(start.getTime())) continue;
+    // Show: starting within 14 days, or currently in-progress
+    if (start > cutoff) continue;
+    if (end < now && !ev.allDay) continue;
+    results.push({ id: ev.id, title: ev.title, start, end, allDay: ev.allDay, calendarName: ev.calendarName, calendarColor: ev.calendarColor, meetingUrl: ev.meetingUrl });
+  }
+
+  // Meetings first (both groups sorted by time within)
+  results.sort((a, b) => {
+    const aMeeting = !!a.meetingUrl;
+    const bMeeting = !!b.meetingUrl;
+    if (aMeeting !== bMeeting) return aMeeting ? -1 : 1;
+    return a.start.getTime() - b.start.getTime();
+  });
+  return results.slice(0, 8);
+}
+
+function fmtEventTime(ev: UpcomingEvent, now: Date): string {
+  const today     = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow  = new Date(today.getTime() + 86400000);
+  const evDay     = new Date(ev.start.getFullYear(), ev.start.getMonth(), ev.start.getDate());
+  const isToday   = evDay.getTime() === today.getTime();
+  const isTomorrow = evDay.getTime() === tomorrow.getTime();
+
+  if (ev.allDay) {
+    const label = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : ev.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${label} · All day`;
+  }
+
+  const dayLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : ev.start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeStr  = ev.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${dayLabel} · ${timeStr}`;
+}
+
 export default async function AdminDashboard() {
+  const now = new Date();
+
+  // Calendar upcoming events from cache
+  const calCaches = await prisma.calendarEventCache.findMany({ select: { events: true } });
+  const allCachedEvents: NormalizedEvent[] = calCaches.flatMap((c) => (c.events as unknown as NormalizedEvent[]) ?? []);
+  const upcomingEvents = parseUpcomingEvents(allCachedEvents);
+
   const lastLog = await prisma.activityLog.findFirst({
     orderBy: { createdAt: 'desc' },
     select: { createdAt: true },
@@ -116,14 +173,21 @@ export default async function AdminDashboard() {
     },
   }) as ActiveTask[];
 
+  const activeTimers = await prisma.activeTimer.findMany({
+    select: { task: { select: { projectId: true } } },
+  });
+  const activeTimerProjectIds = new Set(activeTimers.map((t) => t.task.projectId));
+
+  const heatmapStartDate = new Date();
+  heatmapStartDate.setFullYear(heatmapStartDate.getFullYear() - 1);
+
   const allProjects = await prisma.project.findMany({
     where: { archived: false },
     include: {
       client: { select: { name: true, color: true } },
       tasks: { select: { column: true, title: true } },
       activityLogs: {
-        orderBy: { createdAt: 'desc' },
-        take: 50,
+        where: { createdAt: { gte: heatmapStartDate } },
         select: { createdAt: true },
       },
     },
@@ -252,7 +316,7 @@ export default async function AdminDashboard() {
                   (t) => t.column === KanbanColumn.DONE,
                 ).length;
                 const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-                const heatmap = buildHeatmap(project.activityLogs);
+                const { grid: heatmap, alignedStart: heatmapStart } = buildHeatmapGrid(project.activityLogs, project.createdAt);
                 const st = statusStyle(project.status);
                 const nextTask = project.tasks.find(
                   (t) => t.column === KanbanColumn.IN_PROGRESS || t.column === KanbanColumn.TODO,
@@ -305,6 +369,19 @@ export default async function AdminDashboard() {
                         >
                           {project.client.name}
                         </span>
+                        {activeTimerProjectIds.has(project.id) && (
+                          <span
+                            className="animate-pulse"
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              background: '#4ade80',
+                              flexShrink: 0,
+                              boxShadow: '0 0 4px #4ade80',
+                            }}
+                          />
+                        )}
                       </div>
 
                       <div
@@ -383,23 +460,9 @@ export default async function AdminDashboard() {
                         {pct}% · {done}/{total} tasks
                       </div>
 
-                      {/* Heatmap */}
-                      <div
-                        style={{ display: 'flex', gap: '3px', marginBottom: '11px' }}
-                      >
-                        {heatmap.map((count, i) => (
-                          <span
-                            key={i}
-                            title={`${count} activit${count === 1 ? 'y' : 'ies'}`}
-                            style={{
-                              width: '8px',
-                              height: '8px',
-                              borderRadius: '2px',
-                              background: heatColor(count),
-                              display: 'inline-block',
-                            }}
-                          />
-                        ))}
+                      {/* Heatmap — right-aligned so newest weeks always visible on overflow */}
+                      <div style={{ marginBottom: '11px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
+                        <ProjectHeatmap grid={heatmap} alignedStart={heatmapStart} cellSize={9} gap={2} />
                       </div>
 
                       {/* Next task */}
@@ -542,32 +605,75 @@ export default async function AdminDashboard() {
                   </h2>
                 </div>
               </div>
-              <p
-                style={{
-                  fontFamily: "'Courier New', monospace",
-                  fontSize: '11.5px',
-                  color: '#8a8499',
-                  margin: '0 0 12px',
-                }}
-              >
-                from your connected calendars
-              </p>
-              <AdminLink href="/admin/connections">
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '12.5px',
-                    fontWeight: 600,
-                    color: '#1B998B',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Connect calendars →
-                </span>
-              </AdminLink>
+              {upcomingEvents.length === 0 ? (
+                <>
+                  <p style={{ fontFamily: "'Courier New', monospace", fontSize: '11.5px', color: '#8a8499', margin: '0 0 12px' }}>
+                    from your connected calendars
+                  </p>
+                  <AdminLink href="/admin/connections">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 600, color: '#1B998B', cursor: 'pointer' }}>
+                      Connect calendars →
+                    </span>
+                  </AdminLink>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {upcomingEvents.map((ev, i) => {
+                    const isMeeting = !!ev.meetingUrl;
+                    const prevIsMeeting = i > 0 && !!upcomingEvents[i - 1].meetingUrl;
+                    const showDivider = !isMeeting && prevIsMeeting && i > 0;
+                    return (
+                      <div key={ev.id}>
+                        {showDivider && (
+                          <div style={{ borderTop: '1.5px solid rgba(46,41,78,0.12)', margin: '4px 0 6px', position: 'relative' }}>
+                            <span style={{ position: 'absolute', top: '-9px', left: '8px', background: '#fff', padding: '0 6px', fontFamily: "'Courier New', monospace", fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8499' }}>other events</span>
+                          </div>
+                        )}
+                        {isMeeting ? (
+                          // Meeting row — card style with left accent
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', padding: '8px 10px', background: `${ev.calendarColor}10`, border: `1.5px solid ${ev.calendarColor}44`, borderLeft: `3px solid ${ev.calendarColor}`, borderRadius: '6px' }}>
+                            <Video size={13} color={ev.calendarColor} style={{ flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: '#2E294E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {ev.title}
+                              </div>
+                              <div style={{ fontFamily: "'Courier New', monospace", fontSize: '10px', color: '#6b6580', marginTop: '1px' }}>
+                                {fmtEventTime(ev, now)}
+                              </div>
+                            </div>
+                            <a
+                              href={ev.meetingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: ev.calendarColor, color: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, borderRadius: '5px', textDecoration: 'none', flexShrink: 0, boxShadow: '2px 2px 0 0 rgba(46,41,78,0.18)' }}
+                            >
+                              Join
+                            </a>
+                          </div>
+                        ) : (
+                          // Regular event row — slim
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '5px 0', borderBottom: '1px solid rgba(46,41,78,0.06)' }}>
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: ev.calendarColor, flexShrink: 0, marginTop: '4px' }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 600, color: '#2E294E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {ev.title}
+                              </div>
+                              <div style={{ fontFamily: "'Courier New', monospace", fontSize: '10px', color: '#8a8499', marginTop: '1px' }}>
+                                {fmtEventTime(ev, now)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <div style={{ marginTop: '10px' }}>
+                    <AdminLink href="/admin/calendar">
+                      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: '#1B998B', cursor: 'pointer' }}>View full calendar →</span>
+                    </AdminLink>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Work done last time */}

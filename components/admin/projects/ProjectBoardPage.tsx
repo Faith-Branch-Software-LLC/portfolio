@@ -8,6 +8,7 @@ import KanbanBoard from '../kanban/KanbanBoard';
 import ProjectForm from './ProjectForm';
 import { Plus, Zap, Pencil, ChevronLeft, X, Copy, RefreshCw, Clock } from 'lucide-react';
 import { generateProjectApiToken } from '@/lib/actions/admin/integrations';
+import ProjectHeatmap from './ProjectHeatmap';
 
 interface ProjectBoardPageProps {
   project: {
@@ -25,6 +26,8 @@ interface ProjectBoardPageProps {
   clients: Client[];
   tasks: TaskWithTags[];
   totalMinutes?: number;
+  heatmapGrid?: number[][];
+  heatmapAlignedStart?: string;
   isTestFlightTarget?: boolean;
   isBasecampLinked?: boolean;
 }
@@ -37,7 +40,7 @@ function formatMinutes(total: number): string {
   return `${h}h ${m}m`;
 }
 
-export default function ProjectBoardPage({ project, clients, tasks, totalMinutes, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
+export default function ProjectBoardPage({ project, clients, tasks, totalMinutes, heatmapGrid, heatmapAlignedStart, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
   const router = useTransitionRouter();
   const [pendingAddColumn, setPendingAddColumn] = useState<KanbanColumn | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -87,37 +90,36 @@ export default function ProjectBoardPage({ project, clients, tasks, totalMinutes
           background: 'rgba(255,255,255,0.55)',
           borderBottom: '2px solid #2E294E',
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'stretch',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
         }}
       >
-        <button
-          onClick={() => router.push('/admin/projects')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: '13px',
-            color: '#6b6580',
-            cursor: 'pointer',
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            marginBottom: '9px',
-          }}
-        >
-          <ChevronLeft size={15} />
-          Back to projects
-        </button>
+        {/* Left: back button + project info */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <button
+            onClick={() => router.push('/admin/projects')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '13px',
+              color: '#6b6580',
+              cursor: 'pointer',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              marginBottom: '9px',
+              alignSelf: 'flex-start',
+            }}
+          >
+            <ChevronLeft size={15} />
+            Back to projects
+          </button>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: '16px',
-            flexWrap: 'wrap',
-          }}
-        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span
@@ -191,8 +193,18 @@ export default function ProjectBoardPage({ project, clients, tasks, totalMinutes
               </div>
             )}
           </div>
+        </div>{/* end left column */}
 
-          <div style={{ display: 'flex', gap: '9px', flexShrink: 0 }}>
+        {heatmapGrid && heatmapGrid.length > 0 && (
+            <div
+              className="hidden md:flex"
+              style={{ flex: 1, justifyContent: 'center', overflow: 'hidden', paddingLeft: '16px' }}
+            >
+              <ProjectHeatmap grid={heatmapGrid} alignedStart={heatmapAlignedStart} fillHeight />
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '9px', flexShrink: 0, alignItems: 'center' }}>
             {integrationLinked ? (
               <button
                 onClick={handleSync}
@@ -289,7 +301,6 @@ export default function ProjectBoardPage({ project, clients, tasks, totalMinutes
               <span className="hidden sm:inline">Add task</span>
             </button>
           </div>
-        </div>
       </div>
 
       {/* Board */}

@@ -12,6 +12,7 @@ type ProjectWithClient = Project & { client: Client };
 interface ProjectListProps {
   projects: ProjectWithClient[];
   clients: Client[];
+  activeTimerProjectIds: string[];
 }
 
 const STATUS_COLORS: Record<ProjectStatus, { bg: string; color: string }> = {
@@ -95,7 +96,8 @@ function sortProjects(projects: ProjectWithClient[], key: SortKey): ProjectWithC
   });
 }
 
-export default function ProjectList({ projects, clients }: ProjectListProps) {
+export default function ProjectList({ projects, clients, activeTimerProjectIds }: ProjectListProps) {
+  const activeTimerSet = new Set(activeTimerProjectIds);
   const [editing, setEditing] = useState<Project | null>(null);
   const [creating, setCreating] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -369,6 +371,20 @@ export default function ProjectList({ projects, clients }: ProjectListProps) {
                           <span style={{ fontSize: '10px', color: '#8a8499', fontStyle: 'italic' }}>
                             Archived
                           </span>
+                        )}
+                        {activeTimerSet.has(project.id) && (
+                          <span
+                            className="animate-pulse"
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              background: '#4ade80',
+                              flexShrink: 0,
+                              display: 'inline-block',
+                              boxShadow: '0 0 4px #4ade80',
+                            }}
+                          />
                         )}
                       </div>
                     </div>

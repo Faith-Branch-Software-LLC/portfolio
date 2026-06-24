@@ -6,6 +6,7 @@ import { prisma } from '../../db';
 import { logActivity } from './activity';
 import { completeTodo } from '../../utils/basecampApi';
 import { deleteFeedback } from '../../utils/testflightApi';
+import { decryptConfig } from '../../utils/encryption';
 
 const taskInclude = {
   tags: { include: { tag: true } },
@@ -98,11 +99,11 @@ export async function moveTask(
 
   if (newColumn === KanbanColumn.DONE && task.basecampTodoId) {
     try {
-      const integration = await prisma.integration.findUnique({
+      const integration = await prisma.integration.findFirst({
         where: { type: IntegrationType.BASECAMP },
       });
       if (integration) {
-        const { token, accountId } = integration.config as { token: string; accountId: string };
+        const { token, accountId } = decryptConfig<{ token: string; accountId: string }>(integration.config);
         const project = await prisma.project.findUnique({ where: { id: projectId } });
         if (project?.basecampProjectId) {
           await completeTodo(token, accountId, project.basecampProjectId, task.basecampTodoId);
@@ -123,15 +124,11 @@ export async function deleteTask(id: string, projectId: string) {
 
   if (task.testflightFeedbackId) {
     try {
-      const integration = await prisma.integration.findUnique({
+      const integration = await prisma.integration.findFirst({
         where: { type: IntegrationType.TESTFLIGHT },
       });
       if (integration) {
-        const { issuerId, keyId, privateKey } = integration.config as {
-          issuerId: string;
-          keyId: string;
-          privateKey: string;
-        };
+        const { issuerId, keyId, privateKey } = decryptConfig<{ issuerId: string; keyId: string; privateKey: string }>(integration.config);
         await deleteFeedback(issuerId, keyId, privateKey, task.testflightFeedbackId);
       }
     } catch {}

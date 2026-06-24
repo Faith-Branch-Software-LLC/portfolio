@@ -4,6 +4,7 @@ import authOptions from '@/lib/actions/authOptions';
 import AdminNav from '@/components/admin/AdminNav';
 import { prisma } from '@/lib/db';
 import { KanbanColumn } from '@prisma/client';
+import { HeatmapTweakProvider } from '@/components/admin/HeatmapTweakContext';
 
 export type NavProject = {
   id: string;
@@ -22,6 +23,11 @@ export default async function AdminLayout({
   if (!session || !session.user) {
     redirect('/auth/login');
   }
+
+  const activeTimers = await prisma.activeTimer.findMany({
+    select: { task: { select: { projectId: true } } },
+  });
+  const activeTimerProjectIds = new Set(activeTimers.map((t) => t.task.projectId));
 
   const projects = await prisma.project.findMany({
     where: { archived: false },
@@ -46,12 +52,14 @@ export default async function AdminLayout({
   });
 
   return (
-    <div
-      className="h-screen flex overflow-hidden"
-      style={{ background: '#EFE9DC', fontFamily: "'DM Sans', system-ui, sans-serif" }}
-    >
-      <AdminNav projects={navProjects} />
-      <main className="flex-1 min-h-0 overflow-hidden pt-14 md:pt-0">{children}</main>
-    </div>
+    <HeatmapTweakProvider>
+      <div
+        className="h-screen flex overflow-hidden"
+        style={{ background: '#EFE9DC', fontFamily: "'DM Sans', system-ui, sans-serif" }}
+      >
+        <AdminNav projects={navProjects} hasActiveTimer={activeTimerProjectIds.size > 0} activeTimerProjectIds={activeTimerProjectIds} />
+        <main className="flex-1 min-h-0 overflow-hidden pt-14 md:pt-0">{children}</main>
+      </div>
+    </HeatmapTweakProvider>
   );
 }

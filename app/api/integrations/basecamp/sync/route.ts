@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import authOptions from "@/lib/actions/authOptions";
 import { getIntegration } from '@/lib/actions/admin/integrations';
 import { IntegrationType, KanbanColumn, ExternalSource } from '@prisma/client';
+import { decryptConfig } from '@/lib/utils/encryption';
 import { prisma } from '@/lib/db';
 import {
   listTodos,
@@ -18,7 +19,7 @@ export async function POST() {
   const integration = await getIntegration(IntegrationType.BASECAMP);
   if (!integration) return NextResponse.json({ error: 'Basecamp not connected' }, { status: 404 });
 
-  const { token, accountId, apiBase = 'https://3.basecampapi.com' } = integration.config as { token: string; accountId: string; apiBase?: string };
+  const { token, accountId, apiBase = 'https://3.basecampapi.com' } = decryptConfig<{ token: string; accountId: string; apiBase?: string }>(integration.config);
 
   const linkedProjects = await prisma.project.findMany({
     where: { basecampTodolistId: { not: null }, archived: false },
@@ -107,10 +108,10 @@ export async function POST() {
     }
   }
 
-  await prisma.integration.update({
-    where: { type: IntegrationType.BASECAMP },
-    data: { lastSyncedAt: new Date() },
-  });
+  const bcInt = await prisma.integration.findFirst({ where: { type: IntegrationType.BASECAMP } });
+  if (bcInt) {
+    await prisma.integration.update({ where: { id: bcInt.id }, data: { lastSyncedAt: new Date() } });
+  }
 
   return NextResponse.json({ ok: true, created, updated, pushed });
 }

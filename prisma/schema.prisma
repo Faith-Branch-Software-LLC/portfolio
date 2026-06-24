@@ -65,6 +65,8 @@ enum ExternalSource {
 enum IntegrationType {
   BASECAMP
   TESTFLIGHT
+  GOOGLE_CALENDAR
+  APPLE_CALENDAR
 }
 
 model Client {
@@ -183,10 +185,22 @@ model ProgressReport {
 }
 
 model Integration {
-  id           String          @id @default(cuid())
-  type         IntegrationType @unique
+  id           String               @id @default(cuid())
+  type         IntegrationType
+  name         String               @default("")
   config       Json
   lastSyncedAt DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  eventCache   CalendarEventCache?
+
+  @@index([type])
+}
+
+model CalendarEventCache {
+  id            String      @id @default(cuid())
+  integrationId String      @unique
+  events        Json
+  cachedAt      DateTime    @default(now())
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 }

@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Clock,
+  Calendar,
 } from 'lucide-react';
 import type { NavProject } from '@/app/admin/layout';
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: '/admin/projects', label: 'Projects', icon: FolderKanban, exact: false },
   { href: '/admin/clients', label: 'Clients', icon: Users, exact: false },
   { href: '/admin/clock', label: 'Clock', icon: Clock, exact: false },
+  { href: '/admin/calendar', label: 'Calendar', icon: Calendar, exact: false },
   { href: '/admin/connections', label: 'Connections', icon: Plug, exact: false },
   { href: '/admin/api-docs', label: 'API Docs', icon: Code, exact: false },
 ];
@@ -30,9 +32,11 @@ const CIRC = 62.83;
 
 interface AdminNavProps {
   projects: NavProject[];
+  hasActiveTimer: boolean;
+  activeTimerProjectIds: Set<string>;
 }
 
-export default function AdminNav({ projects }: AdminNavProps) {
+export default function AdminNav({ projects, hasActiveTimer, activeTimerProjectIds }: AdminNavProps) {
   const pathname = usePathname();
   const router = useTransitionRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -208,6 +212,20 @@ export default function AdminNav({ projects }: AdminNavProps) {
                   )}
                   <Icon size={18} />
                   {label}
+                  {href === '/admin/clock' && hasActiveTimer && (
+                    <span
+                      className="animate-pulse"
+                      style={{
+                        marginLeft: 'auto',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: '#4ade80',
+                        flexShrink: 0,
+                        boxShadow: '0 0 4px #4ade80',
+                      }}
+                    />
+                  )}
                 </button>
               );
             })}
@@ -321,6 +339,19 @@ export default function AdminNav({ projects }: AdminNavProps) {
                       >
                         {p.name}
                       </span>
+                      {activeTimerProjectIds.has(p.id) && (
+                        <span
+                          className="animate-pulse"
+                          style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#4ade80',
+                            flexShrink: 0,
+                            boxShadow: '0 0 4px #4ade80',
+                          }}
+                        />
+                      )}
                     </button>
                   );
                 })}

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import authOptions from "@/lib/actions/authOptions";
 import { getIntegration } from '@/lib/actions/admin/integrations';
 import { IntegrationType, KanbanColumn, ExternalSource } from '@prisma/client';
+import { decryptConfig } from '@/lib/utils/encryption';
 import { prisma } from '@/lib/db';
 import { listFeedback, deleteFeedback } from '@/lib/utils/testflightApi';
 
@@ -20,13 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'TestFlight not connected' }, { status: 404 });
   }
 
-  const { issuerId, keyId, privateKey, appId, targetProjectId } = integration.config as {
-    issuerId: string;
-    keyId: string;
-    privateKey: string;
-    appId: string;
-    targetProjectId: string;
-  };
+  const { issuerId, keyId, privateKey, appId, targetProjectId } = decryptConfig<{ issuerId: string; keyId: string; privateKey: string; appId: string; targetProjectId: string }>(integration.config);
 
   let feedbackList;
   try {
@@ -106,7 +101,7 @@ export async function POST(req: NextRequest) {
   }
 
   await prisma.integration.update({
-    where: { type: IntegrationType.TESTFLIGHT },
+    where: { id: integration.id },
     data: { lastSyncedAt: new Date() },
   });
 

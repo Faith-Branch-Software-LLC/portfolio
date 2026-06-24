@@ -4,9 +4,11 @@ import { IntegrationType } from '@prisma/client';
 import ConnectionsClient from '@/components/admin/connections/ConnectionsClient';
 
 export default async function ConnectionsPage() {
-  const [basecampIntegration, testflightIntegration, projects, clients] = await Promise.all([
-    prisma.integration.findUnique({ where: { type: IntegrationType.BASECAMP } }),
-    prisma.integration.findUnique({ where: { type: IntegrationType.TESTFLIGHT } }),
+  const [basecampIntegration, testflightIntegrations, googleCalIntegrations, appleCalIntegrations, projects, clients] = await Promise.all([
+    prisma.integration.findFirst({ where: { type: IntegrationType.BASECAMP } }),
+    prisma.integration.findMany({ where: { type: IntegrationType.TESTFLIGHT }, orderBy: { createdAt: 'asc' } }),
+    prisma.integration.findMany({ where: { type: IntegrationType.GOOGLE_CALENDAR }, orderBy: { createdAt: 'asc' } }),
+    prisma.integration.findMany({ where: { type: IntegrationType.APPLE_CALENDAR }, orderBy: { createdAt: 'asc' } }),
     prisma.project.findMany({
       where: { archived: false },
       orderBy: { name: 'asc' },
@@ -20,6 +22,10 @@ export default async function ConnectionsPage() {
     }),
     prisma.client.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, color: true } }),
   ]);
+
+  function toRow(i: { id: string; name: string; lastSyncedAt: Date | null; config: unknown }) {
+    return { id: i.id, name: i.name, lastSyncedAt: i.lastSyncedAt?.toISOString() ?? null };
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -57,7 +63,7 @@ export default async function ConnectionsPage() {
               color: '#6b6580',
             }}
           >
-            sync projects and feedback into the workshop
+            sync projects, feedback, and calendars into the workshop
           </p>
         </div>
       </div>
@@ -65,13 +71,9 @@ export default async function ConnectionsPage() {
       <ConnectionsClient
         basecampConnected={!!basecampIntegration}
         basecampLastSync={basecampIntegration?.lastSyncedAt?.toISOString() ?? null}
-        testflightConnected={!!testflightIntegration}
-        testflightLastSync={testflightIntegration?.lastSyncedAt?.toISOString() ?? null}
-        testflightTargetProjectId={
-          testflightIntegration
-            ? (testflightIntegration.config as { targetProjectId?: string }).targetProjectId ?? null
-            : null
-        }
+        testflightIntegrations={testflightIntegrations.map(toRow)}
+        googleCalIntegrations={googleCalIntegrations.map(toRow)}
+        appleCalIntegrations={appleCalIntegrations.map(toRow)}
         projects={projects}
         clients={clients}
       />
