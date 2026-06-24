@@ -19,6 +19,7 @@ interface KanbanColumnProps {
   column: KanbanColumnEnum;
   label: string;
   tasks: TaskWithTags[];
+  activeTimerTaskIds: Set<string>;
   onTaskClick: (task: TaskWithTags) => void;
   onAddTask: (column: KanbanColumnEnum) => void;
 }
@@ -27,6 +28,7 @@ export default function KanbanColumnComponent({
   column,
   label,
   tasks,
+  activeTimerTaskIds,
   onTaskClick,
   onAddTask,
 }: KanbanColumnProps) {
@@ -137,7 +139,7 @@ export default function KanbanColumnComponent({
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '2px' }}>
               {tasks.map((task) => (
-                <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />
+                <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} hasActiveTimer={activeTimerTaskIds.has(task.id)} />
               ))}
               {tasks.length === 0 && (
                 <div

@@ -6,6 +6,7 @@ import { archiveProject, deleteProject, unarchiveProject } from '@/lib/actions/a
 import { Plus, ArchiveRestore, LayoutList, Pencil, Archive, Trash2, Flag, ArrowUpDown } from 'lucide-react';
 import ProjectForm from './ProjectForm';
 import AdminLink from '@/components/admin/AdminLink';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type ProjectWithClient = Project & { client: Client };
 
@@ -101,6 +102,7 @@ export default function ProjectList({ projects, clients, activeTimerProjectIds }
   const [editing, setEditing] = useState<Project | null>(null);
   const [creating, setCreating] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState<ProjectWithClient | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'created';
     return (localStorage.getItem('projects:sortKey') as SortKey) ?? 'created';
@@ -116,6 +118,7 @@ export default function ProjectList({ projects, clients, activeTimerProjectIds }
   const visible = sortProjects(showArchived ? projects : active, sortKey);
 
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header bar */}
       <div
@@ -495,10 +498,7 @@ export default function ProjectList({ projects, clients, activeTimerProjectIds }
                     </button>
 
                     <button
-                      onClick={() => {
-                        if (confirm(`Delete "${project.name}"? This cannot be undone.`))
-                          deleteProject(project.id);
-                      }}
+                      onClick={() => setConfirmDeleteProject(project)}
                       title="Delete"
                       style={{
                         display: 'inline-flex',
@@ -523,5 +523,16 @@ export default function ProjectList({ projects, clients, activeTimerProjectIds }
         )}
       </div>
     </div>
+
+    {confirmDeleteProject && (
+      <ConfirmDialog
+        message={`Delete "${confirmDeleteProject.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => deleteProject(confirmDeleteProject.id)}
+        onCancel={() => setConfirmDeleteProject(null)}
+      />
+    )}
+    </>
   );
 }

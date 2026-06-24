@@ -6,6 +6,8 @@ import { deleteClient } from '@/lib/actions/admin/clients';
 import { FileText, Pencil, Trash2, UserPlus, ArrowUpDown, Clock } from 'lucide-react';
 import ClientForm from './ClientForm';
 import AdminLink from '@/components/admin/AdminLink';
+import { useAdminToast } from '@/components/ui/toast-context';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type ClientWithCount = Client & { _count: { projects: number } };
 
@@ -28,9 +30,11 @@ function sortClients(clients: ClientWithCount[], key: SortKey): ClientWithCount[
 }
 
 export default function ClientList({ clients }: ClientListProps) {
+  const { toast } = useAdminToast();
   const [editing, setEditing] = useState<Client | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ClientWithCount | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>(() => {
     if (typeof window === 'undefined') return 'name';
     return (localStorage.getItem('clients:sortKey') as SortKey) ?? 'name';
@@ -43,10 +47,13 @@ export default function ClientList({ clients }: ClientListProps) {
 
   const handleDelete = async (client: ClientWithCount) => {
     if (client._count.projects > 0) {
-      alert(`"${client.name}" has ${client._count.projects} project(s). Reassign or delete them first.`);
+      toast({ title: 'Cannot delete', description: `"${client.name}" has ${client._count.projects} project(s). Reassign or delete them first.`, variant: 'destructive' });
       return;
     }
-    if (!confirm(`Delete "${client.name}"?`)) return;
+    setConfirmDelete(client);
+  };
+
+  const doDelete = async (client: ClientWithCount) => {
     setDeletingId(client.id);
     await deleteClient(client.id);
     setDeletingId(null);
@@ -55,6 +62,7 @@ export default function ClientList({ clients }: ClientListProps) {
   const visible = sortClients(clients, sortKey);
 
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header bar */}
       <div
@@ -368,5 +376,16 @@ export default function ClientList({ clients }: ClientListProps) {
         )}
       </div>
     </div>
+
+    {confirmDelete && (
+      <ConfirmDialog
+        message={`Delete "${confirmDelete.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => doDelete(confirmDelete)}
+        onCancel={() => setConfirmDelete(null)}
+      />
+    )}
+    </>
   );
 }

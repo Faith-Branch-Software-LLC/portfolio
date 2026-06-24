@@ -97,6 +97,28 @@ export async function moveTask(
     await logActivity(projectId, taskId, 'moved', fromColumn, newColumn);
   }
 
+  const stopsTimer = newColumn === KanbanColumn.DONE || newColumn === KanbanColumn.WAITING;
+  if (stopsTimer && fromColumn !== newColumn) {
+    const activeTimer = await prisma.activeTimer.findUnique({ where: { taskId } });
+    if (activeTimer) {
+      const tzSetting = await prisma.adminSetting.findUnique({ where: { key: 'timezone' } });
+      const timezone = tzSetting?.value ?? 'America/New_York';
+      const now = new Date();
+      const minutes = Math.max(1, Math.round((now.getTime() - activeTimer.clockedIn.getTime()) / 60000));
+      const localStr = now.toLocaleDateString('en-CA', { timeZone: timezone });
+      const date = new Date(localStr + 'T00:00:00.000Z');
+      await prisma.$transaction([
+        prisma.timeEntry.upsert({
+          where: { taskId_date: { taskId, date } },
+          create: { taskId, date, minutes },
+          update: { minutes: { increment: minutes } },
+        }),
+        prisma.activeTimer.delete({ where: { id: activeTimer.id } }),
+      ]);
+      revalidatePath('/admin/clock');
+    }
+  }
+
   if (newColumn === KanbanColumn.DONE && task.basecampTodoId) {
     try {
       const integration = await prisma.integration.findFirst({

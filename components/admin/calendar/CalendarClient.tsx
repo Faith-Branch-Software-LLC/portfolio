@@ -15,6 +15,7 @@ import {
   Settings,
   Video,
   Link as LinkIcon,
+  Flag,
 } from 'lucide-react';
 import { useTransitionRouter } from 'next-transition-router';
 import type { NormalizedEvent, CacheEntry, AppleCalendarInfo, AppleCalendarSetting, GoogleCalendarInfo, GoogleCalendarSetting } from '@/lib/types/calendar';
@@ -43,13 +44,24 @@ interface CalEvent {
   meetingUrl?: string;
   googleEventId?: string;
   appleHref?: string;
+  taskHref?: string;
 }
 
 type ViewMode = 'month' | 'week' | '2day';
 
+interface TaskDueEvent {
+  id: string;
+  title: string;
+  due: string;
+  projectId: string;
+  projectName: string;
+  color: string;
+}
+
 interface Props {
   googleCalSources: { id: string; name: string }[];
   appleCalSources: { id: string; name: string }[];
+  taskDueEvents?: TaskDueEvent[];
 }
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -191,9 +203,13 @@ function ModeBtn({ label, active, onClick }: { label: string; active: boolean; o
 // ─── EventChip ────────────────────────────────────────────────────────────────
 
 function EventChip({ ev, onClick, multiDay }: { ev: CalEvent; onClick: () => void; multiDay?: boolean }) {
+  const isTask = !!ev.taskHref;
   return (
     <div onClick={(e) => { e.stopPropagation(); onClick(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 5px', borderRadius: '4px', background: `${ev.calendarColor}18`, border: `1px solid ${ev.calendarColor}44`, cursor: 'pointer', minWidth: 0, borderLeft: multiDay ? `3px solid ${ev.calendarColor}` : undefined }}>
-      <span style={{ width: '6px', height: '6px', borderRadius: '2px', background: ev.calendarColor, flexShrink: 0 }} />
+      {isTask
+        ? <Flag size={8} color={ev.calendarColor} style={{ flexShrink: 0 }} />
+        : <span style={{ width: '6px', height: '6px', borderRadius: '2px', background: ev.calendarColor, flexShrink: 0 }} />
+      }
       <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 600, color: '#2E294E' }}>{ev.title}</span>
       {!ev.allDay && <span style={{ fontFamily: "'Courier New', monospace", fontSize: '9px', color: '#8a8499', flexShrink: 0 }}>{fmtTime(ev.start)}</span>}
       {ev.meetingUrl && <span style={{ color: ev.calendarColor, flexShrink: 0, display: 'inline-flex' }}><Video size={9} /></span>}
@@ -214,7 +230,10 @@ function EventSheet({ ev, onClose }: { ev: CalEvent; onClose: () => void }) {
           <div style={{ width: '42px', height: '5px', borderRadius: '3px', background: 'rgba(46,41,78,0.25)' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '13px', maxWidth: '560px', margin: '0 auto' }}>
-          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: ev.calendarColor, flexShrink: 0, marginTop: '6px' }} />
+          {ev.taskHref
+            ? <Flag size={14} color={ev.calendarColor} style={{ flexShrink: 0, marginTop: '6px' }} />
+            : <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: ev.calendarColor, flexShrink: 0, marginTop: '6px' }} />
+          }
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '21px', margin: 0, color: '#2E294E' }}>{ev.title}</h2>
             <div style={{ fontFamily: "'Courier New', monospace", fontSize: '12px', color: '#6b6580', marginTop: '3px' }}>{ev.calendarName}</div>
@@ -256,6 +275,15 @@ function EventSheet({ ev, onClose }: { ev: CalEvent; onClose: () => void }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ color: '#8a8499', display: 'inline-flex' }}><LinkIcon size={16} /></span>
                   <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#2E294E', textDecoration: 'underline', wordBreak: 'break-all' }}>{ev.url}</a>
+                </div>
+              )}
+              {/* Task link */}
+              {ev.taskHref && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#8a8499', display: 'inline-flex' }}><Flag size={16} /></span>
+                  <a href={ev.taskHref} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13.5px', color: ev.calendarColor, fontWeight: 600, textDecoration: 'none' }}>
+                    Go to task →
+                  </a>
                 </div>
               )}
             </div>
@@ -702,7 +730,7 @@ function TimelineView({ anchor, events, mode, onSelect, onSlotClick }: { anchor:
 
 // ─── main ──────────────────────────────────────────────────────────────────────
 
-export default function CalendarClient({ googleCalSources: initGcal, appleCalSources: initAcal }: Props) {
+export default function CalendarClient({ googleCalSources: initGcal, appleCalSources: initAcal, taskDueEvents: initTaskDues = [] }: Props) {
   const router = useTransitionRouter();
 
   const allSources = useRef<CalSource[]>([
@@ -710,12 +738,32 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
     ...initAcal.map((s, i) => ({ ...s, type: 'apple'  as const, color: APPLE_COLORS [i % APPLE_COLORS.length] })),
   ]).current;
 
+  const taskEvents = useRef<CalEvent[]>(
+    initTaskDues.map((t) => {
+      const due = new Date(t.due);
+      const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+      return {
+        id: `task-${t.id}`,
+        title: t.title,
+        start: dueDay,
+        end: new Date(dueDay.getTime() + 86400000),
+        allDay: true,
+        sourceId: 'tasks',
+        calendarName: t.projectName,
+        calendarColor: t.color,
+        taskHref: `/admin/projects/${t.projectId}?task=${t.id}`,
+      };
+    })
+  ).current;
+
+  const withTasks = (calEvs: CalEvent[]) => [...calEvs, ...taskEvents];
+
   const anyConnected    = allSources.length > 0;
   const hasAnySources   = anyConnected;
 
   const [mode, setMode]         = useState<ViewMode>('month');
   const [anchor, setAnchor]     = useState(() => startOfDay(new Date()));
-  const [events, setEvents]     = useState<CalEvent[]>([]);
+  const [events, setEvents]     = useState<CalEvent[]>(taskEvents);
   const [loadingCache, setLoadingCache] = useState(false);
   const [refreshing, setRefreshing]     = useState(false);
   const [selected, setSelected] = useState<CalEvent | null>(null);
@@ -763,13 +811,13 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
       } catch {}
     }
 
-    if (allEvs.length > 0) setEvents(allEvs);
+    if (allEvs.length > 0) setEvents(withTasks(allEvs));
     setRefreshing(false);
   }, [anyConnected, initGcal, initAcal]);
 
   // Phase 1: instant cache load → then API refresh in background
   useEffect(() => {
-    if (!anyConnected) { setEvents(getDemoEvents(startOfDay(new Date()))); return; }
+    if (!anyConnected) { setEvents(withTasks(getDemoEvents(startOfDay(new Date())))); return; }
 
     setLoadingCache(true);
     fetch('/api/integrations/calendar/cache')
@@ -779,7 +827,7 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
         if (data?.entries?.length) {
           const cached: CalEvent[] = [];
           for (const entry of data.entries) for (const ev of entry.events) cached.push(normalizedToCalEvent(ev, entry.integrationId));
-          setEvents(cached);
+          setEvents(withTasks(cached));
         }
         refreshFromApis();
       })

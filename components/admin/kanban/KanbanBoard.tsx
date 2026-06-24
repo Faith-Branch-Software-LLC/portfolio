@@ -33,19 +33,26 @@ interface KanbanBoardProps {
   projectId: string;
   projectName?: string;
   initialTasks: TaskWithTags[];
+  initialActiveTimerTaskIds?: string[];
   pendingAddColumn?: KanbanColumnEnum | null;
   onPendingAddConsumed?: () => void;
+  initialOpenTaskId?: string;
 }
 
 export default function KanbanBoard({
   projectId,
   projectName,
   initialTasks,
+  initialActiveTimerTaskIds = [],
   pendingAddColumn,
   onPendingAddConsumed,
+  initialOpenTaskId,
 }: KanbanBoardProps) {
   const tasksRef = useRef<TaskWithTags[]>(initialTasks);
   const [tasks, setTasksState] = useState<TaskWithTags[]>(initialTasks);
+  const [activeTimerTaskIds, setActiveTimerTaskIds] = useState<Set<string>>(
+    () => new Set(initialActiveTimerTaskIds),
+  );
   const dragOverColumnRef = useRef<KanbanColumnEnum | null>(null);
   const [activeTask, setActiveTask] = useState<TaskWithTags | null>(null);
 
@@ -62,6 +69,17 @@ export default function KanbanBoard({
       onPendingAddConsumed?.();
     }
   }, [pendingAddColumn]);
+
+  // Open task from URL ?task= param
+  useEffect(() => {
+    if (!initialOpenTaskId) return;
+    const task = tasksRef.current.find((t) => t.id === initialOpenTaskId);
+    if (task) {
+      setSidebarTask(task);
+      setSidebarColumn(task.column);
+      setSidebarOpen(true);
+    }
+  }, [initialOpenTaskId]);
 
   const setTasks = (updater: TaskWithTags[] | ((prev: TaskWithTags[]) => TaskWithTags[])) => {
     setTasksState((prev) => {
@@ -109,6 +127,14 @@ export default function KanbanBoard({
   const handleTaskDeleted = (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     closeSidebar();
+  };
+
+  const handleTimerChange = (taskId: string, active: boolean) => {
+    setActiveTimerTaskIds((prev) => {
+      const next = new Set(prev);
+      if (active) next.add(taskId); else next.delete(taskId);
+      return next;
+    });
   };
 
   const onDragStart = ({ active }: DragStartEvent) => {
@@ -165,6 +191,9 @@ export default function KanbanBoard({
     }
     const finalIds = getColumnTasks(destColumn, current).map((t) => t.id);
     await moveTask(activeId, projectId, destColumn, finalIds);
+    if (destColumn === KanbanColumnEnum.DONE || destColumn === KanbanColumnEnum.WAITING) {
+      handleTimerChange(activeId, false);
+    }
   };
 
   return (
@@ -192,6 +221,7 @@ export default function KanbanBoard({
               column={key}
               label={label}
               tasks={getColumnTasks(key)}
+              activeTimerTaskIds={activeTimerTaskIds}
               onTaskClick={openTask}
               onAddTask={openCreate}
             />
@@ -212,6 +242,7 @@ export default function KanbanBoard({
         onCreated={handleTaskCreated}
         onUpdated={handleTaskUpdated}
         onDeleted={handleTaskDeleted}
+        onTimerChange={handleTimerChange}
       />
     </div>
   );

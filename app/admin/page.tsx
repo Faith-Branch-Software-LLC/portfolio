@@ -5,7 +5,7 @@ import { KanbanColumn } from '@prisma/client';
 import AdminLink from '@/components/admin/AdminLink';
 import WorkToDo, { ActiveTask } from '@/components/admin/WorkToDo';
 import DashboardClock from '@/components/admin/DashboardClock';
-import { Check, Clock, Plus, Code, Video } from 'lucide-react';
+import { Check, Clock, Plus, Code, Video, Flag } from 'lucide-react';
 import type { NormalizedEvent } from '@/lib/types/calendar';
 
 function etDayBoundaries(date: Date): { start: Date; end: Date } {
@@ -66,11 +66,13 @@ interface UpcomingEvent {
   calendarName: string;
   calendarColor: string;
   meetingUrl?: string;
+  isTask?: boolean;
+  taskHref?: string;
 }
 
-function parseUpcomingEvents(raw: NormalizedEvent[]): UpcomingEvent[] {
-  const now = new Date();
+function parseUpcomingEvents(raw: NormalizedEvent[], now: Date): UpcomingEvent[] {
   const cutoff = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const results: UpcomingEvent[] = [];
 
   for (const ev of raw) {
@@ -84,9 +86,10 @@ function parseUpcomingEvents(raw: NormalizedEvent[]): UpcomingEvent[] {
     const start = parseDate(ev.startIso, ev.allDay);
     const end   = parseDate(ev.endIso, ev.allDay);
     if (isNaN(start.getTime())) continue;
-    // Show: starting within 14 days, or currently in-progress
     if (start > cutoff) continue;
-    if (end < now && !ev.allDay) continue;
+    // For all-day, end is exclusive — end <= todayStart means event already passed
+    if (ev.allDay && end <= todayStart) continue;
+    if (!ev.allDay && end < now) continue;
     results.push({ id: ev.id, title: ev.title, start, end, allDay: ev.allDay, calendarName: ev.calendarName, calendarColor: ev.calendarColor, meetingUrl: ev.meetingUrl });
   }
 
@@ -123,7 +126,41 @@ export default async function AdminDashboard() {
   // Calendar upcoming events from cache
   const calCaches = await prisma.calendarEventCache.findMany({ select: { events: true } });
   const allCachedEvents: NormalizedEvent[] = calCaches.flatMap((c) => (c.events as unknown as NormalizedEvent[]) ?? []);
-  const upcomingEvents = parseUpcomingEvents(allCachedEvents);
+  const upcomingCalEvents = parseUpcomingEvents(allCachedEvents, now);
+
+  // Task due dates within next 14 days
+  const cutoff14 = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const dueTasks = await prisma.task.findMany({
+    where: {
+      due: { gte: now, lte: cutoff14 },
+      column: { notIn: [KanbanColumn.DONE] },
+    },
+    select: {
+      id: true,
+      title: true,
+      due: true,
+      project: { select: { id: true, name: true, client: { select: { color: true } } } },
+    },
+    orderBy: { due: 'asc' },
+  });
+
+  const taskDueEvents: UpcomingEvent[] = dueTasks.map((t) => {
+    const due = t.due!;
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    return {
+      id: `task-${t.id}`,
+      title: t.title,
+      start: dueDay,
+      end: new Date(dueDay.getTime() + 86400000),
+      allDay: true,
+      calendarName: t.project.name,
+      calendarColor: t.project.client.color ?? '#F46036',
+      isTask: true,
+      taskHref: `/admin/projects/${t.project.id}?task=${t.id}`,
+    };
+  });
+
+  const upcomingEvents = [...upcomingCalEvents, ...taskDueEvents].sort((a, b) => a.start.getTime() - b.start.getTime()).slice(0, 10);
 
   const lastLog = await prisma.activityLog.findFirst({
     orderBy: { createdAt: 'desc' },
@@ -620,15 +657,8 @@ export default async function AdminDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {upcomingEvents.map((ev, i) => {
                     const isMeeting = !!ev.meetingUrl;
-                    const prevIsMeeting = i > 0 && !!upcomingEvents[i - 1].meetingUrl;
-                    const showDivider = !isMeeting && prevIsMeeting && i > 0;
                     return (
                       <div key={ev.id}>
-                        {showDivider && (
-                          <div style={{ borderTop: '1.5px solid rgba(46,41,78,0.12)', margin: '4px 0 6px', position: 'relative' }}>
-                            <span style={{ position: 'absolute', top: '-9px', left: '8px', background: '#fff', padding: '0 6px', fontFamily: "'Courier New', monospace", fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a8499' }}>other events</span>
-                          </div>
-                        )}
                         {isMeeting ? (
                           // Meeting row — card style with left accent
                           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', padding: '8px 10px', background: `${ev.calendarColor}10`, border: `1.5px solid ${ev.calendarColor}44`, borderLeft: `3px solid ${ev.calendarColor}`, borderRadius: '6px' }}>
@@ -650,6 +680,21 @@ export default async function AdminDashboard() {
                               Join
                             </a>
                           </div>
+                        ) : ev.isTask ? (
+                          // Task due date row
+                          <AdminLink href={ev.taskHref!}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '5px 0', borderBottom: '1px solid rgba(46,41,78,0.06)', cursor: 'pointer' }}>
+                              <Flag size={13} color={ev.calendarColor} style={{ flexShrink: 0, marginTop: '2px' }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 600, color: '#2E294E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {ev.title}
+                                </div>
+                                <div style={{ fontFamily: "'Courier New', monospace", fontSize: '10px', color: '#8a8499', marginTop: '1px' }}>
+                                  {fmtEventTime(ev, now)} · {ev.calendarName}
+                                </div>
+                              </div>
+                            </div>
+                          </AdminLink>
                         ) : (
                           // Regular event row — slim
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '5px 0', borderBottom: '1px solid rgba(46,41,78,0.06)' }}>

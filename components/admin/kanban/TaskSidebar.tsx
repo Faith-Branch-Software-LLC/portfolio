@@ -22,6 +22,7 @@ import {
   FormItem,
 } from '@/components/ui/form';
 import { Trash2, X, Check, Copy, ClipboardCheck, Play, Square, Pencil } from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type TimeEntry = { id: string; date: Date; minutes: number };
 type ActiveTimerState = { id: string; clockedIn: Date } | null;
@@ -224,6 +225,7 @@ interface TaskSidebarProps {
   onCreated: (task: TaskWithTags) => void;
   onUpdated: (task: TaskWithTags) => void;
   onDeleted: (taskId: string) => void;
+  onTimerChange?: (taskId: string, active: boolean) => void;
 }
 
 export default function TaskSidebar({
@@ -236,12 +238,14 @@ export default function TaskSidebar({
   onCreated,
   onUpdated,
   onDeleted,
+  onTimerChange,
 }: TaskSidebarProps) {
   const isEditing = !!task;
   const activeColumn = task?.column ?? column ?? KanbanColumn.BACKLOG;
   const dot = columnDot[activeColumn];
   const colLabel = columnLabels[activeColumn];
   const [copied, setCopied] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Time tracking state
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
@@ -288,6 +292,9 @@ export default function TaskSidebar({
       });
     } else {
       form.reset({ title: '', description: '', priority: '', due: '' });
+      if (open) {
+        setTimeout(() => form.setFocus('title'), 50);
+      }
     }
   }, [task, open]);
 
@@ -312,18 +319,18 @@ export default function TaskSidebar({
     const timer = await clockIn(task.id);
     setActiveTimer(timer);
     setClockingIn(false);
+    onTimerChange?.(task.id, true);
   };
 
   const handleClockOut = async () => {
-    if (!activeTimer) return;
+    if (!activeTimer || !task) return;
     setClockingOut(true);
     await clockOut(activeTimer.id);
     setActiveTimer(null);
-    if (task) {
-      const entries = await getTaskTimeEntries(task.id);
-      setTimeEntries(entries);
-    }
+    const entries = await getTaskTimeEntries(task.id);
+    setTimeEntries(entries);
     setClockingOut(false);
+    onTimerChange?.(task.id, false);
   };
 
   const handleUpdateEntry = async (id: string, minutes: number) => {
@@ -352,6 +359,7 @@ export default function TaskSidebar({
     if (isEditing) {
       const updated = await updateTask(task.id, projectId, data);
       onUpdated(updated);
+      onClose();
     } else {
       const created = await createTask({
         ...data,
@@ -364,7 +372,6 @@ export default function TaskSidebar({
 
   const handleDelete = async () => {
     if (!task) return;
-    if (!confirm('Delete this task?')) return;
     await deleteTask(task.id, projectId);
     onDeleted(task.id);
   };
@@ -770,7 +777,7 @@ export default function TaskSidebar({
               {/* Delete */}
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setConfirmDeleteOpen(true)}
                 title="Delete task"
                 style={{
                   display: 'inline-flex',
@@ -976,6 +983,16 @@ export default function TaskSidebar({
             </div>
           </div>
         </>
+      )}
+
+      {confirmDeleteOpen && (
+        <ConfirmDialog
+          message="Delete this task? This cannot be undone."
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </>
   );

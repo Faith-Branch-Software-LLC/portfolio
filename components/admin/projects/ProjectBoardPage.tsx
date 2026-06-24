@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTransitionRouter } from 'next-transition-router';
+import { useSearchParams } from 'next/navigation';
 import { Client, KanbanColumn, Priority, ProjectStatus } from '@prisma/client';
 import { TaskWithTags } from '@/lib/types/pm';
 import KanbanBoard from '../kanban/KanbanBoard';
@@ -9,6 +10,7 @@ import ProjectForm from './ProjectForm';
 import { Plus, Zap, Pencil, ChevronLeft, X, Copy, RefreshCw, Clock } from 'lucide-react';
 import { generateProjectApiToken } from '@/lib/actions/admin/integrations';
 import ProjectHeatmap from './ProjectHeatmap';
+import { useAdminToast } from '@/components/ui/toast-context';
 
 interface ProjectBoardPageProps {
   project: {
@@ -25,6 +27,7 @@ interface ProjectBoardPageProps {
   };
   clients: Client[];
   tasks: TaskWithTags[];
+  activeTimerTaskIds?: string[];
   totalMinutes?: number;
   heatmapGrid?: number[][];
   heatmapAlignedStart?: string;
@@ -40,8 +43,11 @@ function formatMinutes(total: number): string {
   return `${h}h ${m}m`;
 }
 
-export default function ProjectBoardPage({ project, clients, tasks, totalMinutes, heatmapGrid, heatmapAlignedStart, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
+export default function ProjectBoardPage({ project, clients, tasks, activeTimerTaskIds, totalMinutes, heatmapGrid, heatmapAlignedStart, isTestFlightTarget, isBasecampLinked }: ProjectBoardPageProps) {
   const router = useTransitionRouter();
+  const { toast } = useAdminToast();
+  const searchParams = useSearchParams();
+  const initialOpenTaskId = searchParams.get('task') ?? undefined;
   const [pendingAddColumn, setPendingAddColumn] = useState<KanbanColumn | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -58,7 +64,7 @@ export default function ProjectBoardPage({ project, clients, tasks, totalMinutes
     try {
       const res = await fetch(syncEndpoint, { method: 'POST' });
       if (res.ok) { router.refresh(); }
-      else { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Sync failed'); }
+      else { const d = await res.json().catch(() => ({})); toast({ title: 'Sync failed', description: d.error, variant: 'destructive' }); }
     } finally {
       setSyncing(false);
     }
@@ -309,8 +315,10 @@ export default function ProjectBoardPage({ project, clients, tasks, totalMinutes
           projectId={project.id}
           projectName={project.name}
           initialTasks={tasks}
+          initialActiveTimerTaskIds={activeTimerTaskIds}
           pendingAddColumn={pendingAddColumn}
           onPendingAddConsumed={() => setPendingAddColumn(null)}
+          initialOpenTaskId={initialOpenTaskId}
         />
       </div>
 

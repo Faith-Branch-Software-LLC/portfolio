@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
 import ProjectBoardPage from '@/components/admin/projects/ProjectBoardPage';
@@ -15,7 +16,7 @@ export default async function ProjectPage({ params }: PageProps) {
   const heatmapStartDate = new Date();
   heatmapStartDate.setFullYear(heatmapStartDate.getFullYear() - 1);
 
-  const [project, clients, tfIntegration, totalMinutes, activityLogs] = await Promise.all([
+  const [project, clients, tfIntegration, totalMinutes, activityLogs, activeTimers] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -33,7 +34,13 @@ export default async function ProjectPage({ params }: PageProps) {
       where: { projectId: id, createdAt: { gte: heatmapStartDate } },
       select: { createdAt: true },
     }),
+    prisma.activeTimer.findMany({
+      where: { task: { projectId: id } },
+      select: { taskId: true },
+    }),
   ]);
+
+  const activeTimerTaskIds = activeTimers.map((t) => t.taskId);
 
   if (!project) notFound();
 
@@ -45,26 +52,29 @@ export default async function ProjectPage({ params }: PageProps) {
   const isBasecampLinked = !!project.basecampTodolistId;
 
   return (
-    <ProjectBoardPage
-      project={{
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        clientId: project.clientId,
-        status: project.status,
-        priority: project.priority,
-        due: project.due,
-        apiToken: project.apiToken,
-        basecampTodolistId: project.basecampTodolistId,
-        client: { name: project.client.name, color: project.client.color },
-      }}
-      clients={clients}
-      tasks={project.tasks}
-      totalMinutes={totalMinutes}
-      heatmapGrid={heatmapGrid}
-      heatmapAlignedStart={heatmapAlignedStart}
-      isTestFlightTarget={isTestFlightTarget}
-      isBasecampLinked={isBasecampLinked}
-    />
+    <Suspense>
+      <ProjectBoardPage
+        project={{
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          clientId: project.clientId,
+          status: project.status,
+          priority: project.priority,
+          due: project.due,
+          apiToken: project.apiToken,
+          basecampTodolistId: project.basecampTodolistId,
+          client: { name: project.client.name, color: project.client.color },
+        }}
+        clients={clients}
+        tasks={project.tasks}
+        activeTimerTaskIds={activeTimerTaskIds}
+        totalMinutes={totalMinutes}
+        heatmapGrid={heatmapGrid}
+        heatmapAlignedStart={heatmapAlignedStart}
+        isTestFlightTarget={isTestFlightTarget}
+        isBasecampLinked={isBasecampLinked}
+      />
+    </Suspense>
   );
 }

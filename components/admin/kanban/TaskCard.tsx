@@ -10,6 +10,7 @@ interface TaskCardProps {
   task: TaskWithTags;
   onTaskClick: (task: TaskWithTags) => void;
   isDragOverlay?: boolean;
+  hasActiveTimer?: boolean;
 }
 
 const priorityColors: Record<Priority, string> = {
@@ -26,7 +27,7 @@ const priorityLabels: Record<Priority, string> = {
   URGENT: 'Urgent',
 };
 
-export default function TaskCard({ task, onTaskClick, isDragOverlay = false }: TaskCardProps) {
+export default function TaskCard({ task, onTaskClick, isDragOverlay = false, hasActiveTimer = false }: TaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { column: task.column },
@@ -103,18 +104,36 @@ export default function TaskCard({ task, onTaskClick, isDragOverlay = false }: T
           style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
           onClick={() => onTaskClick(task)}
         >
-          <p
-            style={{
-              fontSize: '13px',
-              lineHeight: 1.35,
-              fontWeight: isDone ? 400 : 500,
-              color: isDone ? '#6b6580' : '#2E294E',
-              textDecoration: isDone ? 'line-through' : 'none',
-              margin: 0,
-            }}
-          >
-            {task.title}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+            <p
+              style={{
+                flex: 1,
+                fontSize: '13px',
+                lineHeight: 1.35,
+                fontWeight: isDone ? 400 : 500,
+                color: isDone ? '#6b6580' : '#2E294E',
+                textDecoration: isDone ? 'line-through' : 'none',
+                margin: 0,
+              }}
+            >
+              {task.title}
+            </p>
+            {hasActiveTimer && (
+              <span
+                className="animate-pulse"
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#4ade80',
+                  flexShrink: 0,
+                  display: 'inline-block',
+                  boxShadow: '0 0 4px #4ade80',
+                  marginTop: '3px',
+                }}
+              />
+            )}
+          </div>
 
           {(task.priority || task.tags.length > 0 || task.due || task.column === KanbanColumn.WAITING) && (
             <div

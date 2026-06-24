@@ -5,6 +5,7 @@ import AdminNav from '@/components/admin/AdminNav';
 import { prisma } from '@/lib/db';
 import { KanbanColumn } from '@prisma/client';
 import { HeatmapTweakProvider } from '@/components/admin/HeatmapTweakContext';
+import { AdminToastProvider } from '@/components/ui/toast-context';
 
 export type NavProject = {
   id: string;
@@ -53,6 +54,7 @@ export default async function AdminLayout({
 
   return (
     <HeatmapTweakProvider>
+    <AdminToastProvider>
       <div
         className="h-screen flex overflow-hidden"
         style={{ background: '#EFE9DC', fontFamily: "'DM Sans', system-ui, sans-serif" }}
@@ -60,6 +62,7 @@ export default async function AdminLayout({
         <AdminNav projects={navProjects} hasActiveTimer={activeTimerProjectIds.size > 0} activeTimerProjectIds={activeTimerProjectIds} />
         <main className="flex-1 min-h-0 overflow-hidden pt-14 md:pt-0">{children}</main>
       </div>
+    </AdminToastProvider>
     </HeatmapTweakProvider>
   );
 }

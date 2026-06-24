@@ -124,7 +124,7 @@ export default function ProjectHeatmap({
                   style={{
                     aspectRatio: '1',
                     width: '100%',
-                    borderRadius: '1px',
+                    borderRadius: '20%',
                     background: heatCellColor(count),
                     display: 'block',
                     cursor: count >= 0 && alignedStart ? 'default' : undefined,
@@ -152,7 +152,7 @@ export default function ProjectHeatmap({
                 style={{
                   width: `${resolvedCellSize}px`,
                   height: `${resolvedCellSize}px`,
-                  borderRadius: '1px',
+                  borderRadius: '20%',
                   background: heatCellColor(count),
                   display: 'inline-block',
                   flexShrink: 0,

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug } from 'lucide-react';
+import { useAdminToast } from '@/components/ui/toast-context';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -345,6 +347,9 @@ export default function ConnectionsClient({
   projects,
   clients,
 }: Props) {
+  const { toast } = useAdminToast();
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
   // ── Basecamp ──────────────────────────────────────────────────────────────
   const [bcConnected, setBcConnected] = useState(initBcConnected);
   const [bcLastSync, setBcLastSync] = useState(initBcSync);
@@ -394,16 +399,20 @@ export default function ConnectionsClient({
   // ── Basecamp ──────────────────────────────────────────────────────────────
 
   async function disconnectBasecamp() {
-    if (!confirm('Disconnect Basecamp? Project mappings will be cleared.')) return;
-    await fetch('/api/integrations/basecamp/configure', { method: 'DELETE' });
-    setBcConnected(false); setBcProjects([]);
+    setConfirmDialog({
+      message: 'Disconnect Basecamp? Project mappings will be cleared.',
+      onConfirm: async () => {
+        await fetch('/api/integrations/basecamp/configure', { method: 'DELETE' });
+        setBcConnected(false); setBcProjects([]);
+      },
+    });
   }
 
   async function syncBasecamp() {
     setBcSyncing(true); setBcError('');
     const res = await fetch('/api/integrations/basecamp/sync', { method: 'POST' });
     setBcSyncing(false);
-    if (res.ok) { const d = await res.json(); setBcLastSync(new Date().toISOString()); alert(`Synced — created: ${d.created}, updated: ${d.updated}, pushed: ${d.pushed}`); }
+    if (res.ok) { const d = await res.json(); setBcLastSync(new Date().toISOString()); toast({ title: 'Basecamp synced', description: `Created: ${d.created}, updated: ${d.updated}, pushed: ${d.pushed}` }); }
     else { setBcError(await parseErr(res, 'Sync failed')); }
   }
 
@@ -439,14 +448,18 @@ export default function ConnectionsClient({
     setTfSyncing((s) => ({ ...s, [id]: true })); setTfError((e) => ({ ...e, [id]: '' }));
     const res = await fetch(`/api/integrations/testflight/${id}`, { method: 'POST' });
     setTfSyncing((s) => ({ ...s, [id]: false }));
-    if (res.ok) { const d = await res.json(); alert(`Synced — created: ${d.created}, deleted: ${d.deleted}`); window.location.reload(); }
+    if (res.ok) { const d = await res.json(); toast({ title: 'TestFlight synced', description: `Created: ${d.created}, deleted: ${d.deleted}` }); window.location.reload(); }
     else { const msg = await parseErr(res, 'Sync failed'); setTfError((e) => ({ ...e, [id]: msg })); }
   }
 
   async function deleteTf(id: string) {
-    if (!confirm('Remove this TestFlight integration?')) return;
-    await fetch(`/api/integrations/testflight/${id}`, { method: 'DELETE' });
-    setTfIntegrations((prev) => prev.filter((i) => i.id !== id));
+    setConfirmDialog({
+      message: 'Remove this TestFlight integration?',
+      onConfirm: async () => {
+        await fetch(`/api/integrations/testflight/${id}`, { method: 'DELETE' });
+        setTfIntegrations((prev) => prev.filter((i) => i.id !== id));
+      },
+    });
   }
 
   async function debugTf(id: string) {
@@ -459,17 +472,25 @@ export default function ConnectionsClient({
   // ── Google Calendar ───────────────────────────────────────────────────────
 
   async function deleteGcal(id: string) {
-    if (!confirm('Disconnect this Google Calendar?')) return;
-    await fetch(`/api/integrations/google-calendar/configure?id=${id}`, { method: 'DELETE' });
-    setGcalIntegrations((prev) => prev.filter((i) => i.id !== id));
+    setConfirmDialog({
+      message: 'Disconnect this Google Calendar?',
+      onConfirm: async () => {
+        await fetch(`/api/integrations/google-calendar/configure?id=${id}`, { method: 'DELETE' });
+        setGcalIntegrations((prev) => prev.filter((i) => i.id !== id));
+      },
+    });
   }
 
   // ── Apple Calendar ────────────────────────────────────────────────────────
 
   async function deleteAcal(id: string) {
-    if (!confirm('Disconnect this Apple Calendar?')) return;
-    await fetch(`/api/integrations/apple-calendar/configure?id=${id}`, { method: 'DELETE' });
-    setAcalIntegrations((prev) => prev.filter((i) => i.id !== id));
+    setConfirmDialog({
+      message: 'Disconnect this Apple Calendar?',
+      onConfirm: async () => {
+        await fetch(`/api/integrations/apple-calendar/configure?id=${id}`, { method: 'DELETE' });
+        setAcalIntegrations((prev) => prev.filter((i) => i.id !== id));
+      },
+    });
   }
 
   const linkedProjects = projects.filter((p) => p.basecampTodolistId);
@@ -711,6 +732,16 @@ export default function ConnectionsClient({
             </div>
           </div>
         </>
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          message={confirmDialog.message}
+          confirmLabel="Confirm"
+          danger
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   );
