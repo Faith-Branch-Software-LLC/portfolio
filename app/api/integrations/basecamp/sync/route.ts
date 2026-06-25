@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import authOptions from "@/lib/actions/authOptions";
 import { getIntegration } from '@/lib/actions/admin/integrations';
@@ -12,9 +12,11 @@ import {
   uncompleteTodo,
 } from '@/lib/utils/basecampApi';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = req.headers.get('x-cron-secret');
+  const validCron = cronSecret && cronSecret === process.env.CRON_SECRET;
+  if (!session && !validCron) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const integration = await getIntegration(IntegrationType.BASECAMP);
   if (!integration) return NextResponse.json({ error: 'Basecamp not connected' }, { status: 404 });

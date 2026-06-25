@@ -13,6 +13,7 @@ env:
     - GOOGLE_CLIENT_ID
     - GOOGLE_CLIENT_SECRET
     - ENCRYPTION_KEY
+    - CRON_SECRET
 
 proxy:
   app_port: 3000

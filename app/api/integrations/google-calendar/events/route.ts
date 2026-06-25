@@ -94,7 +94,9 @@ function normalizeGoogleEvent(e: Record<string, unknown>, calendarName: string, 
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = req.headers.get('x-cron-secret');
+  const validCron = cronSecret && cronSecret === process.env.CRON_SECRET;
+  if (!session && !validCron) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const integrations = await prisma.integration.findMany({ where: { type: IntegrationType.GOOGLE_CALENDAR } });
   if (!integrations.length) return NextResponse.json({ sources: [] });

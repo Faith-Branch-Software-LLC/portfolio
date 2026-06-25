@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug } from 'lucide-react';
+import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug, Bot, Copy, Eye, EyeOff } from 'lucide-react';
 import { useAdminToast } from '@/components/ui/toast-context';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { generateMcpApiKey, revokeMcpApiKey } from '@/lib/actions/admin/integrations';
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ interface Props {
   appleCalIntegrations: IntegrationRow[];
   projects: Project[];
   clients: Client[];
+  mcpApiKey: string | null;
 }
 
 // ─── styles ──────────────────────────────────────────────────────────────────
@@ -346,9 +348,42 @@ export default function ConnectionsClient({
   appleCalIntegrations: initAcalIntegrations,
   projects,
   clients,
+  mcpApiKey: initMcpKey,
 }: Props) {
   const { toast } = useAdminToast();
   const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  // ── MCP ───────────────────────────────────────────────────────────────────
+  const [mcpKey, setMcpKey] = useState(initMcpKey);
+  const [mcpKeyVisible, setMcpKeyVisible] = useState(false);
+  const [mcpGenerating, setMcpGenerating] = useState(false);
+
+  async function handleGenerateMcpKey() {
+    setMcpGenerating(true);
+    try {
+      const key = await generateMcpApiKey();
+      setMcpKey(key);
+      setMcpKeyVisible(true);
+      toast({ title: 'MCP API key generated' });
+    } catch {
+      toast({ title: 'Failed to generate key' });
+    } finally {
+      setMcpGenerating(false);
+    }
+  }
+
+  async function handleRevokeMcpKey() {
+    setConfirmDialog({
+      message: 'Revoke the MCP API key? Claude will lose access until you generate a new one.',
+      onConfirm: async () => {
+        await revokeMcpApiKey();
+        setMcpKey(null);
+        setMcpKeyVisible(false);
+        setConfirmDialog(null);
+        toast({ title: 'MCP API key revoked' });
+      },
+    });
+  }
 
   // ── Basecamp ──────────────────────────────────────────────────────────────
   const [bcConnected, setBcConnected] = useState(initBcConnected);
@@ -499,7 +534,8 @@ export default function ConnectionsClient({
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 26px' }}>
-      <div className="flex flex-col lg:flex-row" style={{ maxWidth: '1200px', gap: '20px', marginBottom: '20px' }}>
+      <div style={{ maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="flex flex-col lg:flex-row" style={{ gap: '20px' }}>
 
         {/* ── Basecamp ───────────────────────────────────────────────────── */}
         <div style={{ ...panel, flex: 1 }}>
@@ -713,6 +749,66 @@ export default function ConnectionsClient({
 
           <AppleCalAddForm onAdded={() => window.location.reload()} />
         </div>
+      </div>
+
+      {/* ── Claude MCP ─────────────────────────────────────────────────────── */}
+      <div style={{ ...panel }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#CC785C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bot size={18} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '17px', color: '#2E294E' }}>Claude MCP</div>
+              <div style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', color: '#6b6580' }}>give claude read/write access to your admin</div>
+            </div>
+          </div>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '20px', background: mcpKey ? '#d4f7f0' : '#f0eeff', color: mcpKey ? '#0d7a68' : '#6b6580', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, border: `1px solid ${mcpKey ? '#1B998B' : '#c8c3e0'}` }}>
+            {mcpKey ? <CheckCircle size={12} /> : <Circle size={12} />}
+            {mcpKey ? 'Key active' : 'No key'}
+          </span>
+        </div>
+
+        {mcpKey ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                readOnly
+                type={mcpKeyVisible ? 'text' : 'password'}
+                value={mcpKey}
+                style={{ ...inputStyle, flex: 1, fontFamily: "'Courier New', monospace", fontSize: '12px' }}
+              />
+              <button style={btnSmall()} onClick={() => setMcpKeyVisible(!mcpKeyVisible)}>
+                {mcpKeyVisible ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+              <button style={btnSmall()} onClick={() => { navigator.clipboard.writeText(mcpKey!); toast({ title: 'Copied to clipboard' }); }}>
+                <Copy size={13} /> Copy
+              </button>
+            </div>
+            <p style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', color: '#6b6580', margin: 0 }}>
+              Add to <code style={{ background: '#2E294E', color: '#fff', padding: '1px 5px', borderRadius: '3px' }}>~/.claude/mcp.json</code> →{' '}
+              <code style={{ background: '#eee', padding: '1px 5px', borderRadius: '3px' }}>Authorization: Bearer {'<key>'}</code>
+            </p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <button style={btnSmall()} onClick={handleGenerateMcpKey} disabled={mcpGenerating}>
+                <RefreshCw size={12} /> Rotate key
+              </button>
+              <button style={btnSmall('#c0392b')} onClick={handleRevokeMcpKey}>
+                <Trash2 size={12} /> Revoke
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontFamily: 'Gelasio, serif', fontSize: '13.5px', color: '#3b3550', lineHeight: 1.6, margin: '0 0 14px' }}>
+              Generate an API key to connect Claude Code to your admin via MCP. Claude can then read tasks, calendar events, and trigger syncs directly from your terminal.
+            </p>
+            <button style={btnPrimary('#CC785C')} onClick={handleGenerateMcpKey} disabled={mcpGenerating}>
+              <Bot size={14} /> {mcpGenerating ? 'Generating…' : 'Generate API key'}
+            </button>
+          </div>
+        )}
+      </div>
       </div>
 
       {/* TF Debug modal */}

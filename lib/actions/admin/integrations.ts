@@ -139,3 +139,24 @@ export async function unlinkProjectFromBasecamp(projectId: string) {
   revalidatePath(`/admin/projects/${projectId}`);
   revalidatePath('/admin/connections');
 }
+
+export async function getMcpApiKey(): Promise<string | null> {
+  const setting = await prisma.adminSetting.findUnique({ where: { key: 'mcp_api_key' } });
+  return setting?.value ?? null;
+}
+
+export async function generateMcpApiKey(): Promise<string> {
+  const key = randomBytes(32).toString('hex');
+  await prisma.adminSetting.upsert({
+    where: { key: 'mcp_api_key' },
+    create: { key: 'mcp_api_key', value: key },
+    update: { value: key },
+  });
+  revalidatePath('/admin/connections');
+  return key;
+}
+
+export async function revokeMcpApiKey(): Promise<void> {
+  await prisma.adminSetting.deleteMany({ where: { key: 'mcp_api_key' } });
+  revalidatePath('/admin/connections');
+}

@@ -7,8 +7,9 @@ import { Plus, ArchiveRestore, LayoutList, Pencil, Archive, Trash2, Flag, ArrowU
 import ProjectForm from './ProjectForm';
 import AdminLink from '@/components/admin/AdminLink';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ProjectHeatmap from './ProjectHeatmap';
 
-type ProjectWithClient = Project & { client: Client };
+type ProjectWithClient = Project & { client: Client; heatmapGrid?: number[][]; heatmapAlignedStart?: string };
 
 interface ProjectListProps {
   projects: ProjectWithClient[];
@@ -420,6 +421,13 @@ export default function ProjectList({ projects, clients, activeTimerProjectIds }
                       )}
                     </div>
                   </div>
+
+                  {/* Heatmap */}
+                  {project.heatmapGrid && project.heatmapGrid.length > 0 && (
+                    <div style={{ padding: '0 14px 10px', overflow: 'hidden', display: 'flex', justifyContent: 'flex-end' }}>
+                      <ProjectHeatmap grid={project.heatmapGrid} alignedStart={project.heatmapAlignedStart} cellSize={7} gap={2} />
+                    </div>
+                  )}
 
                   {/* Card footer — actions */}
                   <div

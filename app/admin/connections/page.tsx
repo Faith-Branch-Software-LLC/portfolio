@@ -2,9 +2,10 @@ import { Plug } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
 import ConnectionsClient from '@/components/admin/connections/ConnectionsClient';
+import { getMcpApiKey } from '@/lib/actions/admin/integrations';
 
 export default async function ConnectionsPage() {
-  const [basecampIntegration, testflightIntegrations, googleCalIntegrations, appleCalIntegrations, projects, clients] = await Promise.all([
+  const [basecampIntegration, testflightIntegrations, googleCalIntegrations, appleCalIntegrations, projects, clients, mcpApiKey] = await Promise.all([
     prisma.integration.findFirst({ where: { type: IntegrationType.BASECAMP } }),
     prisma.integration.findMany({ where: { type: IntegrationType.TESTFLIGHT }, orderBy: { createdAt: 'asc' } }),
     prisma.integration.findMany({ where: { type: IntegrationType.GOOGLE_CALENDAR }, orderBy: { createdAt: 'asc' } }),
@@ -21,6 +22,7 @@ export default async function ConnectionsPage() {
       },
     }),
     prisma.client.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, color: true } }),
+    getMcpApiKey(),
   ]);
 
   function toRow(i: { id: string; name: string; lastSyncedAt: Date | null; config: unknown }) {
@@ -76,6 +78,7 @@ export default async function ConnectionsPage() {
         appleCalIntegrations={appleCalIntegrations.map(toRow)}
         projects={projects}
         clients={clients}
+        mcpApiKey={mcpApiKey}
       />
     </div>
   );

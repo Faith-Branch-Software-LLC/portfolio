@@ -1,4 +1,4 @@
-import { Code, Globe, Zap, Terminal, RefreshCw, Link } from 'lucide-react';
+import { Code, Globe, Zap, Terminal, RefreshCw, Link, Bot } from 'lucide-react';
 
 const panelStyle = {
   background: '#ffffff',
@@ -374,6 +374,105 @@ export default function ApiDocsPage() {
 }`}
               </pre>
             </div>
+          </div>
+
+          {/* MCP Server */}
+          <div style={panelStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+              <span style={{ color: '#CC785C', display: 'inline-flex' }}><Bot size={17} /></span>
+              <h2 style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '17px', margin: 0, color: '#2E294E' }}>
+                Claude MCP Server
+              </h2>
+            </div>
+            <p style={{ fontFamily: 'Gelasio, serif', fontSize: '14px', color: '#3b3550', margin: '0 0 12px', lineHeight: 1.6 }}>
+              The MCP server lets Claude Code read and write your admin data directly — tasks, calendar, timers, integrations.
+              Auth uses a bearer token stored in{' '}
+              <code style={{ fontFamily: "'Courier New', monospace", background: '#2E294E', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>
+                AdminSetting[mcp_api_key]
+              </code>.
+              Generate a key in <strong>Connections → Claude MCP</strong>.
+            </p>
+            <pre
+              style={{
+                margin: '0 0 14px',
+                background: '#002B36',
+                color: '#9fb4b0',
+                padding: '12px 14px',
+                borderRadius: '7px',
+                fontFamily: "'Courier New', monospace",
+                fontSize: '12.5px',
+                overflow: 'auto',
+              }}
+            >
+              POST /api/mcp
+            </pre>
+            <p style={{ fontFamily: 'Gelasio, serif', fontSize: '13px', color: '#3b3550', margin: '0 0 14px', lineHeight: 1.5 }}>
+              Add to{' '}
+              <code style={{ fontFamily: "'Courier New', monospace", background: '#eee', padding: '2px 5px', borderRadius: '3px', fontSize: '12px' }}>
+                ~/.claude/mcp.json
+              </code>:
+            </p>
+            <pre style={{ margin: '0 0 16px', background: '#002B36', color: '#9fb4b0', padding: '12px 14px', borderRadius: '7px', fontFamily: "'Courier New', monospace", fontSize: '12px', overflow: 'auto', lineHeight: 1.5 }}>
+{`{
+  "mcpServers": {
+    "portfolio-admin": {
+      "type": "http",
+      "url": "https://faithbranch.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-mcp-api-key>"
+      }
+    }
+  }
+}`}
+            </pre>
+            <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '14px', color: '#2E294E', marginBottom: '10px' }}>Available tools</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { name: 'list_projects', desc: 'List all projects (filter: status, archived)', args: 'status?, archived?' },
+                { name: 'list_tasks', desc: 'List tasks (filter: projectId, column, priority)', args: 'projectId?, column?, priority?' },
+                { name: 'get_task', desc: 'Get a single task by ID', args: 'taskId' },
+                { name: 'create_task', desc: 'Create a task in a project', args: 'title, projectId, column?, description?, priority?, due?' },
+                { name: 'move_task', desc: 'Move a task to a different kanban column', args: 'taskId, column' },
+                { name: 'update_task', desc: 'Edit task title, description, priority, or due date', args: 'taskId, projectId, title?, description?, priority?, due?' },
+                { name: 'list_calendar_events', desc: 'Upcoming events from cache (default 14 days)', args: 'daysAhead?, includeAllDay?' },
+                { name: 'refresh_calendar', desc: 'Re-fetch from all Google + Apple calendar integrations', args: '—' },
+                { name: 'sync_basecamp', desc: 'Pull latest todos from Basecamp', args: '—' },
+                { name: 'sync_testflight', desc: 'Pull latest TestFlight feedback as tasks', args: '—' },
+                { name: 'get_active_timers', desc: 'All currently running timers', args: '—' },
+                { name: 'clock_in', desc: 'Start a timer on a task', args: 'taskId' },
+                { name: 'clock_out', desc: 'Stop a running timer', args: 'timerId' },
+                { name: 'get_time_summary', desc: 'Time totals for a client by period', args: 'clientId, period?, projectId?' },
+                { name: 'list_clients', desc: 'All clients with project counts', args: '—' },
+                { name: 'generate_report', desc: 'Auto-summary of recent activity for a client', args: 'clientId' },
+              ].map(({ name, desc, args }) => (
+                <div key={name} style={{ padding: '10px 12px', background: '#F7F3EA', border: '1.5px solid rgba(46,41,78,0.14)', borderRadius: '7px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+                    <code style={{ fontFamily: "'Courier New', monospace", fontSize: '12.5px', color: '#2E294E', fontWeight: 700 }}>{name}</code>
+                    <span style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', color: '#9990b0' }}>{args}</span>
+                    <span style={{ fontSize: '12.5px', color: '#6b6580', flex: 1 }}>{desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: '14px' }}>
+              <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '14px', color: '#2E294E', marginBottom: '8px' }}>Resources</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ padding: '8px 12px', background: '#F7F3EA', border: '1.5px solid rgba(46,41,78,0.14)', borderRadius: '7px', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                  <code style={{ fontFamily: "'Courier New', monospace", fontSize: '12.5px', color: '#2E294E', fontWeight: 700 }}>portfolio://dashboard</code>
+                  <span style={{ fontSize: '12.5px', color: '#6b6580' }}>Active tasks + today&apos;s events + running timers</span>
+                </div>
+                <div style={{ padding: '8px 12px', background: '#F7F3EA', border: '1.5px solid rgba(46,41,78,0.14)', borderRadius: '7px', display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                  <code style={{ fontFamily: "'Courier New', monospace", fontSize: '12.5px', color: '#2E294E', fontWeight: 700 }}>portfolio://projects</code>
+                  <span style={{ fontSize: '12.5px', color: '#6b6580' }}>All active projects with client info</span>
+                </div>
+              </div>
+            </div>
+            <p style={{ fontFamily: 'Gelasio, serif', fontSize: '13px', color: '#6b6580', margin: '14px 0 0', lineHeight: 1.5 }}>
+              <strong>Note:</strong> <code style={{ fontFamily: "'Courier New', monospace", fontSize: '11.5px', background: '#eee', padding: '1px 4px', borderRadius: '3px' }}>sync_basecamp</code>,{' '}
+              <code style={{ fontFamily: "'Courier New', monospace", fontSize: '11.5px', background: '#eee', padding: '1px 4px', borderRadius: '3px' }}>sync_testflight</code>, and{' '}
+              <code style={{ fontFamily: "'Courier New', monospace", fontSize: '11.5px', background: '#eee', padding: '1px 4px', borderRadius: '3px' }}>refresh_calendar</code>{' '}
+              require a <code style={{ fontFamily: "'Courier New', monospace", fontSize: '11.5px', background: '#eee', padding: '1px 4px', borderRadius: '3px' }}>CRON_SECRET</code> env var to be set.
+            </p>
           </div>
 
           {/* Cron note */}

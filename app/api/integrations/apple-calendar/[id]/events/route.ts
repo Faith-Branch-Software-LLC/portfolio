@@ -201,7 +201,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = req.headers.get('x-cron-secret');
+  const validCron = cronSecret && cronSecret === process.env.CRON_SECRET;
+  if (!session && !validCron) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
   const isDebug = new URL(req.url).searchParams.get('debug') === '1';
