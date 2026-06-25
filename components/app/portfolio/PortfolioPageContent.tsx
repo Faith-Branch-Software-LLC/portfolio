@@ -1,128 +1,139 @@
 'use client';
 
-import React, { useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Section from '@/components/ui/section';
 import { useLayout } from '@/lib/context/layoutContext';
 import Footer from '@/components/app/footer';
 import { motion } from 'motion/react';
-import gsap from 'gsap';
 import { Hand, ScrapColors, StickyNote, TapeColor } from '@/components/app/scrapbookElements';
+import type { PortfolioItem } from '@prisma/client';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface Project {
-  title: string;
-  description: string;
-  url: string;
-  images?: string[];
-  isRed: boolean;
-  noteRot: number;
-  tapeColor: TapeColor;
+function resolveTapeColor(name: string): TapeColor {
+  const map: Record<string, TapeColor> = {
+    Orange: TapeColor.Orange,
+    Purple: TapeColor.Purple,
+    Teal: TapeColor.Teal,
+    Red: TapeColor.Red,
+  };
+  return map[name] ?? TapeColor.Orange;
 }
 
-const projects: Project[] = [
-  {
-    title: 'Ferric',
-    description:
-      'A nostalgic cassette player for iPhone. Create virtual tapes, add tracks from Apple Music or your local library, decorate with a drawing editor, and watch the reels spin through an animated cassette UI. Built with SwiftUI and AVFoundation.',
-    url: '/ferric',
-    isRed: false,
-    noteRot: 1.2,
-    tapeColor: TapeColor.Orange,
-  },
-  {
-    title: 'Homework Muffin',
-    description:
-      'In 2023, I worked on Homework Muffin as a Senior Design Project. It is a web/mobile application that helps students organize their homework and study for exams.',
-    url: 'https://homeworkmuffin.com',
-    images: ['/scrapBookImages/hwm-1.jpg', '/scrapBookImages/hwm-2.jpg'],
-    isRed: true,
-    noteRot: -1.5,
-    tapeColor: TapeColor.Purple,
-  },
-  {
-    title: 'Austintown Fence',
-    description:
-      'The first project since the start of the company. We were tasked with creating a website for a local fence company. We were able to create a really nice website with admin tools to help manage the website after the project was completed. This was made using Next.js and served on AWS Amplify. I learned a lot about comunicating with clients through this process.',
-    url: 'https://austintownfence.org',
-    images: ['/scrapBookImages/afc-1.jpg', '/scrapBookImages/afc-2.jpg'],
-    isRed: false,
-    noteRot: 1,
-    tapeColor: TapeColor.Red,
-  },
-  {
-    title: 'EyeOnFi',
-    description:
-      "EyeOnFi is a financial forecasting tool that helps everyday people make better financial decisions. By imputing your financial data, EyeOnFi will help you forecast your financial future, helping to make informed decisions about your finances. Also, created in Next.js, we sought to leverage SSR and CSR to make a easy and fun experience for everyone. This project is still ongoing and has it's sights on something big.",
-    url: 'https://app.eyeonfi.com',
-    images: ['/scrapBookImages/eof-1.jpg', '/scrapBookImages/eof-2.jpg'],
-    isRed: true,
-    noteRot: -0.8,
-    tapeColor: TapeColor.Teal,
-  },
-];
+function ImageCarousel({ images, title }: { images: string[]; title: string }) {
+  const [idx, setIdx] = useState(0);
+  const count = images.length;
 
-function AppPlaceholder({ title }: { title: string }) {
-  return (
-    <div className="relative w-[220px] h-[340px] md:w-[300px] md:h-[430px] mx-auto md:mx-0 flex items-center justify-center">
-      <div
-        className="w-full h-full rounded-lg flex items-center justify-center shadow-card"
-        style={{ background: '#f3ead4', transform: 'rotate(-2deg)' }}
-      >
-        <div className="text-center p-6">
-          <p className="font-fraunces font-black text-2xl mb-2">{title}</p>
-          <p className="font-gelasio text-sm opacity-60">Screenshots coming soon</p>
+  if (count === 0) {
+    return (
+      <div className="relative w-[220px] h-[340px] md:w-[300px] md:h-[430px] mx-auto md:mx-0 flex items-center justify-center">
+        <div
+          className="w-full h-full rounded-lg flex items-center justify-center shadow-card"
+          style={{ background: '#f3ead4', transform: 'rotate(-2deg)' }}
+        >
+          <div className="text-center p-6">
+            <p className="font-fraunces font-black text-2xl mb-2">{title}</p>
+            <p className="font-gelasio text-sm opacity-60">Screenshots coming soon</p>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function PageStack({ images, title }: { images: string[]; title: string }) {
-  const img0Ref = useRef<HTMLDivElement>(null);
-  const img1Ref = useRef<HTMLDivElement>(null);
+  if (count === 1) {
+    return (
+      <div className="relative w-[220px] h-[340px] md:w-[300px] md:h-[430px] mx-auto md:mx-0 rounded-lg overflow-hidden shadow-card" style={{ transform: 'rotate(-2deg)' }}>
+        <Image src={images[0]} alt={`${title} screenshot`} fill className="object-cover" sizes="(max-width: 768px) 220px, 300px" />
+      </div>
+    );
+  }
 
-  const bringToFront = useCallback((target: HTMLDivElement | null, other: HTMLDivElement | null) => {
-    if (!target || !other) return;
-    gsap.to(target, { zIndex: 10, scale: 1.05, duration: 0.3, ease: 'power2.out' });
-    gsap.to(other, { zIndex: 1, scale: 0.95, duration: 0.3, ease: 'power2.out' });
-  }, []);
+  const prev = () => setIdx((i) => (i - 1 + count) % count);
+  const next = () => setIdx((i) => (i + 1) % count);
 
   return (
-    <div className="relative w-[220px] h-[340px] md:w-[420px] md:h-[550px] mx-auto md:mx-0 overflow-visible">
+    <div className="relative mx-auto md:mx-0" style={{ width: 'clamp(220px, 30vw, 340px)' }}>
       <div
-        ref={img0Ref}
-        onMouseEnter={() => bringToFront(img0Ref.current, img1Ref.current)}
-        className="absolute top-0 left-0 w-[170px] h-[240px] md:w-[300px] md:h-[430px] rounded-lg overflow-hidden shadow-card cursor-pointer"
-        style={{ transform: 'rotate(-4deg)', zIndex: 2 }}
+        className="relative rounded-lg overflow-hidden shadow-card"
+        style={{ aspectRatio: '3/4', transform: 'rotate(-2deg)' }}
       >
-        <Image
-          src={images[0]}
-          alt={`${title} screenshot 1`}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 170px, 300px"
-        />
+        {images.map((src, i) => (
+          <div
+            key={i}
+            className="absolute inset-0 transition-opacity duration-400"
+            style={{ opacity: i === idx ? 1 : 0, pointerEvents: i === idx ? 'auto' : 'none' }}
+          >
+            <Image
+              src={src}
+              alt={`${title} screenshot ${i + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 220px, 340px"
+            />
+          </div>
+        ))}
       </div>
-      <div
-        ref={img1Ref}
-        onMouseEnter={() => bringToFront(img1Ref.current, img0Ref.current)}
-        className="absolute top-[50px] left-[60px] md:top-[100px] md:left-[130px] w-[170px] h-[240px] md:w-[300px] md:h-[430px] rounded-lg overflow-hidden shadow-card cursor-pointer"
-        style={{ transform: 'rotate(3deg)', zIndex: 1 }}
-      >
-        <Image
-          src={images[1]}
-          alt={`${title} screenshot 2`}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 170px, 300px"
-        />
+
+      {/* Controls */}
+      <div className="flex items-center justify-center gap-3 mt-4">
+        <button
+          onClick={prev}
+          className="w-8 h-8 rounded-full flex items-center justify-center shadow-card transition-transform hover:scale-110 active:scale-95"
+          style={{ background: '#F4EAD4', border: '1.5px solid rgba(0,0,0,0.1)' }}
+          aria-label="Previous image"
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+        <div className="flex gap-2">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIdx(i)}
+              aria-label={`Image ${i + 1}`}
+              style={{
+                width: i === idx ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: i === idx ? '#D7263D' : 'rgba(0,0,0,0.2)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'width 0.2s, background 0.2s',
+                padding: 0,
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={next}
+          className="w-8 h-8 rounded-full flex items-center justify-center shadow-card transition-transform hover:scale-110 active:scale-95"
+          style={{ background: '#F4EAD4', border: '1.5px solid rgba(0,0,0,0.1)' }}
+          aria-label="Next image"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );
 }
 
-export default function PortfolioPageContent() {
+export default function PortfolioPageContent({ items }: { items: PortfolioItem[] }) {
   const { totalTranslation } = useLayout();
+
+  if (items.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+        <Section className="bg-backgroundRed" layer={1}>
+          <div className="text-center py-20">
+            <p className="font-fraunces font-black text-3xl text-white mb-4">Portfolio coming soon</p>
+            <p className="font-gelasio text-white/70">Check back soon for our latest projects.</p>
+          </div>
+        </Section>
+        <Footer layer={2} />
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -131,48 +142,47 @@ export default function PortfolioPageContent() {
       transition={{ duration: 0.5 }}
       style={{ marginBottom: `-${totalTranslation}px` }}
     >
-      {projects.map((project, i) => (
-        <Section key={project.title} className={project.isRed ? "bg-backgroundRed" : "bg-teal"} layer={i + 1}>
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-12 md:gap-20 w-full max-w-6xl mx-auto items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              {project.images?.length ? (
-                <PageStack images={project.images} title={project.title} />
-              ) : (
-                <AppPlaceholder title={project.title} />
-              )}
-            </motion.div>
+      {items.map((item, i) => {
+        const images = (item.images as string[]) ?? [];
+        return (
+          <Section key={item.id} className={i % 2 === 1 ? 'bg-backgroundRed' : 'bg-teal'} layer={i + 1}>
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-12 md:gap-20 w-full max-w-6xl mx-auto items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <ImageCarousel images={images} title={item.title} />
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <StickyNote rot={project.noteRot} tapeColor={project.tapeColor}>
-                <h2 className="text-3xl md:text-4xl font-black font-fraunces mb-3">
-                  {project.title}
-                </h2>
-                <p className="font-gelasio text-base leading-relaxed mb-5">
-                  {project.description}
-                </p>
-                <Hand
-                  color={ScrapColors.red}
-                  size={24}
-                  rot={-3}
-                  href={project.url}
-                  style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
-                >
-                  Visit project →
-                </Hand>
-              </StickyNote>
-            </motion.div>
-          </div>
-        </Section>
-      ))}
-      <Footer layer={projects.length + 1} />
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <StickyNote rot={item.noteRot} tapeColor={resolveTapeColor(item.tapeColor)}>
+                  <h2 className="text-3xl md:text-4xl font-black font-fraunces mb-3">
+                    {item.title}
+                  </h2>
+                  <p className="font-gelasio text-base leading-relaxed mb-5">
+                    {item.description}
+                  </p>
+                  <Hand
+                    color={ScrapColors.red}
+                    size={24}
+                    rot={-3}
+                    href={item.url}
+                    style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}
+                  >
+                    Visit project →
+                  </Hand>
+                </StickyNote>
+              </motion.div>
+            </div>
+          </Section>
+        );
+      })}
+      <Footer layer={items.length + 1} />
     </motion.div>
   );
 }

@@ -335,6 +335,72 @@ export function createMcpServer(): McpServer {
     return json(summary);
   });
 
+  // ── list_portfolio_items ─────────────────────────────────────────────────────
+  server.registerTool('list_portfolio_items', {
+    description: 'List all public portfolio items in display order',
+    inputSchema: {},
+  }, async () => {
+    const items = await prisma.portfolioItem.findMany({ orderBy: { order: 'asc' } });
+    return json(items);
+  });
+
+  // ── create_portfolio_item ────────────────────────────────────────────────────
+  server.registerTool('create_portfolio_item', {
+    description: 'Create a new public portfolio item',
+    inputSchema: {
+      title: z.string().describe('Project title'),
+      description: z.string().describe('Project description shown on the portfolio page'),
+      url: z.string().describe('Link URL for the project (internal path or external URL)'),
+      images: z.array(z.string()).optional().describe('Ordered list of Cloudinary image URLs'),
+      noteRot: z.number().optional().describe('Sticky note rotation in degrees (e.g. 1.2, -1.5)'),
+      tapeColor: z.enum(['Orange', 'Purple', 'Teal', 'Red']).optional().describe('Tape color for the sticky note'),
+      order: z.number().int().optional().describe('Display order (auto-assigned to end if omitted)'),
+    },
+  }, async ({ title, description, url, images, noteRot, tapeColor, order }) => {
+    const maxOrder = await prisma.portfolioItem.aggregate({ _max: { order: true } });
+    const item = await prisma.portfolioItem.create({
+      data: {
+        title,
+        description,
+        url,
+        images: images ?? [],
+        noteRot: noteRot ?? 0,
+        tapeColor: tapeColor ?? 'Orange',
+        order: order ?? (maxOrder._max.order ?? -1) + 1,
+      },
+    });
+    return json(item);
+  });
+
+  // ── update_portfolio_item ────────────────────────────────────────────────────
+  server.registerTool('update_portfolio_item', {
+    description: 'Update an existing portfolio item by ID',
+    inputSchema: {
+      id: z.string().describe('Portfolio item ID'),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      url: z.string().optional(),
+      images: z.array(z.string()).optional().describe('Full replacement list of image URLs'),
+      noteRot: z.number().optional(),
+      tapeColor: z.enum(['Orange', 'Purple', 'Teal', 'Red']).optional(),
+      order: z.number().int().optional(),
+    },
+  }, async ({ id, ...data }) => {
+    const item = await prisma.portfolioItem.update({ where: { id }, data });
+    return json(item);
+  });
+
+  // ── delete_portfolio_item ────────────────────────────────────────────────────
+  server.registerTool('delete_portfolio_item', {
+    description: 'Delete a portfolio item by ID',
+    inputSchema: {
+      id: z.string().describe('Portfolio item ID to delete'),
+    },
+  }, async ({ id }) => {
+    await prisma.portfolioItem.delete({ where: { id } });
+    return text(`Portfolio item ${id} deleted`);
+  });
+
   // ── Resource: portfolio://dashboard ─────────────────────────────────────────
   server.registerResource(
     'portfolio-dashboard',

@@ -204,3 +204,16 @@ model CalendarEventCache {
   cachedAt      DateTime    @default(now())
   integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 }
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  url         String
+  images      Json     @default("[]")
+  order       Int      @default(0)
+  noteRot     Float    @default(0)
+  tapeColor   String   @default("Orange")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

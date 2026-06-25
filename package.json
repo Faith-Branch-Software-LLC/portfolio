@@ -37,6 +37,7 @@
     "@types/three": "^0.166.0",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.5",
     "dotenv": "^16.4.7",

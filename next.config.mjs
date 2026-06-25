@@ -2,6 +2,15 @@
 const nextConfig = {
   output: 'standalone',
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
+  },
+
   // Forces Next.js to follow symlinks for local file: dependencies
   transpilePackages: ['gsap-offset-path'],
 
