@@ -16,6 +16,8 @@ import {
   Clock,
   Calendar,
   Briefcase,
+  PenLine,
+  Receipt,
 } from 'lucide-react';
 import type { NavProject } from '@/app/admin/layout';
 
@@ -26,6 +28,8 @@ const NAV_ITEMS = [
   { href: '/admin/clock', label: 'Clock', icon: Clock, exact: false },
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar, exact: false },
   { href: '/admin/portfolio', label: 'Portfolio', icon: Briefcase, exact: false },
+  { href: '/admin/blog', label: 'Blog', icon: PenLine, exact: false },
+  { href: '/admin/invoices', label: 'Invoices', icon: Receipt, exact: false },
   { href: '/admin/connections', label: 'Connections', icon: Plug, exact: false },
   { href: '/admin/api-docs', label: 'API Docs', icon: Code, exact: false },
 ];

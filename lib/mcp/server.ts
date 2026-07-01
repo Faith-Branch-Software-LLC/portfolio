@@ -401,6 +401,79 @@ export function createMcpServer(): McpServer {
     return text(`Portfolio item ${id} deleted`);
   });
 
+  // ── list_blog_posts ──────────────────────────────────────────────────────────
+  server.registerTool('list_blog_posts', {
+    description: 'List all blog posts, optionally filtered by published state',
+    inputSchema: {
+      published: z.boolean().optional().describe('Filter by published state (omit for all posts)'),
+    },
+  }, async ({ published }) => {
+    const posts = await prisma.blogPost.findMany({
+      where: published !== undefined ? { published } : {},
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, slug: true, title: true, description: true, published: true, tags: true, createdAt: true, updatedAt: true },
+    });
+    return json(posts);
+  });
+
+  // ── get_blog_post ────────────────────────────────────────────────────────────
+  server.registerTool('get_blog_post', {
+    description: 'Get a single blog post by ID, including its markdown content',
+    inputSchema: {
+      id: z.number().int().describe('Blog post ID'),
+    },
+  }, async ({ id }) => {
+    const post = await prisma.blogPost.findUnique({ where: { id } });
+    if (!post) return text(`Blog post ${id} not found`);
+    return json(post);
+  });
+
+  // ── create_blog_post ─────────────────────────────────────────────────────────
+  server.registerTool('create_blog_post', {
+    description: 'Create a new blog post as a draft',
+    inputSchema: {
+      title: z.string().describe('Post title'),
+      description: z.string().describe('Short description for listing and SEO'),
+      content: z.string().describe('Markdown content'),
+      tags: z.string().optional().describe('Comma-separated tags'),
+      published: z.boolean().optional().describe('Publish immediately (default: false)'),
+    },
+  }, async ({ title, description, content, tags, published }) => {
+    const { createBlogPost: create, publishBlogPost: publish } = await import('@/lib/actions/admin/blog');
+    const post = await create({ title, description, content, tags });
+    if (published) await publish(post.id);
+    return json({ ...post, published: published ?? false });
+  });
+
+  // ── update_blog_post ─────────────────────────────────────────────────────────
+  server.registerTool('update_blog_post', {
+    description: 'Update an existing blog post',
+    inputSchema: {
+      id: z.number().int().describe('Blog post ID'),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      content: z.string().optional().describe('Markdown content'),
+      tags: z.string().optional().describe('Comma-separated tags'),
+    },
+  }, async ({ id, ...data }) => {
+    const { updateBlogPost: update } = await import('@/lib/actions/admin/blog');
+    const post = await update(id, data);
+    return json(post);
+  });
+
+  // ── publish_blog_post ────────────────────────────────────────────────────────
+  server.registerTool('publish_blog_post', {
+    description: 'Publish or unpublish a blog post',
+    inputSchema: {
+      id: z.number().int().describe('Blog post ID'),
+      published: z.boolean().describe('true to publish, false to unpublish'),
+    },
+  }, async ({ id, published }) => {
+    const { publishBlogPost: publish, unpublishBlogPost: unpublish } = await import('@/lib/actions/admin/blog');
+    const post = published ? await publish(id) : await unpublish(id);
+    return json(post);
+  });
+
   // ── Resource: portfolio://dashboard ─────────────────────────────────────────
   server.registerResource(
     'portfolio-dashboard',

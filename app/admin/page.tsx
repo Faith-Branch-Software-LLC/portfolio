@@ -5,7 +5,8 @@ import { KanbanColumn } from '@prisma/client';
 import AdminLink from '@/components/admin/AdminLink';
 import WorkToDo, { ActiveTask } from '@/components/admin/WorkToDo';
 import DashboardClock from '@/components/admin/DashboardClock';
-import { Check, Clock, Plus, Code, Video, Flag } from 'lucide-react';
+import { Check, Clock, Plus, Code, Video, Flag, ExternalLink } from 'lucide-react';
+import { getAkauntingConfig } from '@/lib/akaunting';
 import type { NormalizedEvent } from '@/lib/types/calendar';
 
 function etDayBoundaries(date: Date): { start: Date; end: Date } {
@@ -122,6 +123,8 @@ function fmtEventTime(ev: UpcomingEvent, now: Date): string {
 
 export default async function AdminDashboard() {
   const now = new Date();
+
+  const akauntingConfig = await getAkauntingConfig();
 
   // Calendar upcoming events from cache
   const calCaches = await prisma.calendarEventCache.findMany({ select: { events: true } });
@@ -257,6 +260,32 @@ export default async function AdminDashboard() {
       >
         <DashboardClock taskCount={activeTasks.length} />
         <div style={{ display: 'flex', gap: '10px' }}>
+          {akauntingConfig && (
+            <a
+              href={akauntingConfig.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#ffffff',
+                color: '#2E294E',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '14px',
+                padding: '10px 15px',
+                border: '2px solid #2E294E',
+                borderRadius: '6px',
+                boxShadow: '3px 3px 0 0 #2E294E',
+                cursor: 'pointer',
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={16} />
+              <span className="hidden sm:inline">Akaunting</span>
+            </a>
+          )}
           <AdminLink href="/admin/api-docs">
             <button
               style={{

@@ -14,6 +14,7 @@ model BlogPost {
   slug        String   @unique
   title       String
   description String
+  content     String?  @db.Text
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -143,7 +144,7 @@ model ActiveTimer {
 
 model AdminSetting {
   key   String @id
-  value String
+  value String @db.Text
 }
 
 model Tag {

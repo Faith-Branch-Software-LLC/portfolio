@@ -3,6 +3,7 @@ export interface BlogPost {
   slug: string;
   title: string;
   description: string;
+  content?: string | null;
   published: boolean;
   createdAt: Date;
   updatedAt: Date;

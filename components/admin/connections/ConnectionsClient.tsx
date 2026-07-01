@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug, Bot, Copy, Eye, EyeOff } from 'lucide-react';
+import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug, Bot, Copy, Eye, EyeOff, Receipt } from 'lucide-react';
 import { useAdminToast } from '@/components/ui/toast-context';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { generateMcpApiKey, revokeMcpApiKey } from '@/lib/actions/admin/integrations';
@@ -44,6 +44,8 @@ interface Props {
   projects: Project[];
   clients: Client[];
   mcpApiKey: string | null;
+  akauntingConnected: boolean;
+  akauntingUrl: string | null;
 }
 
 // ─── styles ──────────────────────────────────────────────────────────────────
@@ -349,6 +351,8 @@ export default function ConnectionsClient({
   projects,
   clients,
   mcpApiKey: initMcpKey,
+  akauntingConnected: initAkConnected,
+  akauntingUrl: initAkUrl,
 }: Props) {
   const { toast } = useAdminToast();
   const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
@@ -413,6 +417,17 @@ export default function ConnectionsClient({
 
   // ── Apple Calendar ────────────────────────────────────────────────────────
   const [acalIntegrations, setAcalIntegrations] = useState(initAcalIntegrations);
+
+  // ── Akaunting ─────────────────────────────────────────────────────────────
+  const [akConnected, setAkConnected] = useState(initAkConnected);
+  const [akUrl, setAkUrl] = useState(initAkUrl ?? '');
+  const [akUrlInput, setAkUrlInput] = useState('');
+  const [akEmail, setAkEmail] = useState('');
+  const [akPassword, setAkPassword] = useState('');
+  const [akCompanyId, setAkCompanyId] = useState('1');
+  const [akShowForm, setAkShowForm] = useState(false);
+  const [akLoading, setAkLoading] = useState(false);
+  const [akErr, setAkErr] = useState('');
 
   // ── parse URL params on mount ─────────────────────────────────────────────
   useEffect(() => {
@@ -524,6 +539,42 @@ export default function ConnectionsClient({
       onConfirm: async () => {
         await fetch(`/api/integrations/apple-calendar/configure?id=${id}`, { method: 'DELETE' });
         setAcalIntegrations((prev) => prev.filter((i) => i.id !== id));
+      },
+    });
+  }
+
+  // ── Akaunting ─────────────────────────────────────────────────────────────
+
+  async function connectAkaunting() {
+    if (!akUrlInput || !akEmail || !akPassword || !akCompanyId) { setAkErr('All fields required'); return; }
+    setAkLoading(true); setAkErr('');
+    const res = await fetch('/api/integrations/accounting/configure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: akUrlInput, email: akEmail, password: akPassword, companyId: akCompanyId }),
+    });
+    setAkLoading(false);
+    if (res.ok) {
+      setAkConnected(true);
+      setAkUrl(akUrlInput);
+      setAkShowForm(false);
+      setAkEmail(''); setAkPassword('');
+      toast({ title: 'Akaunting connected' });
+    } else {
+      const d = await res.json().catch(() => ({})) as { error?: string };
+      setAkErr(d.error ?? 'Connection failed');
+    }
+  }
+
+  async function disconnectAkaunting() {
+    setConfirmDialog({
+      message: 'Disconnect Akaunting? You will no longer be able to create invoices from here.',
+      onConfirm: async () => {
+        await fetch('/api/integrations/accounting/configure', { method: 'DELETE' });
+        setAkConnected(false);
+        setAkUrl('');
+        setConfirmDialog(null);
+        toast({ title: 'Akaunting disconnected' });
       },
     });
   }
@@ -807,6 +858,75 @@ export default function ConnectionsClient({
               <Bot size={14} /> {mcpGenerating ? 'Generating…' : 'Generate API key'}
             </button>
           </div>
+        )}
+      </div>
+
+      {/* ── Akaunting ──────────────────────────────────────────────────────── */}
+      <div style={{ ...panel }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#3B5998', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Receipt size={18} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '17px', color: '#2E294E' }}>Akaunting</div>
+              <div style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', color: '#6b6580' }}>create invoices · send to accounting</div>
+            </div>
+          </div>
+          <StatusBadge connected={akConnected} />
+        </div>
+
+        {akConnected ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: "'Courier New', monospace", fontSize: '12px', color: '#6b6580', flex: 1 }}>{akUrl}</span>
+              <a href="/admin/invoices" style={{ ...btnPrimary(), textDecoration: 'none', fontSize: '13px', padding: '8px 14px' }}>
+                <Receipt size={13} /> Open Invoices
+              </a>
+              <button style={{ ...btnOutline, borderColor: '#e74c3c', color: '#e74c3c', boxShadow: '2px 2px 0 0 #e74c3c', fontSize: '13px', padding: '8px 14px' }} onClick={disconnectAkaunting}>
+                <Trash2 size={13} /> Disconnect
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {!akShowForm ? (
+              <button style={{ ...btnOutline, fontSize: '13px', padding: '8px 14px' }} onClick={() => setAkShowForm(true)}>
+                <Zap size={14} /> Connect Akaunting
+              </button>
+            ) : (
+              <div style={{ background: '#F7F3EA', borderRadius: '8px', padding: '16px', border: '1.5px solid rgba(46,41,78,0.14)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={labelStyle}>Server URL</label>
+                    <input style={inputStyle} placeholder="http://accounting.faithbranch.com:8080" value={akUrlInput} onChange={(e) => setAkUrlInput(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Email</label>
+                    <input style={inputStyle} type="email" placeholder="admin@faithbranch.com" value={akEmail} onChange={(e) => setAkEmail(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Password</label>
+                    <input style={inputStyle} type="password" value={akPassword} onChange={(e) => setAkPassword(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Company ID</label>
+                    <input style={{ ...inputStyle, width: '120px' }} placeholder="1" value={akCompanyId} onChange={(e) => setAkCompanyId(e.target.value)} />
+                  </div>
+                </div>
+                {akErr && <p style={{ color: '#c0392b', fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', margin: '10px 0 0' }}>{akErr}</p>}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                  <button style={btnPrimary('#3B5998')} disabled={akLoading} onClick={connectAkaunting}>
+                    <Zap size={14} /> {akLoading ? 'Connecting…' : 'Connect'}
+                  </button>
+                  <button style={{ ...btnOutline, padding: '8px 12px', fontSize: '12.5px' }} onClick={() => { setAkShowForm(false); setAkErr(''); }}>Cancel</button>
+                </div>
+              </div>
+            )}
+            <p style={{ fontFamily: 'Gelasio, serif', fontSize: '13px', color: '#6b6580', lineHeight: 1.6, marginTop: '12px' }}>
+              Connect your Akaunting server to create invoices directly from the workshop. Clients are synced as contacts automatically.
+            </p>
+          </>
         )}
       </div>
       </div>

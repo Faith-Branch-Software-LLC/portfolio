@@ -210,7 +210,7 @@ export async function getBlogPostById(id: number): Promise<BlogPost | null> {
  * @param slug The slug of the post to retrieve
  * @returns The blog post with content from markdown file, or null if not found
  */
-export async function getBlogPostBySlug(slug: string): Promise<(BlogPost & { content?: string }) | null> {
+export async function getBlogPostBySlug(slug: string): Promise<(BlogPost & { content?: string | null }) | null> {
   // Try to fetch from database with timeout
   let dbPost: BlogPost | null = null;
   try {
@@ -220,6 +220,11 @@ export async function getBlogPostBySlug(slug: string): Promise<(BlogPost & { con
     ]);
   } catch (error) {
     console.error('DB query failed for blog post, falling back to markdown:', error);
+  }
+
+  // Prefer DB content (written via admin editor) over markdown file
+  if (dbPost && dbPost.content) {
+    return dbPost;
   }
 
   const markdownPost = getMarkdownPostBySlug(slug);
