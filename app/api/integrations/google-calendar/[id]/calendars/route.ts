@@ -4,15 +4,8 @@ import authOptions from '@/lib/actions/authOptions';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
 import { decryptConfig, encryptConfig } from '@/lib/utils/encryption';
+import { getValidGoogleToken, type GoogleConfig } from '@/lib/utils/googleCalendarAuth';
 import type { GoogleCalendarInfo, GoogleCalendarSetting } from '@/lib/types/calendar';
-
-type GoogleConfig = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  email?: string;
-  calendarSettings?: Record<string, GoogleCalendarSetting>;
-};
 
 // Darken colors that are too light to see on white backgrounds
 function darkenIfLight(hex: string): string {
@@ -26,30 +19,6 @@ function darkenIfLight(hex: string): string {
   return `#${d(r)}${d(g)}${d(b)}`;
 }
 
-async function getToken(integrationId: string): Promise<{ token: string; cfg: GoogleConfig } | null> {
-  const row = await prisma.integration.findUnique({ where: { id: integrationId } });
-  if (!row || row.type !== IntegrationType.GOOGLE_CALENDAR) return null;
-
-  const cfg = decryptConfig<GoogleConfig>(row.config);
-  if (Date.now() < cfg.expiresAt - 60_000) return { token: cfg.accessToken, cfg };
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: cfg.refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  if (!res.ok) return { token: cfg.accessToken, cfg };
-  const refreshed = await res.json();
-  const updated: GoogleConfig = { ...cfg, accessToken: refreshed.access_token, expiresAt: Date.now() + refreshed.expires_in * 1000 };
-  await prisma.integration.update({ where: { id: integrationId }, data: { config: encryptConfig(updated) } });
-  return { token: updated.accessToken, cfg: updated };
-}
-
 // GET — list all Google calendars for this integration with applied settings
 export async function GET(
   _req: NextRequest,
@@ -59,8 +28,8 @@ export async function GET(
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
-  const result = await getToken(id);
-  if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const result = await getValidGoogleToken(id);
+  if (!result) return NextResponse.json({ error: 'Not found or needs reconnect' }, { status: 404 });
 
   const { token, cfg } = result;
   const settings = cfg.calendarSettings ?? {};

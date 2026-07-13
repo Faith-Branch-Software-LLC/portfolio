@@ -16,6 +16,7 @@ import {
   Video,
   Link as LinkIcon,
   Flag,
+  AlertTriangle,
 } from 'lucide-react';
 import { useTransitionRouter } from 'next-transition-router';
 import type { NormalizedEvent, CacheEntry, AppleCalendarInfo, AppleCalendarSetting, GoogleCalendarInfo, GoogleCalendarSetting } from '@/lib/types/calendar';
@@ -59,7 +60,7 @@ interface TaskDueEvent {
 }
 
 interface Props {
-  googleCalSources: { id: string; name: string }[];
+  googleCalSources: { id: string; name: string; authError?: boolean }[];
   appleCalSources: { id: string; name: string }[];
   taskDueEvents?: TaskDueEvent[];
 }
@@ -618,6 +619,28 @@ function NoCalsBanner({ onGoConnect }: { onGoConnect: () => void }) {
   );
 }
 
+function ReconnectBanner({ sources }: { sources: { id: string; name: string }[] }) {
+  return (
+    <div style={{ margin: '16px 26px 0', padding: '12px 16px', background: 'rgba(244,96,54,0.08)', border: '1.5px solid rgba(244,96,54,0.35)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+      <span style={{ color: '#F46036', display: 'inline-flex', flexShrink: 0 }}><AlertTriangle size={15} /></span>
+      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#3b3550', flex: 1, minWidth: '200px' }}>
+        Google sign-in expired for {sources.map((s) => s.name).join(', ')} — events may be stale until you reconnect.
+      </span>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {sources.map((s) => (
+          <a
+            key={s.id}
+            href={`/api/integrations/google-calendar/oauth/start?integrationId=${s.id}&name=${encodeURIComponent(s.name)}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '12.5px', color: '#fff', background: '#F46036', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none' }}
+          >
+            Reconnect {s.name}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── MonthView ────────────────────────────────────────────────────────────────
 
 function MonthView({ anchor, events, onSelect, onDayClick }: { anchor: Date; events: CalEvent[]; onSelect: (ev: CalEvent) => void; onDayClick: (d: Date) => void }) {
@@ -760,6 +783,7 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
 
   const anyConnected    = allSources.length > 0;
   const hasAnySources   = anyConnected;
+  const gcalAuthErrorSources = initGcal.filter((s) => s.authError).map((s) => ({ id: s.id, name: s.name }));
 
   const [mode, setMode]         = useState<ViewMode>('month');
   const [anchor, setAnchor]     = useState(() => startOfDay(new Date()));
@@ -893,6 +917,7 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
       </div>
 
       {!anyConnected && <NoCalsBanner onGoConnect={() => router.push('/admin/connections')} />}
+      {gcalAuthErrorSources.length > 0 && <ReconnectBanner sources={gcalAuthErrorSources} />}
       {loadingCache && (
         <div style={{ padding: '10px 26px', fontFamily: "'Courier New', monospace", fontSize: '12px', color: '#8a8499', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />

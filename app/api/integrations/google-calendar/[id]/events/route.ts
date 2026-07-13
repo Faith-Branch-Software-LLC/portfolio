@@ -1,35 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/actions/authOptions';
-import { prisma } from '@/lib/db';
-import { IntegrationType } from '@prisma/client';
-import { decryptConfig, encryptConfig } from '@/lib/utils/encryption';
+import { getValidGoogleToken } from '@/lib/utils/googleCalendarAuth';
 
 async function getToken(integrationId: string): Promise<string | null> {
-  const integration = await prisma.integration.findUnique({ where: { id: integrationId } });
-  if (!integration || integration.type !== IntegrationType.GOOGLE_CALENDAR) return null;
-
-  const cfg = decryptConfig<{ accessToken: string; refreshToken: string; expiresAt: number }>(integration.config);
-  if (Date.now() < cfg.expiresAt - 60_000) return cfg.accessToken;
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: cfg.refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  if (!res.ok) return cfg.accessToken;
-  const refreshed = await res.json();
-  const accessToken = refreshed.access_token;
-  await prisma.integration.update({
-    where: { id: integrationId },
-    data: { config: encryptConfig({ ...cfg, accessToken, expiresAt: Date.now() + refreshed.expires_in * 1000 }) },
-  });
-  return accessToken;
+  const result = await getValidGoogleToken(integrationId);
+  return result?.token ?? null;
 }
 
 // POST = create event

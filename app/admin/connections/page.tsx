@@ -4,6 +4,8 @@ import { IntegrationType } from '@prisma/client';
 import ConnectionsClient from '@/components/admin/connections/ConnectionsClient';
 import { getMcpApiKey } from '@/lib/actions/admin/integrations';
 import { getAkauntingConfig } from '@/lib/akaunting';
+import { decryptConfig } from '@/lib/utils/encryption';
+import type { GoogleConfig } from '@/lib/utils/googleCalendarAuth';
 
 export default async function ConnectionsPage() {
   const [basecampIntegration, testflightIntegrations, googleCalIntegrations, appleCalIntegrations, projects, clients, mcpApiKey, akauntingConfig] = await Promise.all([
@@ -29,6 +31,14 @@ export default async function ConnectionsPage() {
 
   function toRow(i: { id: string; name: string; lastSyncedAt: Date | null; config: unknown }) {
     return { id: i.id, name: i.name, lastSyncedAt: i.lastSyncedAt?.toISOString() ?? null };
+  }
+
+  function toGcalRow(i: { id: string; name: string; lastSyncedAt: Date | null; config: unknown }) {
+    let authError = false;
+    try {
+      authError = !!decryptConfig<GoogleConfig>(i.config).authError;
+    } catch {}
+    return { id: i.id, name: i.name, lastSyncedAt: i.lastSyncedAt?.toISOString() ?? null, authError };
   }
 
   return (
@@ -76,7 +86,7 @@ export default async function ConnectionsPage() {
         basecampConnected={!!basecampIntegration}
         basecampLastSync={basecampIntegration?.lastSyncedAt?.toISOString() ?? null}
         testflightIntegrations={testflightIntegrations.map(toRow)}
-        googleCalIntegrations={googleCalIntegrations.map(toRow)}
+        googleCalIntegrations={googleCalIntegrations.map(toGcalRow)}
         appleCalIntegrations={appleCalIntegrations.map(toRow)}
         projects={projects}
         clients={clients}

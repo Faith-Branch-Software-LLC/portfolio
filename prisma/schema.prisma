@@ -112,6 +112,9 @@ model Task {
   completedAt          DateTime?
   updatedAt            DateTime       @updatedAt
   basecampTodoId       String?
+  basecampUrl          String?
+  basecampCommentsCount     Int?      @default(0)
+  basecampCommentsSeenCount Int?      @default(0)
   testflightFeedbackId String?
   screenshotUrl        String?        @db.Text
   externalSource       ExternalSource?

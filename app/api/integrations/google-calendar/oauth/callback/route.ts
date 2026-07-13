@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/actions/authOptions';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
-import { encryptConfig } from '@/lib/utils/encryption';
+import { decryptConfig, encryptConfig } from '@/lib/utils/encryption';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -46,22 +46,43 @@ export async function GET(req: NextRequest) {
     if (infoRes.ok) email = (await infoRes.json()).email ?? '';
   } catch {}
 
-  // Decode label from state
+  // Decode label + reconnect target from state
   let label = '';
+  let integrationId = '';
   const stateParam = searchParams.get('state');
   if (stateParam) {
-    try { label = JSON.parse(Buffer.from(stateParam, 'base64url').toString()).name ?? ''; } catch {}
+    try {
+      const decoded = JSON.parse(Buffer.from(stateParam, 'base64url').toString());
+      label = decoded.name ?? '';
+      integrationId = decoded.integrationId ?? '';
+    } catch {}
   }
 
   const name = label || email || 'Google Calendar';
+  const newConfig = { accessToken: tokens.access_token, refreshToken: tokens.refresh_token, expiresAt: Date.now() + tokens.expires_in * 1000, email };
 
-  await prisma.integration.create({
-    data: {
-      type: IntegrationType.GOOGLE_CALENDAR,
-      name,
-      config: encryptConfig({ accessToken: tokens.access_token, refreshToken: tokens.refresh_token, expiresAt: Date.now() + tokens.expires_in * 1000, email }),
-    },
-  });
+  // Reconnecting a specific integration — update it in place so calendarSettings
+  // (per-calendar colors/enabled) and the id survive, and drop the authError flag.
+  const existing = integrationId
+    ? await prisma.integration.findUnique({ where: { id: integrationId } })
+    : null;
 
-  return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/admin/connections?gcal_connected=1`);
+  if (existing && existing.type === IntegrationType.GOOGLE_CALENDAR) {
+    const prevCfg = decryptConfig<{ calendarSettings?: unknown }>(existing.config);
+    await prisma.integration.update({
+      where: { id: integrationId },
+      data: { config: encryptConfig({ ...newConfig, calendarSettings: prevCfg.calendarSettings, authError: false }) },
+    });
+  } else {
+    await prisma.integration.create({
+      data: {
+        type: IntegrationType.GOOGLE_CALENDAR,
+        name,
+        config: encryptConfig(newConfig),
+      },
+    });
+  }
+
+  const redirectTo = existing ? '/admin/calendar?gcal_reconnected=1' : '/admin/connections?gcal_connected=1';
+  return NextResponse.redirect(`${process.env.NEXTAUTH_URL}${redirectTo}`);
 }

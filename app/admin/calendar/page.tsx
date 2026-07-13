@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db';
 import { IntegrationType, KanbanColumn } from '@prisma/client';
 import CalendarClient from '@/components/admin/calendar/CalendarClient';
+import { decryptConfig } from '@/lib/utils/encryption';
+import type { GoogleConfig } from '@/lib/utils/googleCalendarAuth';
 
 export default async function CalendarPage() {
   const [googleIntegrations, appleIntegrations, dueTasks] = await Promise.all([
@@ -26,9 +28,17 @@ export default async function CalendarPage() {
     color: t.project.client.color ?? '#F46036',
   }));
 
+  const googleCalSources = googleIntegrations.map((i) => {
+    let authError = false;
+    try {
+      authError = !!decryptConfig<GoogleConfig>(i.config).authError;
+    } catch {}
+    return { id: i.id, name: i.name, authError };
+  });
+
   return (
     <CalendarClient
-      googleCalSources={googleIntegrations.map((i) => ({ id: i.id, name: i.name }))}
+      googleCalSources={googleCalSources}
       appleCalSources={appleIntegrations.map((i) => ({ id: i.id, name: i.name }))}
       taskDueEvents={taskDueEvents}
     />

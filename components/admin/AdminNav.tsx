@@ -169,7 +169,10 @@ export default function AdminNav({ projects, hasActiveTimer, activeTimerProjectI
         </div>
 
         {/* Scrollable middle: nav + projects */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+        <div
+          className="admin-nav-scroll"
+          style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+        >
           {/* Nav */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
             {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
@@ -270,9 +273,14 @@ export default function AdminNav({ projects, hasActiveTimer, activeTimerProjectI
                   const isCurrentProject = currentProjectId === p.id;
 
                   return (
-                    <button
+                    <a
                       key={p.id}
-                      onClick={() => navigate(`/admin/projects/${p.id}`)}
+                      href={`/admin/projects/${p.id}`}
+                      onClick={(e) => {
+                        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                        e.preventDefault();
+                        navigate(`/admin/projects/${p.id}`);
+                      }}
                       title={`Open ${p.name}`}
                       style={{
                         display: 'flex',
@@ -285,6 +293,8 @@ export default function AdminNav({ projects, hasActiveTimer, activeTimerProjectI
                         background: isCurrentProject ? 'rgba(255,255,255,0.14)' : 'transparent',
                         width: '100%',
                         textAlign: 'left',
+                        textDecoration: 'none',
+                        color: 'inherit',
                       }}
                     >
                       <span
@@ -358,7 +368,7 @@ export default function AdminNav({ projects, hasActiveTimer, activeTimerProjectI
                           }}
                         />
                       )}
-                    </button>
+                    </a>
                   );
                 })}
               </div>

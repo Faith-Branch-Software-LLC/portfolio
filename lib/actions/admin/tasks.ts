@@ -158,3 +158,13 @@ export async function deleteTask(id: string, projectId: string) {
 
   revalidatePath(`/admin/projects/${projectId}`);
 }
+
+export async function markBasecampCommentsSeen(id: string) {
+  const task = await prisma.task.findUnique({ where: { id }, select: { basecampCommentsCount: true, projectId: true } });
+  if (!task) return;
+  await prisma.task.update({
+    where: { id },
+    data: { basecampCommentsSeenCount: task.basecampCommentsCount ?? 0 },
+  });
+  revalidatePath(`/admin/projects/${task.projectId}`);
+}

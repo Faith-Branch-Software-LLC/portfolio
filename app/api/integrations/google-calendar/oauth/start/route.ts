@@ -9,10 +9,11 @@ export async function GET(req: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) return NextResponse.json({ error: 'GOOGLE_CLIENT_ID not set' }, { status: 500 });
 
-  // Carry optional display name through OAuth via state param
+  // Carry optional display name + reconnect target through OAuth via state param
   const { searchParams } = new URL(req.url);
   const label = searchParams.get('name') ?? '';
-  const state = Buffer.from(JSON.stringify({ name: label })).toString('base64url');
+  const integrationId = searchParams.get('integrationId') ?? '';
+  const state = Buffer.from(JSON.stringify({ name: label, integrationId })).toString('base64url');
 
   const redirectUri = `${process.env.NEXTAUTH_URL}/api/integrations/google-calendar/oauth/callback`;
   const scopes = [

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug, Bot, Copy, Eye, EyeOff, Receipt } from 'lucide-react';
+import { Zap, RefreshCw, Trash2, ChevronDown, ChevronUp, CheckCircle, Circle, Plus, Calendar, Bug, Bot, Copy, Eye, EyeOff, Receipt, AlertTriangle } from 'lucide-react';
 import { useAdminToast } from '@/components/ui/toast-context';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { generateMcpApiKey, revokeMcpApiKey } from '@/lib/actions/admin/integrations';
@@ -13,6 +13,7 @@ interface IntegrationRow {
   name: string;
   lastSyncedAt: string | null;
   config?: Record<string, unknown>;
+  authError?: boolean;
 }
 
 interface Project {
@@ -151,6 +152,7 @@ function ConnectedRow({
   onDelete,
   onDebug,
   debugLabel,
+  authError,
 }: {
   name: string;
   lastSync: string | null;
@@ -159,11 +161,19 @@ function ConnectedRow({
   onDelete: () => void;
   onDebug?: () => void;
   debugLabel?: string;
+  authError?: boolean;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#F7F3EA', borderRadius: '7px', border: '1.5px solid rgba(46,41,78,0.12)', flexWrap: 'wrap' }}>
-      <CheckCircle size={14} color="#1B998B" style={{ flexShrink: 0 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: authError ? '#FFF5F2' : '#F7F3EA', borderRadius: '7px', border: authError ? '1.5px solid #F46036' : '1.5px solid rgba(46,41,78,0.12)', flexWrap: 'wrap' }}>
+      {authError
+        ? <AlertTriangle size={14} color="#F46036" style={{ flexShrink: 0 }} />
+        : <CheckCircle size={14} color="#1B998B" style={{ flexShrink: 0 }} />}
       <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 600, color: '#2E294E', flex: 1, minWidth: 0 }}>{name}</span>
+      {authError && (
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: '#F46036' }}>
+          Reconnect needed — remove and connect again
+        </span>
+      )}
       <LastSync ts={lastSync} />
       {onSync && (
         <button style={btnSmall()} onClick={onSync} disabled={syncing}>
@@ -744,6 +754,7 @@ export default function ConnectionsClient({
                 name={gcal.name}
                 lastSync={gcal.lastSyncedAt}
                 onDelete={() => deleteGcal(gcal.id)}
+                authError={gcal.authError}
               />
             ))}
           </div>

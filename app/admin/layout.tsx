@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import authOptions from '@/lib/actions/authOptions';
 import AdminNav from '@/components/admin/AdminNav';
 import { prisma } from '@/lib/db';
-import { KanbanColumn } from '@prisma/client';
+import { KanbanColumn, ProjectStatus } from '@prisma/client';
 import { HeatmapTweakProvider } from '@/components/admin/HeatmapTweakContext';
 import { AdminToastProvider } from '@/components/ui/toast-context';
 
@@ -31,7 +31,7 @@ export default async function AdminLayout({
   const activeTimerProjectIds = new Set(activeTimers.map((t) => t.task.projectId));
 
   const projects = await prisma.project.findMany({
-    where: { archived: false },
+    where: { archived: false, status: ProjectStatus.IN_PROGRESS },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,

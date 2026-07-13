@@ -32,6 +32,8 @@ export interface BasecampTodo {
   due_on: string | null;
   created_at: string;
   updated_at: string;
+  app_url: string;
+  comments_count: number;
 }
 
 export async function listProjects(token: string, accountId: string, apiBase = 'https://3.basecampapi.com'): Promise<BasecampProject[]> {

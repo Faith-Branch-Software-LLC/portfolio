@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { KanbanColumn, Priority } from '@prisma/client';
-import { createTask, deleteTask, updateTask } from '@/lib/actions/admin/tasks';
+import { createTask, deleteTask, markBasecampCommentsSeen, updateTask } from '@/lib/actions/admin/tasks';
 import {
   clockIn,
   clockOut,
@@ -21,7 +21,7 @@ import {
   FormField,
   FormItem,
 } from '@/components/ui/form';
-import { Trash2, X, Check, Copy, ClipboardCheck, Play, Square, Pencil } from 'lucide-react';
+import { Trash2, X, Check, Copy, ClipboardCheck, Play, Square, Pencil, ExternalLink, MessageCircle } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type TimeEntry = { id: string; date: Date; minutes: number };
@@ -462,6 +462,76 @@ export default function TaskSidebar({
             <X size={16} />
           </button>
         </div>
+
+        {/* Basecamp link */}
+        {task?.basecampUrl && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              padding: '10px 20px',
+              borderBottom: '1.5px solid rgba(46,41,78,0.14)',
+              background: '#F7F3EA',
+              flexShrink: 0,
+            }}
+          >
+            <a
+              href={task.basecampUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                if ((task.basecampCommentsCount ?? 0) > (task.basecampCommentsSeenCount ?? 0)) {
+                  markBasecampCommentsSeen(task.id);
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: '12.5px',
+                color: '#2E294E',
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={13} />
+              Open in Basecamp
+            </a>
+            {(task.basecampCommentsCount ?? 0) > 0 && (
+              <span
+                title={
+                  (task.basecampCommentsCount ?? 0) > (task.basecampCommentsSeenCount ?? 0)
+                    ? 'New comments'
+                    : 'Comments'
+                }
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontFamily: "'Courier New', monospace",
+                  fontWeight: 700,
+                  fontSize: '11.5px',
+                  padding: '3px 8px',
+                  borderRadius: '20px',
+                  background:
+                    (task.basecampCommentsCount ?? 0) > (task.basecampCommentsSeenCount ?? 0)
+                      ? '#F46036'
+                      : 'rgba(46,41,78,0.1)',
+                  color:
+                    (task.basecampCommentsCount ?? 0) > (task.basecampCommentsSeenCount ?? 0)
+                      ? '#fff'
+                      : '#2E294E',
+                }}
+              >
+                <MessageCircle size={11} />
+                {task.basecampCommentsCount}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Form */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>

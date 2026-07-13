@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import ProjectHeatmap from '@/components/admin/projects/ProjectHeatmap';
 import { buildHeatmapGrid } from '@/lib/utils/heatmap';
-import { KanbanColumn } from '@prisma/client';
+import { KanbanColumn, ProjectStatus } from '@prisma/client';
 import AdminLink from '@/components/admin/AdminLink';
 import WorkToDo, { ActiveTask } from '@/components/admin/WorkToDo';
 import DashboardClock from '@/components/admin/DashboardClock';
@@ -222,7 +222,7 @@ export default async function AdminDashboard() {
   heatmapStartDate.setFullYear(heatmapStartDate.getFullYear() - 1);
 
   const allProjects = await prisma.project.findMany({
-    where: { archived: false },
+    where: { archived: false, status: ProjectStatus.IN_PROGRESS },
     include: {
       client: { select: { name: true, color: true } },
       tasks: { select: { column: true, title: true } },

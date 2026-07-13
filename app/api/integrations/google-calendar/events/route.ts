@@ -3,16 +3,8 @@ import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/actions/authOptions';
 import { prisma } from '@/lib/db';
 import { IntegrationType } from '@prisma/client';
-import { decryptConfig, encryptConfig } from '@/lib/utils/encryption';
-import type { NormalizedEvent, GoogleCalendarSetting } from '@/lib/types/calendar';
-
-type GoogleConfig = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  email?: string;
-  calendarSettings?: Record<string, GoogleCalendarSetting>;
-};
+import { getValidGoogleToken } from '@/lib/utils/googleCalendarAuth';
+import type { NormalizedEvent } from '@/lib/types/calendar';
 
 const FALLBACK_COLORS = ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#9C27B0', '#FF6D00'];
 
@@ -25,30 +17,6 @@ function darkenIfLight(hex: string): string {
   if (lum <= 0.55) return hex;
   const d = (v: number) => Math.round(v * 0.55).toString(16).padStart(2, '0');
   return `#${d(r)}${d(g)}${d(b)}`;
-}
-
-async function refreshIfNeeded(integration: { id: string; config: unknown }): Promise<{ token: string; cfg: GoogleConfig }> {
-  const cfg = decryptConfig<GoogleConfig>(integration.config);
-  if (Date.now() < cfg.expiresAt - 60_000) return { token: cfg.accessToken, cfg };
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: cfg.refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  if (!res.ok) return { token: cfg.accessToken, cfg };
-  const refreshed = await res.json();
-  const updated: GoogleConfig = { ...cfg, accessToken: refreshed.access_token, expiresAt: Date.now() + refreshed.expires_in * 1000 };
-  await prisma.integration.update({
-    where: { id: integration.id },
-    data: { config: encryptConfig(updated) },
-  });
-  return { token: updated.accessToken, cfg: updated };
 }
 
 const MEETING_RE = /https?:\/\/[^\s<>"\\]+(?:zoom\.us\/j|meet\.google\.com|teams\.microsoft\.com|webex\.com|whereby\.com|around\.co)[^\s<>"\\]*/i;
@@ -109,7 +77,9 @@ export async function GET(req: NextRequest) {
   const sources = await Promise.all(integrations.map(async (integration, idx) => {
     const fallbackColor = FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
     try {
-      const { token: accessToken, cfg } = await refreshIfNeeded(integration);
+      const authResult = await getValidGoogleToken(integration.id);
+      if (!authResult) throw new Error('needs reconnect');
+      const { token: accessToken, cfg } = authResult;
       const settings = cfg.calendarSettings ?? {};
 
       const calListRes = await fetch(

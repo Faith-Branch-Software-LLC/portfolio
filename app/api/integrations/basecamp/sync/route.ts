@@ -63,21 +63,33 @@ export async function POST(req: NextRequest) {
             order: (lastTask?.order ?? -1) + 1,
             completedAt: todo.completed ? new Date() : undefined,
             basecampTodoId: todoId,
+            basecampUrl: todo.app_url,
+            basecampCommentsCount: todo.comments_count,
             externalSource: ExternalSource.BASECAMP,
           },
         });
         created++;
       } else {
+        const columnChange: { column?: KanbanColumn; completedAt?: Date | null } = {};
         if (todo.completed && existing.column !== KanbanColumn.DONE) {
-          await prisma.task.update({
-            where: { id: existing.id },
-            data: { column: KanbanColumn.DONE, completedAt: new Date() },
-          });
-          updated++;
+          columnChange.column = KanbanColumn.DONE;
+          columnChange.completedAt = new Date();
         } else if (!todo.completed && existing.column === KanbanColumn.DONE) {
+          columnChange.column = KanbanColumn.BACKLOG;
+          columnChange.completedAt = null;
+        }
+        if (
+          Object.keys(columnChange).length > 0 ||
+          existing.basecampUrl !== todo.app_url ||
+          existing.basecampCommentsCount !== todo.comments_count
+        ) {
           await prisma.task.update({
             where: { id: existing.id },
-            data: { column: KanbanColumn.BACKLOG, completedAt: null },
+            data: {
+              ...columnChange,
+              basecampUrl: todo.app_url,
+              basecampCommentsCount: todo.comments_count,
+            },
           });
           updated++;
         }
