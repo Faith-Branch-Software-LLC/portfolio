@@ -48,10 +48,16 @@ RUN --mount=type=secret,id=ReSendKey \
     bun run build && \
     ls -la /app/.next/static || (echo "Build failed - static directory not created" && exit 1)
 
-FROM base AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs && \
     useradd --system --uid 1001 --gid nodejs nextjs
