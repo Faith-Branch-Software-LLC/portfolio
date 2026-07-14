@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Section from '@/components/ui/section';
 import { useLayout } from '@/lib/context/layoutContext';
@@ -8,7 +9,86 @@ import Footer from '@/components/app/footer';
 import { motion } from 'motion/react';
 import { Hand, ScrapColors, StickyNote, TapeColor } from '@/components/app/scrapbookElements';
 import type { PortfolioItem } from '@prisma/client';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+
+function Lightbox({
+  images,
+  title,
+  index,
+  onIndexChange,
+  onClose,
+}: {
+  images: string[];
+  title: string;
+  index: number;
+  onIndexChange: (i: number) => void;
+  onClose: () => void;
+}) {
+  const count = images.length;
+  const prev = () => onIndexChange((index - 1 + count) % count);
+  const next = () => onIndexChange((index + 1) % count);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && count > 1) prev();
+      if (e.key === 'ArrowRight' && count > 1) next();
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose, index, count]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 cursor-pointer"
+      style={{ background: 'rgba(0,0,0,0.85)' }}
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
+        style={{ background: '#F4EAD4' }}
+      >
+        <X size={20} />
+      </button>
+      <div className="relative w-full h-full max-w-[92vw] max-h-[90vh] cursor-default" onClick={(e) => e.stopPropagation()}>
+        <Image src={images[index]} alt={`${title} screenshot ${index + 1}`} fill className="object-contain" sizes="92vw" />
+      </div>
+      {count > 1 && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              prev();
+            }}
+            aria-label="Previous image"
+            className="absolute left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer"
+            style={{ background: '#F4EAD4' }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              next();
+            }}
+            aria-label="Next image"
+            className="absolute right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer"
+            style={{ background: '#F4EAD4' }}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      )}
+    </div>,
+    document.body
+  );
+}
 
 function resolveTapeColor(name: string): TapeColor {
   const map: Record<string, TapeColor> = {
@@ -20,9 +100,33 @@ function resolveTapeColor(name: string): TapeColor {
   return map[name] ?? TapeColor.Orange;
 }
 
+function fitBox(ratio: number, maxW: number, maxH: number) {
+  let w = maxH * ratio;
+  let h = maxH;
+  if (w > maxW) {
+    w = maxW;
+    h = maxW / ratio;
+  }
+  return { w: Math.round(w), h: Math.round(h) };
+}
+
 function ImageCarousel({ images, title }: { images: string[]; title: string }) {
   const [idx, setIdx] = useState(0);
+  const [ratios, setRatios] = useState<Record<number, number>>({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const count = images.length;
+  const ratio = ratios[idx] ?? 3 / 4;
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const { w: boxW, h: boxH } = fitBox(ratio, isDesktop ? 420 : 300, isDesktop ? 430 : 340);
 
   if (count === 0) {
     return (
@@ -42,9 +146,28 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
 
   if (count === 1) {
     return (
-      <div className="relative w-[220px] h-[340px] md:w-[300px] md:h-[430px] mx-auto md:mx-0 rounded-lg overflow-hidden shadow-card" style={{ transform: 'rotate(-2deg)' }}>
-        <Image src={images[0]} alt={`${title} screenshot`} fill className="object-cover" sizes="(max-width: 768px) 220px, 300px" />
-      </div>
+      <>
+        <div
+          className="relative mx-auto md:mx-0 rounded-lg overflow-hidden shadow-card cursor-pointer transition-[width,height] duration-300"
+          style={{ transform: 'rotate(-2deg)', width: boxW, height: boxH }}
+          onClick={() => setLightboxOpen(true)}
+        >
+          <Image
+            src={images[0]}
+            alt={`${title} screenshot`}
+            fill
+            className="object-contain"
+            sizes="(max-width: 768px) 300px, 420px"
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setRatios((r) => ({ ...r, 0: img.naturalWidth / img.naturalHeight }));
+            }}
+          />
+        </div>
+        {lightboxOpen && (
+          <Lightbox images={images} title={title} index={0} onIndexChange={() => {}} onClose={() => setLightboxOpen(false)} />
+        )}
+      </>
     );
   }
 
@@ -52,10 +175,11 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
   const next = () => setIdx((i) => (i + 1) % count);
 
   return (
-    <div className="relative mx-auto md:mx-0" style={{ width: 'clamp(220px, 30vw, 340px)' }}>
+    <div className="relative mx-auto md:mx-0" style={{ width: boxW }}>
       <div
-        className="relative rounded-lg overflow-hidden shadow-card"
-        style={{ aspectRatio: '3/4', transform: 'rotate(-2deg)' }}
+        className="relative rounded-lg overflow-hidden shadow-card cursor-pointer transition-[width,height] duration-300"
+        style={{ transform: 'rotate(-2deg)', width: boxW, height: boxH }}
+        onClick={() => setLightboxOpen(true)}
       >
         {images.map((src, i) => (
           <div
@@ -67,12 +191,19 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
               src={src}
               alt={`${title} screenshot ${i + 1}`}
               fill
-              className="object-cover"
-              sizes="(max-width: 768px) 220px, 340px"
+              className="object-contain"
+              sizes="(max-width: 768px) 300px, 420px"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                setRatios((r) => ({ ...r, [i]: img.naturalWidth / img.naturalHeight }));
+              }}
             />
           </div>
         ))}
       </div>
+      {lightboxOpen && (
+        <Lightbox images={images} title={title} index={idx} onIndexChange={setIdx} onClose={() => setLightboxOpen(false)} />
+      )}
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-3 mt-4">
@@ -95,7 +226,7 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
                 width: i === idx ? '20px' : '8px',
                 height: '8px',
                 borderRadius: '4px',
-                background: i === idx ? '#D7263D' : 'rgba(0,0,0,0.2)',
+                background: i === idx ? '#F4EAD4' : 'rgba(255,255,255,0.35)',
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'width 0.2s, background 0.2s',
@@ -146,7 +277,7 @@ export default function PortfolioPageContent({ items }: { items: PortfolioItem[]
         const images = (item.images as string[]) ?? [];
         return (
           <Section key={item.id} className={i % 2 === 1 ? 'bg-backgroundRed' : 'bg-teal'} layer={i + 1}>
-            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-12 md:gap-20 w-full max-w-6xl mx-auto items-center">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,420px)_1fr] gap-12 md:gap-20 w-full max-w-6xl mx-auto items-center">
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}

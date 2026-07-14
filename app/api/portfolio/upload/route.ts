@@ -14,14 +14,20 @@ export async function POST(req: NextRequest) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ folder: 'portfolio', resource_type: 'image' }, (error, result) => {
-        if (error || !result) return reject(error);
-        resolve(result as { secure_url: string });
-      })
-      .end(buffer);
-  });
+  try {
+    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream({ folder: 'portfolio', resource_type: 'image' }, (error, result) => {
+          if (error || !result) return reject(error);
+          resolve(result as { secure_url: string });
+        })
+        .end(buffer);
+    });
 
-  return NextResponse.json({ url: result.secure_url });
+    return NextResponse.json({ url: result.secure_url });
+  } catch (error) {
+    console.error('Cloudinary upload failed:', error);
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

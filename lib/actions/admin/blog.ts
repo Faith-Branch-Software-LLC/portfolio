@@ -76,6 +76,7 @@ export async function createBlogPost(data: {
     },
   });
   revalidatePath('/admin/blog');
+  revalidatePath('/blog');
   return post;
 }
 
