@@ -108,9 +108,16 @@ export default function FerricPage() {
           <p className="font-gelasio text-white/80 text-base leading-relaxed mb-4">
             A nostalgic cassette player for iPhone. Create virtual tapes, add your music, and listen in style.
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
+          <div className="flex gap-3 justify-center flex-wrap items-center">
             <span className="bg-white/20 text-white rounded-full px-4 py-1.5 text-sm font-fraunces font-medium">iOS 26.2+</span>
-            <span className="bg-white text-orange rounded-full px-4 py-1.5 text-sm font-fraunces font-semibold">TestFlight Beta</span>
+            <a
+              href="https://apps.apple.com/us/app/ferric/id6774606842"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-orange rounded-full px-4 py-1.5 text-sm font-fraunces font-semibold hover:bg-white/90"
+            >
+              Download on the App Store →
+            </a>
           </div>
         </div>
       </Section>

@@ -12,6 +12,8 @@ Allow: /icon.svg
 Disallow: /api/
 Disallow: /_next/
 Disallow: /up/
+Disallow: /admin/
+Disallow: /auth/
 
 # Sitemap location
 Sitemap: https://faithbranch.com/sitemap.xml

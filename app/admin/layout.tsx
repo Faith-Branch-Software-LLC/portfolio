@@ -6,6 +6,14 @@ import { prisma } from '@/lib/db';
 import { KanbanColumn, ProjectStatus } from '@prisma/client';
 import { HeatmapTweakProvider } from '@/components/admin/HeatmapTweakContext';
 import { AdminToastProvider } from '@/components/ui/toast-context';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export type NavProject = {
   id: string;
