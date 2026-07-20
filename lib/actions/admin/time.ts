@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '../../db';
+import { ClientTimePeriod, CLIENT_TIME_PERIOD_TO_PRESET, presetRange } from '@/lib/time-range';
 
 function getLocalDateMidnightUTC(timezone: string): Date {
   const localStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
@@ -106,22 +107,10 @@ export async function getProjectTotalMinutes(projectId: string): Promise<number>
 
 export async function getClientTimeData(
   clientId: string,
-  period: 'lifetime' | 'yearly' | 'monthly' | 'weekly',
+  period: ClientTimePeriod,
   projectId?: string,
 ) {
-  const now = new Date();
-  let since: Date | undefined;
-
-  if (period === 'weekly') {
-    const d = new Date(now);
-    d.setDate(d.getDate() - d.getDay());
-    d.setHours(0, 0, 0, 0);
-    since = d;
-  } else if (period === 'monthly') {
-    since = new Date(now.getFullYear(), now.getMonth(), 1);
-  } else if (period === 'yearly') {
-    since = new Date(now.getFullYear(), 0, 1);
-  }
+  const range = presetRange(CLIENT_TIME_PERIOD_TO_PRESET[period]);
 
   return prisma.timeEntry.findMany({
     where: {
@@ -131,7 +120,7 @@ export async function getClientTimeData(
           ...(projectId ? { id: projectId } : {}),
         },
       },
-      ...(since ? { date: { gte: since } } : {}),
+      ...(range ? { date: { gte: range.from, lt: range.to } } : {}),
     },
     include: {
       task: {
@@ -143,6 +132,85 @@ export async function getClientTimeData(
     },
     orderBy: { date: 'desc' },
   });
+}
+
+export interface ClientTimeRangeTask {
+  id: string;
+  title: string;
+  minutes: number;
+}
+
+export interface ClientTimeRangeProject {
+  id: string;
+  name: string;
+  minutes: number;
+  tasks: ClientTimeRangeTask[];
+}
+
+export interface ClientTimeRangeSummary {
+  totalMinutes: number;
+  projects: ClientTimeRangeProject[];
+}
+
+export async function getClientTimeRangeSummary(
+  clientId: string,
+  from: Date,
+  to: Date,
+  projectId?: string,
+): Promise<ClientTimeRangeSummary> {
+  const entries = await prisma.timeEntry.findMany({
+    where: {
+      task: {
+        project: {
+          clientId,
+          ...(projectId ? { id: projectId } : {}),
+        },
+      },
+      date: { gte: from, lt: to },
+    },
+    include: {
+      task: {
+        select: {
+          id: true,
+          title: true,
+          project: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy: { date: 'desc' },
+  });
+
+  const totalMinutes = entries.reduce((sum, e) => sum + e.minutes, 0);
+
+  const projectMap = new Map<
+    string,
+    { id: string; name: string; minutes: number; tasks: Map<string, ClientTimeRangeTask> }
+  >();
+
+  for (const e of entries) {
+    const p = e.task.project;
+    let project = projectMap.get(p.id);
+    if (!project) {
+      project = { id: p.id, name: p.name, minutes: 0, tasks: new Map() };
+      projectMap.set(p.id, project);
+    }
+    project.minutes += e.minutes;
+
+    const existingTask = project.tasks.get(e.task.id);
+    if (existingTask) existingTask.minutes += e.minutes;
+    else project.tasks.set(e.task.id, { id: e.task.id, title: e.task.title, minutes: e.minutes });
+  }
+
+  const projects = Array.from(projectMap.values())
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      minutes: p.minutes,
+      tasks: Array.from(p.tasks.values()).sort((a, b) => b.minutes - a.minutes),
+    }))
+    .sort((a, b) => b.minutes - a.minutes);
+
+  return { totalMinutes, projects };
 }
 
 export async function getClientProjects(clientId: string) {

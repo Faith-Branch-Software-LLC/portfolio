@@ -196,6 +196,21 @@ export default function KanbanBoard({
     }
   };
 
+  const handleMoveColumn = async (taskId: string, destColumn: KanbanColumnEnum) => {
+    const current = tasksRef.current;
+    const task = current.find((t) => t.id === taskId);
+    if (!task || task.column === destColumn) return;
+    const moved = { ...task, column: destColumn, order: getColumnTasks(destColumn, current).length };
+    const updated = current.map((t) => (t.id === taskId ? moved : t));
+    setTasks(updated);
+    setSidebarTask(moved);
+    const finalIds = getColumnTasks(destColumn, updated).map((t) => t.id);
+    await moveTask(taskId, projectId, destColumn, finalIds);
+    if (destColumn === KanbanColumnEnum.DONE || destColumn === KanbanColumnEnum.WAITING) {
+      handleTimerChange(taskId, false);
+    }
+  };
+
   return (
     <div style={{ position: 'relative', height: '100%', display: 'flex', overflow: 'hidden' }}>
       <DndContext
@@ -243,6 +258,7 @@ export default function KanbanBoard({
         onUpdated={handleTaskUpdated}
         onDeleted={handleTaskDeleted}
         onTimerChange={handleTimerChange}
+        onMoveColumn={handleMoveColumn}
       />
     </div>
   );

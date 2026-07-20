@@ -660,12 +660,12 @@ function MonthView({ anchor, events, onSelect, onDayClick }: { anchor: Date; eve
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '22px 26px' }}>
       <div style={{ background: '#fff', border: '2px solid #2E294E', borderRadius: '10px', boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#2E294E' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', background: '#2E294E' }}>
           {WEEKDAYS.map((w) => <div key={w} style={{ padding: '9px 8px', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.78)' }}>{w}</div>)}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gridTemplateRows: 'repeat(6,1fr)', gap: '1px', background: 'rgba(46,41,78,0.14)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gridTemplateRows: 'repeat(6,1fr)', gap: '1px', background: 'rgba(46,41,78,0.14)' }}>
           {cells.map(({ day, dayEvents, isToday, isCurrentMonth, isMultiDayStart, isMultiDayCont }, i) => (
-            <div key={i} onClick={() => onDayClick(day)} style={{ background: isToday ? '#F4EAD4' : '#ffffff', padding: '6px', minHeight: '96px', opacity: isCurrentMonth ? 1 : 0.4, cursor: 'pointer' }}>
+            <div key={i} onClick={() => onDayClick(day)} style={{ background: isToday ? '#F4EAD4' : '#ffffff', padding: '6px', minHeight: '96px', minWidth: 0, opacity: isCurrentMonth ? 1 : 0.4, cursor: 'pointer', overflow: 'hidden' }}>
               <div style={{ marginBottom: '4px' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', background: isToday ? '#2E294E' : 'transparent', color: isToday ? '#fff' : '#2E294E', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: isToday ? 700 : 400 }}>
                   {day.getDate()}
@@ -692,19 +692,31 @@ function TimelineView({ anchor, events, mode, onSelect, onSlotClick }: { anchor:
   const cols = mode === 'week'
     ? Array.from({ length: 7 }, (_, i) => addDays(addDays(anchor, -anchor.getDay()), i))
     : [startOfDay(anchor), addDays(startOfDay(anchor), 1)];
-  const gridTmpl = `${GUTTER_PX}px ${cols.map(() => '1fr').join(' ')}`;
+  const gridTmpl = `${GUTTER_PX}px ${cols.map(() => 'minmax(0,1fr)').join(' ')}`;
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollbarW, setScrollbarW] = useState(0);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setScrollbarW(el.offsetWidth - el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode, cols.length]);
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '0 26px 22px' }}>
       <div style={{ marginTop: '18px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#fff', border: '2px solid #2E294E', borderRadius: '10px', boxShadow: '5px 5px 0 0 rgba(46,41,78,0.18)', overflow: 'hidden' }}>
         {/* All-day / header row */}
-        <div style={{ display: 'grid', gridTemplateColumns: gridTmpl, borderBottom: '2px solid #2E294E', background: '#F4EAD4', flexShrink: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: gridTmpl, borderBottom: '2px solid #2E294E', background: '#F4EAD4', flexShrink: 0, paddingRight: `${scrollbarW}px` }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '6px 4px', fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8a8499' }}>All-day</div>
           {cols.map((col, ci) => {
             const isToday = sameDay(col, today);
             const allDayEvs = events.filter((ev) => ev.allDay && eventOnDay(ev, col));
             return (
-              <div key={ci} style={{ borderLeft: '1px solid rgba(46,41,78,0.12)', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div key={ci} style={{ borderLeft: '1px solid rgba(46,41,78,0.12)', padding: '8px 6px', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.05em', color: '#8a8499' }}>{WEEKDAYS[col.getDay()]}</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', background: isToday ? '#2E294E' : 'transparent', color: isToday ? '#fff' : '#2E294E', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: isToday ? 700 : 500 }}>{col.getDate()}</span>
@@ -715,7 +727,7 @@ function TimelineView({ anchor, events, mode, onSelect, onSlotClick }: { anchor:
           })}
         </div>
         {/* Timed events grid */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: gridTmpl, height: `${HOURS.length * HOUR_PX}px`, position: 'relative' }}>
             <div style={{ position: 'relative' }}>
               {HOURS.map((h) => (
@@ -727,7 +739,7 @@ function TimelineView({ anchor, events, mode, onSelect, onSlotClick }: { anchor:
             {cols.map((col, ci) => {
               const timedEvs = events.filter((ev) => !ev.allDay && sameDay(ev.start, col));
               return (
-                <div key={ci} onClick={() => onSlotClick(col)} style={{ position: 'relative', borderLeft: '1px solid rgba(46,41,78,0.12)', backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent ${HOUR_PX-1}px, rgba(46,41,78,0.07) ${HOUR_PX-1}px, rgba(46,41,78,0.07) ${HOUR_PX}px)`, cursor: 'pointer' }}>
+                <div key={ci} onClick={() => onSlotClick(col)} style={{ position: 'relative', minWidth: 0, overflow: 'hidden', borderLeft: '1px solid rgba(46,41,78,0.12)', backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent ${HOUR_PX-1}px, rgba(46,41,78,0.07) ${HOUR_PX-1}px, rgba(46,41,78,0.07) ${HOUR_PX}px)`, cursor: 'pointer' }}>
                   {timedEvs.map((ev) => {
                     const topMin = ev.start.getHours() * 60 + ev.start.getMinutes();
                     const durMin = Math.max(30, (ev.end.getTime() - ev.start.getTime()) / 60000);
@@ -925,7 +937,7 @@ export default function CalendarClient({ googleCalSources: initGcal, appleCalSou
         </div>
       )}
 
-      {mode === 'month' && <MonthView anchor={anchor} events={events} onSelect={setSelected} onDayClick={(d) => setNewEventStart(d)} />}
+      {mode === 'month' && <MonthView anchor={anchor} events={events} onSelect={setSelected} onDayClick={(d) => { setAnchor(d); setMode(window.innerWidth < 640 ? '2day' : 'week'); }} />}
       {(mode === 'week' || mode === '2day') && <TimelineView anchor={anchor} events={events} mode={mode} onSelect={setSelected} onSlotClick={(d) => setNewEventStart(d)} />}
 
       {selected && <EventSheet ev={selected} onClose={() => setSelected(null)} />}

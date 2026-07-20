@@ -226,7 +226,16 @@ interface TaskSidebarProps {
   onUpdated: (task: TaskWithTags) => void;
   onDeleted: (taskId: string) => void;
   onTimerChange?: (taskId: string, active: boolean) => void;
+  onMoveColumn?: (taskId: string, column: KanbanColumn) => void;
 }
+
+const columnOrder: KanbanColumn[] = [
+  KanbanColumn.BACKLOG,
+  KanbanColumn.TODO,
+  KanbanColumn.IN_PROGRESS,
+  KanbanColumn.WAITING,
+  KanbanColumn.DONE,
+];
 
 export default function TaskSidebar({
   open,
@@ -239,6 +248,7 @@ export default function TaskSidebar({
   onUpdated,
   onDeleted,
   onTimerChange,
+  onMoveColumn,
 }: TaskSidebarProps) {
   const isEditing = !!task;
   const activeColumn = task?.column ?? column ?? KanbanColumn.BACKLOG;
@@ -423,26 +433,53 @@ export default function TaskSidebar({
             flexShrink: 0,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
             <span
               style={{
                 width: '10px',
                 height: '10px',
                 borderRadius: '3px',
                 background: dot,
+                flexShrink: 0,
                 display: 'inline-block',
               }}
             />
-            <span
-              style={{
-                fontFamily: 'Fraunces, serif',
-                fontWeight: 600,
-                fontSize: '15px',
-                color: '#2E294E',
-              }}
-            >
-              {isEditing ? colLabel : `New task — ${colLabel}`}
-            </span>
+            {isEditing && task ? (
+              <select
+                value={task.column}
+                onChange={(e) => onMoveColumn?.(task.id, e.target.value as KanbanColumn)}
+                aria-label="Move task to column"
+                style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  color: '#2E294E',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  padding: '4px 2px',
+                }}
+              >
+                {columnOrder.map((col) => (
+                  <option key={col} value={col}>{columnLabels[col]}</option>
+                ))}
+              </select>
+            ) : (
+              <span
+                style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  color: '#2E294E',
+                }}
+              >
+                {`New task — ${colLabel}`}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}

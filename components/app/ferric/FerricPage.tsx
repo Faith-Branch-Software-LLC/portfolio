@@ -7,7 +7,7 @@ import { Link } from 'next-transition-router';
 import Footer from '@/components/app/footer';
 import Section, { SectionTitle } from '@/components/ui/section';
 import { Hand, Highlight, ScrapColors, StickyNote, TapeColor } from '@/components/app/scrapbookElements';
-import { LayoutGrid, Play, Repeat2, Pencil, Music, Lock } from 'lucide-react';
+import { LayoutGrid, Play, Repeat2, Pencil, Music, Lock, Ban, Clock3 } from 'lucide-react';
 import { useLayout } from '@/lib/context/layoutContext';
 
 const features = [
@@ -17,6 +17,21 @@ const features = [
   { icon: Pencil,     title: 'Drawing Editor',       body: 'Decorate your tapes with a pen, eraser, and stickers. Make each cassette yours.' },
   { icon: Music,      title: 'External Services',    body: 'Pull tracks from your Apple Music library, local files, or many other external services!' },
   { icon: Lock,       title: 'Lock Screen Controls', body: 'Full Now Playing integration. Control playback from your lock screen, AirPods, or CarPlay.' },
+];
+
+const apiStatuses = [
+  {
+    icon: Ban,
+    status: 'Blocked',
+    title: 'YouTube Music',
+    body: "Can't integrate — YouTube's API Terms of Service prohibit this kind of use.",
+  },
+  {
+    icon: Clock3,
+    status: 'Not yet',
+    title: 'Spotify',
+    body: 'Integration is built, but locked behind a 250,000 MAU requirement Ferric hasn’t hit yet.',
+  },
 ];
 
 function ContactForm() {
@@ -146,8 +161,35 @@ export default function FerricPage() {
         </div>
       </Section>
 
+      {/* ── API Availability ── */}
+      <Section className="bg-orange" layer={2}>
+        <div className="flex items-baseline gap-3 flex-wrap justify-center">
+          <SectionTitle className="text-white">Not hooked up (yet).</SectionTitle>
+          <Hand color={ScrapColors.olive} size={26} rot={-5}>~ APIs ~</Hand>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-3xl">
+          {apiStatuses.map((a, i) => (
+            <StickyNote
+              key={a.title}
+              rot={i % 2 === 0 ? 0.6 : -0.8}
+              tapeColor={[TapeColor.Teal, TapeColor.Purple][i]}
+            >
+              <div className="flex gap-3 items-center mb-2">
+                <a.icon className="w-5 h-5 flex-shrink-0 text-black/60" />
+                <h3 className="font-fraunces font-bold text-lg text-black">{a.title}</h3>
+                <span className="ml-auto text-[10px] font-fraunces font-semibold uppercase tracking-widest bg-black/10 text-black/60 rounded-full px-2 py-0.5">
+                  {a.status}
+                </span>
+              </div>
+              <p className="font-gelasio text-sm leading-relaxed text-black/70">{a.body}</p>
+            </StickyNote>
+          ))}
+        </div>
+      </Section>
+
       {/* ── Support ── */}
-      <Section id="support" className="bg-teal" layer={2}>
+      <Section id="support" className="bg-teal" layer={3}>
         <div className="flex items-baseline gap-3 flex-wrap justify-center mb-4">
           <SectionTitle className="text-white">Get in touch.</SectionTitle>
           <Hand color={ScrapColors.olive} size={24} rot={-4}>~ support ~</Hand>
@@ -164,7 +206,7 @@ export default function FerricPage() {
         </div>
       </Section>
 
-      <Footer layer={3} />
+      <Footer layer={4} />
     </div>
   );
 }

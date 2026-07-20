@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react';
 import AdminLink from '@/components/admin/AdminLink';
 import { getClientTimeData } from '@/lib/actions/admin/time';
-import { ChevronLeft, Clock } from 'lucide-react';
+import { ClientTimePeriod, CLIENT_TIME_PERIOD_TO_PRESET } from '@/lib/time-range';
+import { ChevronLeft, Clock, Copy, Check, Download } from 'lucide-react';
 
-type Period = 'lifetime' | 'yearly' | 'monthly' | 'weekly';
+type Period = ClientTimePeriod;
 
 type Entry = {
   id: string;
@@ -20,6 +21,7 @@ type Entry = {
 const PERIODS: { value: Period; label: string }[] = [
   { value: 'weekly', label: 'This Week' },
   { value: 'monthly', label: 'This Month' },
+  { value: 'lastMonth', label: 'Last Month' },
   { value: 'yearly', label: 'This Year' },
   { value: 'lifetime', label: 'All Time' },
 ];
@@ -49,6 +51,7 @@ export default function ClientTimePage({
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [projectId, setProjectId] = useState<string>('');
   const [isPending, startTransition] = useTransition();
+  const [copyState, setCopyState] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
 
   const load = (newPeriod: Period, newProjectId: string) => {
     startTransition(async () => {
@@ -70,6 +73,35 @@ export default function ClientTimePage({
     setProjectId(pid);
     load(period, pid);
   };
+
+  const exportParams = () => {
+    const params = new URLSearchParams({ preset: CLIENT_TIME_PERIOD_TO_PRESET[period] });
+    if (projectId) params.set('projectId', projectId);
+    return params;
+  };
+
+  const handleCopyText = async () => {
+    setCopyState('copying');
+    try {
+      const params = exportParams();
+      params.set('format', 'text');
+      const res = await fetch(`/api/admin/clients/${client.id}/time-export?${params.toString()}`);
+      if (!res.ok) throw new Error('export failed');
+      const text = await res.text();
+      await navigator.clipboard.writeText(text);
+      setCopyState('copied');
+    } catch {
+      setCopyState('error');
+    } finally {
+      setTimeout(() => setCopyState('idle'), 1500);
+    }
+  };
+
+  const pdfHref = (() => {
+    const params = exportParams();
+    params.set('format', 'pdf');
+    return `/api/admin/clients/${client.id}/time-export?${params.toString()}`;
+  })();
 
   const totalMinutes = entries.reduce((s, e) => s + e.minutes, 0);
 
@@ -228,6 +260,53 @@ export default function ClientTimePage({
           >
             total
           </span>
+        </div>
+
+        {/* Export */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={handleCopyText}
+            disabled={copyState === 'copying'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '12.5px',
+              fontWeight: 600,
+              color: '#2E294E',
+              background: '#fff',
+              border: '1.5px solid rgba(46,41,78,0.28)',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              cursor: copyState === 'copying' ? 'default' : 'pointer',
+            }}
+          >
+            {copyState === 'copied' ? <Check size={13} /> : <Copy size={13} />}
+            {copyState === 'copied' ? 'Copied!' : copyState === 'error' ? 'Copy failed' : 'Copy Text'}
+          </button>
+          <a
+            href={pdfHref}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '12.5px',
+              fontWeight: 600,
+              color: '#2E294E',
+              background: '#fff',
+              border: '1.5px solid rgba(46,41,78,0.28)',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              cursor: 'pointer',
+              textDecoration: 'none',
+            }}
+          >
+            <Download size={13} />
+            Export PDF
+          </a>
         </div>
       </div>
 

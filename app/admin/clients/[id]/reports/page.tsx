@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import ReportsList from '@/components/admin/reports/ReportsList';
+import TimeRangeSummary from '@/components/admin/reports/TimeRangeSummary';
 import AdminLink from '@/components/admin/AdminLink';
 import { ChevronLeft } from 'lucide-react';
 
@@ -81,6 +82,9 @@ export default async function ClientReportsPage({ params }: PageProps) {
       {/* Content */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 26px' }}>
         <div style={{ maxWidth: '720px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <TimeRangeSummary clientId={client.id} />
+          </div>
           <ReportsList
             clientId={client.id}
             clientName={client.name}
