@@ -18,6 +18,7 @@ import {
   Briefcase,
   PenLine,
   Receipt,
+  Droplet,
 } from 'lucide-react';
 import type { NavProject } from '@/app/admin/layout';
 
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: '/admin/projects', label: 'Projects', icon: FolderKanban, exact: false },
   { href: '/admin/clients', label: 'Clients', icon: Users, exact: false },
   { href: '/admin/clock', label: 'Clock', icon: Clock, exact: false },
+  { href: '/admin/pools', label: 'Pool Cleaning', icon: Droplet, exact: false },
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar, exact: false },
   { href: '/admin/portfolio', label: 'Portfolio', icon: Briefcase, exact: false },
   { href: '/admin/blog', label: 'Blog', icon: PenLine, exact: false },

@@ -70,6 +70,11 @@ enum IntegrationType {
   APPLE_CALENDAR
 }
 
+enum ChemicalType {
+  SALT
+  CHLORINE
+}
+
 model Client {
   id              String           @id @default(cuid())
   name            String
@@ -220,4 +225,68 @@ model PortfolioItem {
   tapeColor   String   @default("Orange")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ── Pool Cleaning ──────────────────────────────────────────────────────────────
+
+model Pool {
+  id             String             @id @default(cuid())
+  name           String
+  address        String
+  contactName    String?
+  chemicalType   ChemicalType       @default(CHLORINE)
+  notes          String?            @db.Text
+  archived       Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  checklistItems PoolChecklistItem[]
+  visits         PoolVisit[]
+}
+
+model PoolChecklistItem {
+  id        String                     @id @default(cuid())
+  poolId    String
+  label     String
+  order     Int                        @default(0)
+  createdAt DateTime                   @default(now())
+  pool      Pool                       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  checks    PoolVisitChecklistCheck[]
+
+  @@index([poolId])
+}
+
+model PoolVisit {
+  id              String                     @id @default(cuid())
+  poolId          String
+  date            DateTime
+  minutes         Int
+  notes           String?                    @db.Text
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  pool            Pool                       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  chemicals       PoolChemicalUsed[]
+  checklistChecks PoolVisitChecklistCheck[]
+
+  @@index([poolId])
+}
+
+model PoolChemicalUsed {
+  id        String    @id @default(cuid())
+  visitId   String
+  name      String
+  amount    String?
+  createdAt DateTime  @default(now())
+  visit     PoolVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+}
+
+model PoolVisitChecklistCheck {
+  visitId         String
+  checklistItemId String
+  checked         Boolean           @default(true)
+  visit           PoolVisit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  checklistItem   PoolChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
+
+  @@id([visitId, checklistItemId])
 }

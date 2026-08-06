@@ -2,6 +2,7 @@ export type TimeRangePreset =
   | 'today'
   | 'thisWeek'
   | 'lastWeek'
+  | 'lastTwoWeeks'
   | 'thisMonth'
   | 'lastMonth'
   | 'thisYear'
@@ -12,6 +13,7 @@ export const TIME_RANGE_PRESETS: { value: TimeRangePreset; label: string }[] = [
   { value: 'today', label: 'Today' },
   { value: 'thisWeek', label: 'This Week' },
   { value: 'lastWeek', label: 'Last Week' },
+  { value: 'lastTwoWeeks', label: 'Last Two Weeks' },
   { value: 'thisMonth', label: 'This Month' },
   { value: 'lastMonth', label: 'Last Month' },
   { value: 'thisYear', label: 'This Year' },
@@ -58,6 +60,13 @@ export function presetRange(
       from.setDate(from.getDate() - 7);
       return { from, to: thisWeekStart };
     }
+    case 'lastTwoWeeks': {
+      const thisWeekStart = startOfDay(now);
+      thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+      const from = new Date(thisWeekStart);
+      from.setDate(from.getDate() - 14);
+      return { from, to: thisWeekStart };
+    }
     case 'thisMonth':
       return { from: new Date(now.getFullYear(), now.getMonth(), 1), to };
     case 'lastMonth':
@@ -99,6 +108,11 @@ export function rangeLabel(preset: TimeRangePreset, from: Date, to: Date): strin
     case 'thisWeek':
     case 'lastWeek':
       return `Week of ${from.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+    case 'lastTwoWeeks': {
+      const fromStr = from.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const toStr = inclusiveEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `${fromStr} – ${toStr}`;
+    }
     case 'thisMonth':
     case 'lastMonth':
       return from.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
