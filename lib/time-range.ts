@@ -64,8 +64,8 @@ export function presetRange(
       const thisWeekStart = startOfDay(now);
       thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
       const from = new Date(thisWeekStart);
-      from.setDate(from.getDate() - 14);
-      return { from, to: thisWeekStart };
+      from.setDate(from.getDate() - 7);
+      return { from, to };
     }
     case 'thisMonth':
       return { from: new Date(now.getFullYear(), now.getMonth(), 1), to };
