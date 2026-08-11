@@ -29,6 +29,7 @@ RUN --mount=type=secret,id=ReSendKey \
     --mount=type=secret,id=CLOUDINARY_CLOUD_NAME \
     --mount=type=secret,id=CLOUDINARY_API_KEY \
     --mount=type=secret,id=CLOUDINARY_API_SECRET \
+    --mount=type=secret,id=MOBILE_JWT_SECRET \
     export NEXT_PUBLIC_RE_SEND_KEY=$(cat /run/secrets/ReSendKey) && \
     export DATABASE_URL=$(cat /run/secrets/DATABASE_URL) && \
     export NEXTAUTH_SECRET=$(cat /run/secrets/NEXTAUTH_SECRET) && \
@@ -42,6 +43,7 @@ RUN --mount=type=secret,id=ReSendKey \
     export CLOUDINARY_CLOUD_NAME=$(cat /run/secrets/CLOUDINARY_CLOUD_NAME) && \
     export CLOUDINARY_API_KEY=$(cat /run/secrets/CLOUDINARY_API_KEY) && \
     export CLOUDINARY_API_SECRET=$(cat /run/secrets/CLOUDINARY_API_SECRET) && \
+    export MOBILE_JWT_SECRET=$(cat /run/secrets/MOBILE_JWT_SECRET) && \
     bun run prisma generate && \
     bun run prisma migrate deploy && \
     bun run compile:blog && \

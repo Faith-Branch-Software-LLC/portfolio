@@ -1,12 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { createHash } from 'crypto';
-import { prisma } from '../db';
-import * as OTPAuth from 'otpauth';
-
-function hashPassword(password: string): string {
-  return createHash('sha256').update(password).digest('hex');
-}
+import { verifyAdminCredentials } from '../auth/verifyAdminCredentials';
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -20,37 +14,18 @@ const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email) return null;
 
-        const admin = await prisma.admin.findUnique({
-          where: { email: credentials.email },
+        const result = await verifyAdminCredentials({
+          email: credentials.email,
+          password: credentials.password,
+          token2FA: credentials.token2FA,
         });
-        if (!admin) return null;
 
-        const hashedPassword = hashPassword(credentials.password);
-        if (hashedPassword !== admin.password) return null;
-
-        if (admin.setup2FA) {
-          if (credentials.token2FA && admin.token2FA) {
-            const totp = new OTPAuth.TOTP({
-              issuer: 'PortfolioAdmin',
-              label: admin.id,
-              algorithm: 'SHA1',
-              digits: 6,
-              period: 30,
-              secret: admin.token2FA,
-            });
-            const isValid = totp.validate({ token: credentials.token2FA }) !== null;
-            if (!isValid) return null;
-          } else if (admin.token2FA) {
-            throw new Error('Requires2FA');
-          }
+        if ('error' in result) {
+          if (result.error === 'requires2FA') throw new Error('Requires2FA');
+          return null;
         }
 
-        await prisma.admin.update({
-          where: { id: admin.id },
-          data: { lastLogin: new Date() },
-        });
-
-        return { id: admin.id, name: admin.name, email: admin.email };
+        return result.admin;
       },
     }),
   ],

@@ -17,6 +17,7 @@ env:
     - CLOUDINARY_CLOUD_NAME
     - CLOUDINARY_API_KEY
     - CLOUDINARY_API_SECRET
+    - MOBILE_JWT_SECRET
 
 proxy:
   app_port: 3000

@@ -46,6 +46,7 @@
     "gray-matter": "^4.0.3",
     "gsap": "^3.14.2",
     "gsap-offset-path": "1.1.0",
+    "jose": "^6.2.8",
     "jsdom": "^24.0.0",
     "lucide-react": "^0.472.0",
     "mariadb": "^3.4.5",

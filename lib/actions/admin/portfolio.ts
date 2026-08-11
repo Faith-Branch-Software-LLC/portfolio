@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '../../db';
 
+export async function listPortfolioItems() {
+  return prisma.portfolioItem.findMany({ orderBy: { order: 'asc' } });
+}
+
 export async function createPortfolioItem(data: {
   title: string;
   description: string;

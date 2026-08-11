@@ -3,6 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '../../db';
 
+export async function listClients() {
+  return prisma.client.findMany({
+    orderBy: { name: 'asc' },
+    include: { _count: { select: { projects: true } } },
+  });
+}
+
 export async function createClient(data: { name: string; color?: string }) {
   const client = await prisma.client.create({ data });
   revalidatePath('/admin/clients');
