@@ -118,6 +118,8 @@ interface VisitInput {
   saltReading?: string;
   phReading?: string;
   chlorineReading?: string;
+  alkalinityReading?: string;
+  stabilizerReading?: string;
   chemicals: { name: string; amount?: string }[];
   checkedItemIds: string[];
 }
@@ -140,6 +142,8 @@ export async function createVisit(data: VisitInput) {
       saltReading: data.saltReading,
       phReading: data.phReading,
       chlorineReading: data.chlorineReading,
+      alkalinityReading: data.alkalinityReading,
+      stabilizerReading: data.stabilizerReading,
       chemicals: { create: data.chemicals.filter((c) => c.name.trim()).map((c) => ({ name: c.name, amount: c.amount })) },
       checklistChecks: { create: data.checkedItemIds.map((checklistItemId) => ({ checklistItemId })) },
     },
@@ -165,6 +169,8 @@ export async function updateVisit(id: string, data: VisitInput) {
         saltReading: data.saltReading,
         phReading: data.phReading,
         chlorineReading: data.chlorineReading,
+        alkalinityReading: data.alkalinityReading,
+        stabilizerReading: data.stabilizerReading,
         chemicals: { create: data.chemicals.filter((c) => c.name.trim()).map((c) => ({ name: c.name, amount: c.amount })) },
         checklistChecks: { create: data.checkedItemIds.map((checklistItemId) => ({ checklistItemId })) },
       },

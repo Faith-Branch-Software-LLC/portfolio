@@ -29,6 +29,8 @@ export const PATCH = withMobileAuth<Ctx>(async (req, { params }) => {
       saltReading: body.saltReading,
       phReading: body.phReading,
       chlorineReading: body.chlorineReading,
+      alkalinityReading: body.alkalinityReading,
+      stabilizerReading: body.stabilizerReading,
       chemicals: Array.isArray(body.chemicals) ? body.chemicals : [],
       checkedItemIds: Array.isArray(body.checkedItemIds) ? body.checkedItemIds : [],
     });
