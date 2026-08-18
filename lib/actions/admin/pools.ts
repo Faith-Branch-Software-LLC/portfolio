@@ -115,6 +115,9 @@ interface VisitInput {
   date: Date;
   minutes: number;
   notes?: string;
+  saltReading?: string;
+  phReading?: string;
+  chlorineReading?: string;
   chemicals: { name: string; amount?: string }[];
   checkedItemIds: string[];
 }
@@ -134,6 +137,9 @@ export async function createVisit(data: VisitInput) {
       date: data.date,
       minutes: data.minutes,
       notes: data.notes,
+      saltReading: data.saltReading,
+      phReading: data.phReading,
+      chlorineReading: data.chlorineReading,
       chemicals: { create: data.chemicals.filter((c) => c.name.trim()).map((c) => ({ name: c.name, amount: c.amount })) },
       checklistChecks: { create: data.checkedItemIds.map((checklistItemId) => ({ checklistItemId })) },
     },
@@ -156,6 +162,9 @@ export async function updateVisit(id: string, data: VisitInput) {
         date: data.date,
         minutes: data.minutes,
         notes: data.notes,
+        saltReading: data.saltReading,
+        phReading: data.phReading,
+        chlorineReading: data.chlorineReading,
         chemicals: { create: data.chemicals.filter((c) => c.name.trim()).map((c) => ({ name: c.name, amount: c.amount })) },
         checklistChecks: { create: data.checkedItemIds.map((checklistItemId) => ({ checklistItemId })) },
       },

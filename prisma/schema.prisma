@@ -261,6 +261,9 @@ model PoolVisit {
   date            DateTime
   minutes         Int
   notes           String?                    @db.Text
+  saltReading     String?
+  phReading       String?
+  chlorineReading String?
   createdAt       DateTime                   @default(now())
   updatedAt       DateTime                   @updatedAt
   pool            Pool                       @relation(fields: [poolId], references: [id], onDelete: Cascade)

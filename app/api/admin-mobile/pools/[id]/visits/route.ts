@@ -17,6 +17,9 @@ export const POST = withMobileAuth<Ctx>(async (req: NextRequest, { params }) => 
       date: new Date(body.date),
       minutes: body.minutes,
       notes: body.notes,
+      saltReading: body.saltReading,
+      phReading: body.phReading,
+      chlorineReading: body.chlorineReading,
       chemicals: Array.isArray(body.chemicals) ? body.chemicals : [],
       checkedItemIds: Array.isArray(body.checkedItemIds) ? body.checkedItemIds : [],
     });
