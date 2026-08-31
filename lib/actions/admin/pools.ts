@@ -240,6 +240,11 @@ export interface PoolMonthlyReportVisit {
   id: string;
   date: Date;
   chemicals: PoolMonthlyReportChemical[];
+  saltReading: string | null;
+  phReading: string | null;
+  chlorineReading: string | null;
+  alkalinityReading: string | null;
+  stabilizerReading: string | null;
 }
 
 export interface PoolMonthlyReportPool {
@@ -265,7 +270,16 @@ export async function getPoolMonthlyReport(year: number, month: number): Promise
       visits: {
         where: { date: { gte: from, lt: to } },
         orderBy: { date: 'asc' },
-        select: { id: true, date: true, chemicals: { select: { name: true, amount: true } } },
+        select: {
+          id: true,
+          date: true,
+          chemicals: { select: { name: true, amount: true } },
+          saltReading: true,
+          phReading: true,
+          chlorineReading: true,
+          alkalinityReading: true,
+          stabilizerReading: true,
+        },
       },
     },
   });
