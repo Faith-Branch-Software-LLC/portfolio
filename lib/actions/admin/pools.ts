@@ -90,6 +90,20 @@ export async function deletePool(id: string) {
   revalidatePath('/admin/pools');
 }
 
+export async function closePool(id: string) {
+  const pool = await prisma.pool.update({ where: { id }, data: { closed: true } });
+  revalidatePath('/admin/pools');
+  revalidatePath(`/admin/pools/${id}`);
+  return pool;
+}
+
+export async function openPool(id: string) {
+  const pool = await prisma.pool.update({ where: { id }, data: { closed: false } });
+  revalidatePath('/admin/pools');
+  revalidatePath(`/admin/pools/${id}`);
+  return pool;
+}
+
 export async function createChecklistItem(poolId: string, label: string) {
   const last = await prisma.poolChecklistItem.findFirst({ where: { poolId }, orderBy: { order: 'desc' } });
   const item = await prisma.poolChecklistItem.create({
